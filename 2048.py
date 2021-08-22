@@ -60,7 +60,7 @@ def print_board(board):
                 sys.stdout.write('|%6c' % ' ')
             else:
                 sys.stdout.write("|%6u" % (1 << power_val))
-            board = board >> 4
+            board >>= 4
         print("|")
     sys.stdout.write("-----------------------------\n")
 
@@ -117,12 +117,12 @@ def init_tables():
             if line[i] == 0:
                 line[i] = line[j]
                 line[j] = 0
-                i = i - 1
+                i -= 1
             elif line[i] == line[j]:
                 if line[i] != 0xf:
                     line[i] = line[i] + 1
                 line[j] = 0
-            i = i + 1
+            i += 1
 
         result = (line[0] <<  0) | \
                  (line[1] <<  4) | \
@@ -207,7 +207,7 @@ def insert_tile_rand(board, tile):
             tile <<= 4
         if index == 0:
             break
-        index = index - 1
+        index -= 1
         tmp >>= 4
         tile <<= 4
     return board | tile
@@ -235,12 +235,12 @@ def play_game(get_move):
         while move < 4:
             if execute_move(move, board) != board:
                 break
-            move = move + 1
+            move += 1
         if move == 4:
             break
 
         current_score = score_board(board) - scorepenalty
-        moveno = moveno + 1
+        moveno += 1
         sys.stdout.write("\nMove #%d, current score=%d(+%d)\n" % (moveno, current_score, current_score - last_score))
         last_score = current_score
         sys.stdout.flush()
@@ -251,34 +251,34 @@ def play_game(get_move):
 
         if move == RETRACT:
             if moveno <= 1 or retract_num <= 0:
-                moveno = moveno - 1
+                moveno -= 1
                 continue
             moveno -= 2
             if retract_pos == 0 and retract_num > 0:
                 retract_pos = MAX_RETRACT
-            retract_pos = retract_pos - 1
+            retract_pos -= 1
             board = retract_vec[retract_pos]
             scorepenalty = scorepenalty - retract_penalty_vec[retract_pos]
-            retract_num = retract_num - 1
+            retract_num -= 1
             continue
 
         newboard = execute_move(move, board)
         if newboard == board:
-            moveno = moveno - 1
+            moveno -= 1
             continue
 
         tile = draw_tile()
         if tile == 2:
-            scorepenalty = scorepenalty + 4
+            scorepenalty += 4
             retract_penalty_vec[retract_pos] = 4
         else:
             retract_penalty_vec[retract_pos] = 0
         retract_vec[retract_pos] = board
-        retract_pos = retract_pos + 1
+        retract_pos += 1
         if retract_pos == MAX_RETRACT:
             retract_pos = 0
         if retract_num < MAX_RETRACT:
-            retract_num = retract_num + 1
+            retract_num += 1
 
         board = insert_tile_rand(newboard, tile)
 
