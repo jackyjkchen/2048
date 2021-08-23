@@ -12,6 +12,11 @@ def clear_screen():
     else:
         _ = os.system('cls')
 
+class _get_ch_win32:
+    def __call__(self):
+        import msvcrt
+        return msvcrt.getwch()
+
 class _get_ch_unix:
     def __call__(self):
         import tty, termios
@@ -29,7 +34,7 @@ class _get_ch:
         if os.name == 'posix':
             self.impl = _get_ch_unix()
         else:
-            pass
+            self.impl = _get_ch_win32()
 
     def __call__(self):
         return self.impl()
