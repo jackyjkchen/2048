@@ -72,6 +72,12 @@ AI的慢速实现，不使用C++ std::map cache，ISO C90实现，非严格C90�
 编译器和平台支持与2048.c相同
 
 
+
 * 2048.py
 
-python实现，已测试支持python2.4+，python3.0+，支持各种Posix变体和Win32
+python实现，查表法（相当于2048.c + FASTMODE），已测试支持python2.4+，python3.0+，支持各种Posix变体和Win32。
+
+
+* 2048.pas
+
+现代pascal实现，查表法（相当于2048.c + FASTMODE）。用于free pascal、delphi等现代化pascal编译器。

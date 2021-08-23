@@ -330,7 +330,7 @@ begin
 
         current_score := score_board(board) - scorepenalty;
         moveno := moveno + 1;
-        writeln(format('Move #%d, current score=%d(+%d)',[moveno, current_score, current_score - last_score]));
+        writeln(format('Move #%d, current score=%d(+%d)', [moveno, current_score, current_score - last_score]));
         last_score := current_score;
 
         _move := get_move(board);
@@ -377,7 +377,7 @@ begin
         board := insert_tile_rand(newboard, tile);
     end; 
     print_board(board);
-    writeln(format('Game over. Your score is %d.',[current_score]));
+    writeln(format('Game over. Your score is %d.', [current_score]));
 end;
 
 begin
