@@ -57,7 +57,7 @@ def reverse_row(row):
     return ((row >> 12) | ((row >> 4) & 0x00F0)  | ((row << 4) & 0x0F00) | (row << 12)) & ROW_MASK
 
 def print_board(board):
-    sys.stdout.write("-----------------------------\n")
+    sys.stdout.write("-----------------------------%s" % os.linesep)
     for i in range(0, 4):
         for j in range(0, 4):
             power_val = board & 0xf
@@ -67,7 +67,7 @@ def print_board(board):
                 sys.stdout.write("|%6u" % (1 << power_val))
             board >>= 4
         print("|")
-    sys.stdout.write("-----------------------------\n")
+    sys.stdout.write("-----------------------------%s" % os.linesep)
 
 def transpose(x):
     a1 = x & 0xF0F00F0FF0F00F0F
@@ -113,10 +113,12 @@ def init_tables():
 
         i = 0
         while i < 3:
-            for j in range(i+1, 4):
+            j = i + 1
+            while j < 4:
                 if line[j] != 0:
                     break
-            if line[j] == 0:
+                j += 1
+            if j == 4:
                 break
 
             if line[i] == 0:
@@ -246,7 +248,7 @@ def play_game(get_move):
 
         current_score = score_board(board) - scorepenalty
         moveno += 1
-        sys.stdout.write("\nMove #%d, current score=%d(+%d)\n" % (moveno, current_score, current_score - last_score))
+        sys.stdout.write("Move #%d, current score=%d(+%d)%s" % (moveno, current_score, current_score - last_score, os.linesep))
         last_score = current_score
         sys.stdout.flush()
 
@@ -288,7 +290,7 @@ def play_game(get_move):
         board = insert_tile_rand(newboard, tile)
 
     print_board(board)
-    sys.stdout.write("\nGame over. Your score is %d.\n" % current_score)
+    sys.stdout.write("Game over. Your score is %d.%s" % (current_score, os.linesep))
     sys.stdout.flush()
 
 

@@ -513,7 +513,7 @@ void play_game(get_move_func_t get_move) {
             break;
 
         current_score = score_board(board) - scorepenalty;
-        printf("\nMove #%ld, current score=%ld(+%ld)\n", ++moveno, current_score, current_score - last_score);
+        printf("Move #%ld, current score=%ld(+%ld)\n", ++moveno, current_score, current_score - last_score);
         last_score = current_score;
 
         move = get_move(board);
@@ -557,7 +557,7 @@ void play_game(get_move_func_t get_move) {
     }
 
     print_board(board);
-    printf("\nGame over. Your score is %ld.\n", current_score);
+    printf("Game over. Your score is %ld.\n", current_score);
 }
 
 int main() {
