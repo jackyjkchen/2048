@@ -29,7 +29,7 @@ typedef unsigned int        uint32;
 #include <conio.h>
 #elif defined(MSDOS) || defined(__WINDOWS__)
 #include <conio.h>
-#elif defined(_POSIX_SOURCE) || defined(_POSIX_VERSION)
+#elif defined(_POSIX_SOURCE) || defined(_POSIX_VERSION) || defined(__CYGWIN__) || defined(__MACH__)
 #include <unistd.h>
 #include <termios.h>
 #endif
@@ -100,14 +100,14 @@ static void clear_screen(void)
 #else
 #define clear_screen()  system("cls");
 #endif
-#elif defined(_POSIX_SOURCE) || defined(_POSIX_VERSION)
+#elif defined(_POSIX_SOURCE) || defined(_POSIX_VERSION) || defined(__CYGWIN__) || defined(__MACH__)
 #define clear_screen()  printf("\033[2J\033[H");
 #else
 #define clear_screen()
 #endif
 
 #if defined(_WIN32) || defined(MSDOS) || defined(__WINDOWS__)
-#elif defined(_POSIX_SOURCE) || defined(_POSIX_VERSION)
+#elif defined(_POSIX_SOURCE) || defined(_POSIX_VERSION) || defined(__CYGWIN__) || defined(__MACH__)
 typedef struct
 {
     struct termios oldt, newt;
@@ -115,7 +115,7 @@ typedef struct
 #endif
 
 #if defined(_WIN32) || defined(MSDOS) || defined(__WINDOWS__)
-#elif defined(_POSIX_SOURCE) || defined(_POSIX_VERSION)
+#elif defined(_POSIX_SOURCE) || defined(_POSIX_VERSION) || defined(__CYGWIN__) || defined(__MACH__)
 static void term_init(term_state *s)
 {
     tcgetattr(STDIN_FILENO, &s->oldt);
@@ -126,7 +126,7 @@ static void term_init(term_state *s)
 #endif
 
 #if defined(_WIN32) || defined(MSDOS) || defined(__WINDOWS__)
-#elif defined(_POSIX_SOURCE) || defined(_POSIX_VERSION)
+#elif defined(_POSIX_SOURCE) || defined(_POSIX_VERSION) || defined(__CYGWIN__) || defined(__MACH__)
 static void term_clear(term_state *s)
 {
     tcsetattr(STDIN_FILENO, TCSANOW, &s->oldt);
@@ -626,7 +626,7 @@ void play_game(get_move_func_t get_move) {
 
 int main() {
 #if defined(_WIN32) || defined(MSDOS) || defined(__WINDOWS__)
-#elif defined(_POSIX_SOURCE) || defined(_POSIX_VERSION)
+#elif defined(_POSIX_SOURCE) || defined(_POSIX_VERSION) || defined(__CYGWIN__) || defined(__MACH__)
     term_state s;
     term_init(&s);
 #endif
@@ -637,7 +637,7 @@ int main() {
     play_game(ask_for_move);
 
 #if defined(_WIN32) || defined(MSDOS) || defined(__WINDOWS__)
-#elif defined(_POSIX_SOURCE) || defined(_POSIX_VERSION)
+#elif defined(_POSIX_SOURCE) || defined(_POSIX_VERSION) || defined(__CYGWIN__) || defined(__MACH__)
     term_clear(&s);
 #endif
     return 0;

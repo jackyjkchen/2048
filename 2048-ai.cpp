@@ -102,7 +102,7 @@ static void clear_screen(void)
 #else
 #define clear_screen()  system("cls");
 #endif
-#elif defined(_POSIX_SOURCE) || defined(_POSIX_VERSION)
+#elif defined(_POSIX_SOURCE) || defined(_POSIX_VERSION) || defined(__CYGWIN__) || defined(__MACH__)
 #define clear_screen()  printf("\033[2J\033[H");
 #else
 #define clear_screen()
