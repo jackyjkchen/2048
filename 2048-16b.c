@@ -119,7 +119,7 @@ static void term_clear(term_state *s) {
 
 static int get_ch(void) {
 #if defined(_WIN32) || defined(MSDOS) || defined(__WINDOWS__)
-#if defined(_MSC_VER) && _MSC_VER >= 1200
+#if defined(_MSC_VER) && _MSC_VER >= 900
     return _getch();
 #else
     return getch();
@@ -162,7 +162,7 @@ static row_t reverse_row(row_t row) {
 }
 
 static void print_board(board_t board) {
-    int i, j;
+    int i = 0, j = 0;
     uint16 *t = (uint16 *)&board;
 
     printf("-----------------------------\n");
@@ -472,10 +472,8 @@ int ask_for_move(board_t board) {
     print_board(board);
 
     while (1) {
-        char movechar;
         const char *allmoves = "wsadkjhl", *pos = 0;
-
-        movechar = get_ch();
+        char movechar = get_ch();
 
         if (movechar == 'q') {
             return -1;
@@ -548,13 +546,13 @@ void play_game(get_move_func_t get_move) {
     int retract_pos = 0, retract_num = 0;
 
     while (1) {
-        int move;
-        uint16 tile;
-        board_t newboard, tmp;
+        int move = 0;
+        uint16 tile = 0;
+        board_t newboard;
 
         clear_screen();
         for (move = 0; move < 4; move++) {
-            tmp = execute_move(move, board);
+            board_t tmp = execute_move(move, board);
             if (memcmp(&tmp, &board, sizeof(board_t)) != 0)
                 break;
         }

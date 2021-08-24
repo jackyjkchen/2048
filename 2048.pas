@@ -49,18 +49,18 @@ var
 begin
     writeln('-----------------------------');
     for i := 0 to 3 do
-    begin 
+    begin
         for j := 0 to 3 do
-        begin 
+        begin
             power_val := board and $f;
             if power_val = 0 then
                 write(format('|%6c', [' ']))
             else
                 write(format('|%6d', [1 shl power_val]));
             board := board shr 4;
-        end; 
+        end;
         writeln('|');
-    end; 
+    end;
     writeln('-----------------------------');
 end;
 
@@ -92,7 +92,6 @@ end;
 
 const
     TABLESIZE = 65536;
-    MAX_RETRACT = 64;
 type
     row_table_t   =  array[0..(TABLESIZE)-1] of uint16;
     score_table_t =  array[0..(TABLESIZE)-1] of uint32;
@@ -121,11 +120,11 @@ begin
         row_line[3] := (row shr 12) and $f;
 
         for i := 0 to 3 do
-        begin 
+        begin
             rank := row_line[i];
             if rank >= 2 then
                 score  := score + ((rank - 1) * (1 shl rank));
-        end; 
+        end;
         score_table[row] := score;
 
         i := 0;
@@ -133,26 +132,26 @@ begin
         begin
             j := i + 1;
             while j < 4 do
-            begin 
+            begin
                 if row_line[j] <> 0 then break;
                 j := j + 1;
-            end; 
+            end;
             if j = 4 then break;
 
             if row_line[i] = 0 then
-            begin 
+            begin
                 row_line[i] := row_line[j];
                 row_line[j] := 0;
                 i := i - 1;
             end
             else if row_line[i] = row_line[j] then
-            begin 
+            begin
                 if row_line[i] <> $f then 
                     row_line[i] := row_line[i] + 1;
                 row_line[j] := 0;
-            end; 
+            end;
             i := i + 1;
-        end; 
+        end;
 
         row_result := (row_line[0] shl  0) or 
                       (row_line[1] shl  4) or 
@@ -166,7 +165,7 @@ begin
         row_right_table[rev_row] := rev_row xor rev_result;
 
         row := row + 1;
-    until row = 65535; 
+    until row = 65535;
 end;
 
 function execute_move_col(board : board_t; var table : row_table_t) : board_t;
@@ -233,8 +232,8 @@ const
 begin
     print_board(board);
     while true do
-    begin 
-        movechar := get_ch();
+    begin
+        movechar := get_ch;
         if movechar = 'q' then
             exit(-1);
         if movechar = 'r' then 
@@ -266,17 +265,17 @@ begin
     index := unif_random(count_empty(board));
     tmp := board;
     while true do
-    begin 
+    begin
         while (tmp and $f) <> 0 do
-        begin 
+        begin
             tmp := tmp shr 4;
             tile := tile shl 4;
-        end; 
+        end;
         if index = 0 then break;
         index := index - 1;
         tmp := tmp shr 4;
         tile := tile shl 4;
-    end; 
+    end;
     insert_tile_rand := board or tile;
 end;
 
@@ -284,14 +283,16 @@ function initial_board : board_t;
 var
   board : board_t;
 begin
-    board := board_t((draw_tile()) shl (unif_random(16) shl 2));
-    initial_board := insert_tile_rand(board, draw_tile());
+    board := board_t((draw_tile) shl (unif_random(16) shl 2));
+    initial_board := insert_tile_rand(board, draw_tile);
 end;
 
 type
     get_move_func_t = function(board : board_t) : integer;
 
 procedure play_game(get_move : get_move_func_t);
+const
+    MAX_RETRACT = 64;
 var
     board               : board_t;
     newboard            : board_t;
@@ -303,10 +304,10 @@ var
     tile                : uint16;
     retract_vec         : array[0..(MAX_RETRACT)-1] of board_t;
     retract_penalty_vec : array[0..(MAX_RETRACT)-1] of byte;
-    retract_pos         : integer; 
-    retract_num         : integer; 
+    retract_pos         : integer;
+    retract_num         : integer;
 begin
-    board := initial_board();
+    board := initial_board;
     scorepenalty := 0;
     current_score := 0;
     last_score := 0;
@@ -317,15 +318,15 @@ begin
     retract_num := 0;
 
     while true do
-    begin 
-        clear_screen();
+    begin
+        clear_screen;
         _move := 0;
         while _move < 4 do
-        begin 
+        begin
             if execute_move(_move, board) <> board then
                 break;
             _move := _move + 1;
-        end; 
+        end;
         if _move = 4 then break;
 
         current_score := score_board(board) - scorepenalty;
@@ -337,12 +338,12 @@ begin
         if _move < 0 then break;
 
         if _move = RETRACT then
-        begin 
+        begin
             if (moveno <= 1) or (retract_num <= 0) then
-            begin 
+            begin
                 moveno := moveno - 1;
                 continue;
-            end; 
+            end;
             moveno := moveno - 2;
             if (retract_pos = 0) and (retract_num > 0) then
                 retract_pos := MAX_RETRACT;
@@ -355,18 +356,18 @@ begin
 
         newboard := execute_move(_move, board);
         if newboard = board then
-        begin 
+        begin
             moveno := moveno - 1;
             continue;
         end;
 
-        tile := draw_tile();
+        tile := draw_tile;
         if tile = 2 then begin
             scorepenalty := scorepenalty + 4;
             retract_penalty_vec[retract_pos] := 4;
         end else begin
             retract_penalty_vec[retract_pos] := 0;
-        end; 
+        end;
         retract_vec[retract_pos] := board;
         retract_pos := retract_pos + 1;
         if retract_pos = MAX_RETRACT then
@@ -374,7 +375,7 @@ begin
         if retract_num < MAX_RETRACT then
             retract_num := retract_num + 1;
         board := insert_tile_rand(newboard, tile);
-    end; 
+    end;
     print_board(board);
     writeln(format('Game over. Your score is %d.', [current_score]));
 end;

@@ -147,7 +147,7 @@ static inline row_t reverse_row(row_t row) {
 }
 
 static void print_board(board_t board) {
-    int i, j;
+    int i = 0, j = 0;
 
     printf("-----------------------------\n");
     for (i = 0; i < 4; i++) {
@@ -503,7 +503,7 @@ static float score_heur_helper(board_t board) {
         for (i = 0; i < 4; ++i) {
             int rank = line[i];
 
-            sum += pow(rank, SCORE_SUM_POWER);
+            sum += (float)pow(rank, SCORE_SUM_POWER);
             if (rank == 0) {
                 empty++;
             } else {
@@ -525,11 +525,11 @@ static float score_heur_helper(board_t board) {
 
         for (i = 1; i < 4; ++i) {
             if (line[i - 1] > line[i]) {
-                monotonicity_left +=
-                    pow(line[i - 1], SCORE_MONOTONICITY_POWER) - pow(line[i], SCORE_MONOTONICITY_POWER);
+                monotonicity_left += (float)(pow(line[i - 1], SCORE_MONOTONICITY_POWER) -
+                    pow(line[i], SCORE_MONOTONICITY_POWER));
             } else {
-                monotonicity_right +=
-                    pow(line[i], SCORE_MONOTONICITY_POWER) - pow(line[i - 1], SCORE_MONOTONICITY_POWER);
+                monotonicity_right += (float)(pow(line[i], SCORE_MONOTONICITY_POWER) -
+                    pow(line[i - 1], SCORE_MONOTONICITY_POWER));
             }
         }
         heur_score += SCORE_LOST_PENALTY + SCORE_EMPTY_WEIGHT * empty + SCORE_MERGES_WEIGHT * merges -
@@ -628,13 +628,13 @@ static float _score_toplevel_move(eval_state &state, board_t board, int move) {
     board_t newboard = execute_move(move, board);
 
     if (board == newboard)
-        return 0;
+        return 0.0f;
 
     return score_tilechoose_node(state, newboard, 1.0f) + 1e-6f;
 }
 
 float score_toplevel_move(board_t board, int move) {
-    float res;
+    float res = 0.0f;
     eval_state state;
 
     state.depth_limit = std::max(3, count_distinct_tiles(board) - 2);
@@ -648,8 +648,8 @@ float score_toplevel_move(board_t board, int move) {
 }
 
 int find_best_move(board_t board) {
-    int move;
-    float best = 0;
+    int move = 0;
+    float best = 0.0f;
     int bestmove = -1;
 
     print_board(board);

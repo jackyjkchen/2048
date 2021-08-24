@@ -12,14 +12,12 @@ gcc 2.0+ (linux, freebsd, macos, mingw, mingw-w64, cygwin, djgpp)
 clang 3.0+ (linux, macos, freebsd, win32)
 visual c++ 2.0+ (win32)
 openwatcom c++ 1.9 (win32, win386, dos32 pmode, dos4gw)
-watcom c++ 11 (win32, win386, dos32 pmode, dos4gw)
 borland c++ 5.5 (win32)
 ```
 
 不使用FASTMODE预处理，代码和数据段可控制在64KiB以内，额外支持：
 ```
 openwatcom c++ 1.9 (dos16 exe, dos16 com, win16)
-watcom c++ 11 (dos16 exe, dos16 com, win16)
 ```
 
 
@@ -35,17 +33,15 @@ gcc 2.0+ (linux, freebsd, macos, mingw, mingw-w64, cygwin, djgpp)
 clang 3.0+ (linux, macos, freebsd, win32)
 visual c++ 2.0+ (win32)
 openwatcom c++ 1.9 (win32, win386, dos32 pmode, dos4gw)
-watcom c++ 11 (win32, win386, dos32 pmode, dos4gw)
 borland c++ 5.5 (win32)
 ```
 
 不使用FASTMODE预处理，代码和数据段可控制在64KiB以内，额外支持：
 ```
 openwatcom c++ 1.9 (dos16 exe, dos16 com, win16)
-watcom c++ 11 (dos16 exe, dos16 com, win16)
 borland c++ 3.1 (dos16 exe, dos16 com, win16)
-turbo c++ 3.0 (dos16 exe, dos16 com)
-turbo c 2.0 (dos16 exe, dos16 com)
+turbo c++ 1.01/3.0 (dos16 exe, dos16 com)
+turbo c 1.5/2.01 (dos16 exe, dos16 com)
 ```
 
 
@@ -75,16 +71,40 @@ AI的慢速实现，不使用C++ std::map cache，ISO C90实现，非严格C90�
 
 * 2048.py
 
-python实现，使用查表法（相当于2048.c + FASTMODE）。已测试支持python2.4+，python3.0+，支持各种Posix变体和Win32。
+python实现，使用查表法（相当于2048.c + FASTMODE）。支持python2.4+，python3.0+，支持各种Posix变体和Win32。
 
+已测试python版本和平台
+```
+python 2.4-2.7 (linux, win32, freebsd, macos)
+python 3.0-3.9 (linux, win32, freebsd, macos)
+```
 
 
 * 2048.pas
 
 现代pascal实现，使用uint64+查表法（相当于2048.c + FASTMODE）。用于free pascal、delphi等现代化pascal编译器。
 
+已测试编译器和平台
+```
+free pascal 2.6.4/3.0.4/3.2.2 (linux, win32, freebsd, macos)
+```
 
 
 * 2048-16b.pas
 
-不使用uint64的pascal实现，且不使用查表法（相当于2048-16b.c且不使用FASTMODE）。用于turbo pascal等旧版pascal编译器。
+不使用uint64的pascal实现，且不使用查表法（相当于2048-16b.c且不使用FASTMODE）。用于turbo pascal 7.x。
+```
+free pascal 2.6.4/3.0.4/3.2.2 (linux, win32, freebsd, macos)
+turbo pascal 7.1 (dos16 exe)
+
+```
+
+
+* 2048-old.pas
+
+不使用uint64、break、continue、uses strings的pascal实现，且不使用查表法（相当于2048-16b.c且不使用FASTMODE）。用于turbo pascal 6以下等旧版pascal编译器。
+```
+free pascal 2.6.4/3.0.4/3.2.2 (linux, win32, freebsd, macos)
+turbo pascal 4.0/5.5/6.0/7.1 (dos16 exe)
+
+```

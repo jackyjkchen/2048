@@ -1,6 +1,6 @@
 program main_2048;
 
-uses crt, strings;
+uses crt;
 
 function unif_random(n : integer) : integer;
 begin
@@ -115,6 +115,7 @@ function execute_move_helper(row : row_t) : row_t;
 var
   i, j     : integer;
   row_line : array[0..3] of byte;
+label 1, 2;
 begin
     row_line[0] := (row shr  0) and $f;
     row_line[1] := (row shr  4) and $f;
@@ -127,11 +128,11 @@ begin
         j := i + 1;
         while j < 4 do
         begin
-            if row_line[j] <> 0 then break;
+            if row_line[j] <> 0 then goto 1;
             j := j + 1;
         end;
-        if j = 4 then break;
-
+        1:
+        if j = 4 then goto 2;
         if row_line[i] = 0 then
         begin
             row_line[i] := row_line[j];
@@ -146,7 +147,7 @@ begin
         end;
         i := i + 1;
     end;
-
+    2:
     execute_move_helper := (row_line[0] shl 0) or (row_line[1] shl 4) or (row_line[2] shl 8) or (row_line[3] shl 12);
 end;
 
@@ -230,34 +231,51 @@ begin
     score_board := score_helper(board);
 end;
 
+function strchr(var _str : string; _chr : char) : integer;
+var
+    i : integer;
+label 1;
+begin
+    for i := 1 to length(_str) do
+    begin
+        if _str[i] = _chr then goto 1;
+    end;
+    i := 0;
+    1:
+    strchr := i - 1;
+end;
+
 function ask_for_move(board : board_t) : integer;
 var
   movechar : char;
-  _pos     : pchar;
+  _pos     : integer;
   ret      : integer;
 const
-  allmoves : pchar = 'wsadkjhl';
+  allmoves : string = 'wsadkjhl';
+label 1, 2;
 begin
     print_board(board);
     while true do
     begin
+        1:
         movechar := get_ch;
         if movechar = 'q' then
         begin
             ret := -1;
-            break;
+            goto 2;
         end;
         if movechar = 'r' then
         begin
             ret :=RETRACT;
-            break;
+            goto 2;
         end;
-        _pos := strscan(allmoves, movechar);
-        if _pos = nil then
-            continue;
-        ret := (_pos - allmoves) mod 4;
-        break;
+        _pos := strchr(allmoves, movechar);
+        if _pos = -1 then
+            goto 1;
+        ret := _pos mod 4;
+        goto 2;
     end;
+    2:
     ask_for_move := ret;
 end;
 
@@ -277,6 +295,7 @@ procedure insert_tile_rand(var board : board_t; tile : word);
 var
   index, shift : integer;
   tmp, orig_tile : word;
+label 1;
 begin
     index := unif_random(count_empty(board));
     shift := 0;
@@ -295,7 +314,7 @@ begin
                 tile := orig_tile;
             end;
         end;
-        if index = 0 then break;
+        if index = 0 then goto 1;
         index := index - 1;
         tmp := tmp shr 4;
         tile := tile shl 4;
@@ -306,6 +325,7 @@ begin
             tile := orig_tile;
         end;
     end;
+    1:
     board[3 - (shift shr 4)] := board[3 - (shift shr 4)] or tile;
 end;
 
@@ -323,6 +343,7 @@ function compare_board(var b1 : board_t; var b2 : board_t; length : integer) : b
 var
     ret : boolean;
     i   : integer;
+label 1;
 begin
     ret := true;
     for i := 0 to (length - 1) do
@@ -330,9 +351,10 @@ begin
         if b1[i] <>  b2[i] then
         begin
             ret := false;
-            break;
+            goto 1;
         end;
     end;
+    1:
     compare_board := ret;
 end;
 
@@ -348,10 +370,11 @@ var
     moveno              : longint;
     _move               : integer;
     tile                : longint;
-    retract_vec         : array[0..(MAX_RETRACT)-1] of board_t;
-    retract_penalty_vec : array[0..(MAX_RETRACT)-1] of byte;
+    retract_vec         : array[0..63] of board_t;
+    retract_penalty_vec : array[0..63] of byte;
     retract_pos         : integer;
     retract_num         : integer;
+label 1, 2, 3;
 begin
     initial_board(board);
     scorepenalty := 0;
@@ -365,6 +388,7 @@ begin
 
     while true do
     begin
+        1:
         clear_screen;
         _move := 0;
         while _move < 4 do
@@ -372,10 +396,11 @@ begin
             move(board, newboard, sizeof(board_t));
             execute_move(_move, newboard);
             if not compare_board(board, newboard, 4) then
-                break;
+                goto 2;
             _move := _move + 1;
         end;
-        if _move = 4 then break;
+        2:
+        if _move = 4 then goto 3;
 
         current_score := score_board(board) - scorepenalty;
         moveno := moveno + 1;
@@ -383,14 +408,14 @@ begin
         last_score := current_score;
 
         _move := ask_for_move(board);
-        if _move < 0 then break;
+        if _move < 0 then goto 3;
 
         if _move = RETRACT then
         begin
             if (moveno <= 1) or (retract_num <= 0) then
             begin
                 moveno := moveno - 1;
-                continue;
+                goto 1;
             end;
             moveno := moveno - 2;
             if (retract_pos = 0) and (retract_num > 0) then
@@ -399,7 +424,7 @@ begin
             board := retract_vec[retract_pos];
             scorepenalty := scorepenalty - retract_penalty_vec[retract_pos];
             retract_num := retract_num - 1;
-            continue;
+            goto 1;
         end;
 
         move(board, newboard, sizeof(board_t));
@@ -407,7 +432,7 @@ begin
         if compare_board(board, newboard, 4) then
         begin
             moveno := moveno - 1;
-            continue;
+            goto 1;
         end;
 
         tile := draw_tile;
@@ -426,6 +451,7 @@ begin
         move(newboard, board, sizeof(board_t));
         insert_tile_rand(board, tile);
     end;
+    3:
     print_board(board);
     writeln('Game over. Your score is ', current_score, '.');
 end;

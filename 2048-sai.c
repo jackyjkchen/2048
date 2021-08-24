@@ -126,18 +126,18 @@ enum {
 
 typedef int (*get_move_func_t)(board_t);
 
-static inline board_t unpack_col(row_t row) {
+static board_t unpack_col(row_t row) {
     board_t tmp = row;
 
     return (tmp | (tmp << 12) | (tmp << 24) | (tmp << 36)) & COL_MASK;
 }
 
-static inline row_t reverse_row(row_t row) {
+static row_t reverse_row(row_t row) {
     return (row >> 12) | ((row >> 4) & 0x00F0) | ((row << 4) & 0x0F00) | (row << 12);
 }
 
 static void print_board(board_t board) {
-    int i, j;
+    int i = 0, j = 0;
 
     printf("-----------------------------\n");
     for (i = 0; i < 4; i++) {
@@ -492,7 +492,7 @@ static float score_heur_helper(board_t board) {
         for (i = 0; i < 4; ++i) {
             int rank = line[i];
 
-            sum += pow(rank, SCORE_SUM_POWER);
+            sum += (float)pow(rank, SCORE_SUM_POWER);
             if (rank == 0) {
                 empty++;
             } else {
@@ -511,11 +511,11 @@ static float score_heur_helper(board_t board) {
 
         for (i = 1; i < 4; ++i) {
             if (line[i - 1] > line[i]) {
-                monotonicity_left +=
-                    pow(line[i - 1], SCORE_MONOTONICITY_POWER) - pow(line[i], SCORE_MONOTONICITY_POWER);
+                monotonicity_left += (float)(pow(line[i - 1], SCORE_MONOTONICITY_POWER) -
+                    pow(line[i], SCORE_MONOTONICITY_POWER));
             } else {
-                monotonicity_right +=
-                    pow(line[i], SCORE_MONOTONICITY_POWER) - pow(line[i - 1], SCORE_MONOTONICITY_POWER);
+                monotonicity_right += (float)(pow(line[i], SCORE_MONOTONICITY_POWER) -
+                    pow(line[i - 1], SCORE_MONOTONICITY_POWER));
             }
         }
         heur_score += SCORE_LOST_PENALTY + SCORE_EMPTY_WEIGHT * empty + SCORE_MERGES_WEIGHT * merges -
@@ -594,13 +594,13 @@ static float _score_toplevel_move(eval_state *state, board_t board, int move) {
     board_t newboard = execute_move(move, board);
 
     if (board == newboard)
-        return 0;
+        return 0.0f;
 
     return score_tilechoose_node(state, newboard, 1.0f) + 1e-6f;
 }
 
 float score_toplevel_move(board_t board, int move) {
-    float res;
+    float res = 0.0f;
     eval_state state;
 
     memset(&state, 0x00, sizeof(state));
@@ -615,8 +615,8 @@ float score_toplevel_move(board_t board, int move) {
 
 /* Find the best move for a given board. */
 int find_best_move(board_t board) {
-    int move;
-    float best = 0;
+    int move = 0;
+    float best = 0.0f;
     int bestmove = -1;
 
     print_board(board);
