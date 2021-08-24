@@ -102,7 +102,7 @@ typedef struct {
 
 #if defined(_WIN32) || defined(MSDOS) || defined(__WINDOWS__)
 #elif defined(_POSIX_SOURCE) || defined(_POSIX_VERSION) || defined(__CYGWIN__) || defined(__MACH__)
-static void term_init(term_state * s) {
+static void term_init(term_state *s) {
     tcgetattr(STDIN_FILENO, &s->oldt);
     s->newt = s->oldt;
     s->newt.c_lflag &= ~(ICANON | ECHO);
@@ -112,7 +112,7 @@ static void term_init(term_state * s) {
 
 #if defined(_WIN32) || defined(MSDOS) || defined(__WINDOWS__)
 #elif defined(_POSIX_SOURCE) || defined(_POSIX_VERSION) || defined(__CYGWIN__) || defined(__MACH__)
-static void term_clear(term_state * s) {
+static void term_clear(term_state *s) {
     tcsetattr(STDIN_FILENO, TCSANOW, &s->oldt);
 }
 #endif
