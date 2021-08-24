@@ -15,6 +15,11 @@ openwatcom c++ 1.9 (win32, win386, dos32 pmode, dos4gw)
 borland c++ 5.5 (win32)
 ```
 
+注1：VC++ 2.0使用release版编译会报错，VC自己的bug
+
+注2：gcc低版本需要大量补丁用于支持现代化系统，[参见](https://github.com/jackyjkchen/legacy-gcc)
+
+
 不使用FASTMODE预处理，代码和数据段可控制在64KiB以内，额外支持：
 ```
 openwatcom c++ 1.9 (dos16 exe, dos16 com, win16)
@@ -76,7 +81,7 @@ python实现，使用查表法（相当于2048.c + FASTMODE）。支持python2.4
 已测试python版本和平台
 ```
 python 2.4-2.7 (linux, win32, freebsd, macos)
-python 3.0-3.9 (linux, win32, freebsd, macos)
+python 3.0+ (linux, win32, freebsd, macos)
 ```
 
 
