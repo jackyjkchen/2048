@@ -61,7 +61,6 @@ static void clear_screen(void)
   hStdOut = GetStdHandle( STD_OUTPUT_HANDLE );
   if (hStdOut == INVALID_HANDLE_VALUE) return;
 
-  /* Get the number of cells in the current buffer */
   if (full_clear == 1) {
       if (!GetConsoleScreenBufferInfo( hStdOut, &csbi )) return;
       cellCount = csbi.dwSize.X *csbi.dwSize.Y;
@@ -72,7 +71,6 @@ static void clear_screen(void)
       cellCount = 8192;
   }
 
-  /* Fill the entire buffer with spaces */
   if (!FillConsoleOutputCharacter(
     hStdOut,
     (TCHAR) ' ',
@@ -81,7 +79,6 @@ static void clear_screen(void)
     &count
     )) return;
 
-  /* Fill the entire buffer with the current colors and attributes */
   if (full_clear && !FillConsoleOutputAttribute(
     hStdOut,
     csbi.wAttributes,
@@ -90,7 +87,6 @@ static void clear_screen(void)
     &count
     )) return;
 
-  /* Move the cursor home */
   SetConsoleCursorPosition( hStdOut, homeCoords );
 }
 #elif defined(__BORLANDC__) || defined (__TURBOC__) || defined(__DJGPP__)
@@ -119,7 +115,6 @@ typedef struct {
 static const board_t ROW_MASK = W64LIT(0xFFFF);
 static const board_t COL_MASK = W64LIT(0x000F000F000F000F);
 
-/* MSVC compatibility: undefine max and min macros */
 #if defined(max)
 #undef max
 #endif
@@ -175,12 +170,6 @@ static void print_board(board_t board) {
     printf("-----------------------------\n");
 }
 
-/* Transpose rows/columns in a board:
-   0123       048c
-   4567  -->  159d
-   89ab       26ae
-   cdef       37bf
-*/
 static board_t transpose(board_t x)
 {
     board_t a1 = x & W64LIT(0xF0F00F0FF0F00F0F);
@@ -205,12 +194,6 @@ static int count_empty(board_t x)
     return (int)(x & 0xf);
 }
 
-/* We can perform state lookups one row at a time by using arrays with 65536 entries. */
-
-/* Move tables. Each row or compressed column is mapped to (oldrow^newrow) assuming row/col 0.
- *
- * Thus, the value is 0 if there is no move, and otherwise equals a value that can easily be
- * xor'ed into the current board state to update the board. */
 #ifdef FASTMODE
 #define TABLESIZE 65536
 static row_t row_left_table[TABLESIZE];
@@ -219,7 +202,6 @@ static float score_table[TABLESIZE];
 static float heur_score_table[TABLESIZE];
 #endif
 
-// Heuristic scoring settings
 static const float SCORE_LOST_PENALTY = 200000.0f;
 static const float SCORE_MONOTONICITY_POWER = 4.0f;
 static const float SCORE_MONOTONICITY_WEIGHT = 47.0f;
@@ -251,7 +233,6 @@ static void init_tables(void) {
         }
         score_table[row] = score;
 
-        // Heuristic score
         float sum = 0.0f;
         int empty = 0;
         int merges = 0;
@@ -305,7 +286,6 @@ static void init_tables(void) {
                 i--;
             } else if (line[i] == line[j]) {
                 if(line[i] != 0xf) {
-                    /* Pretend that 32768 + 32768 = 32768 (representational limit). */
                     line[i]++;
                 }
                 line[j] = 0;
@@ -367,7 +347,6 @@ static row_t execute_move_helper(row_t row) {
             i--;
         } else if (line[i] == line[j]) {
             if(line[i] != 0xf) {
-                /* Pretend that 32768 + 32768 = 32768 (representational limit). */
                 line[i]++;
             }
             line[j] = 0;
@@ -410,7 +389,6 @@ static board_t execute_move_row(board_t board, int move) {
 
 #endif
 
-/* Execute a move. */
 static board_t execute_move(int move, board_t board) {
     switch(move) {
 #ifdef FASTMODE
@@ -442,7 +420,6 @@ static int count_distinct_tiles(board_t board) {
         board >>= 4;
     }
 
-    // Don't count empty tiles.
     bitset >>= 1;
 
     int count = 0;
@@ -453,10 +430,9 @@ static int count_distinct_tiles(board_t board) {
     return count;
 }
 
-/* Optimizing the game */
 
 struct eval_state {
-    trans_table_t trans_table; // transposition table, to cache previously-seen moves
+    trans_table_t trans_table;
     int maxdepth;
     int curdepth;
     long cachehits;
@@ -506,7 +482,6 @@ static float score_heur_helper(board_t board) {
         line[2] = (row >>  8) & 0xf;
         line[3] = (row >> 12) & 0xf;
 
-        // Heuristic score
         float sum = 0.0f;
         int empty = 0;
         int merges = 0;
@@ -568,9 +543,6 @@ static uint32 score_board(board_t board) {
 #endif
 }
 
-// Statistics and controls
-// cprob: cumulative probability
-// don't recurse into a node with a cprob less than this threshold
 static const float CPROB_THRESH_BASE = 0.0001f;
 static const uint16 CACHE_DEPTH_LIMIT  = 15;
 
@@ -588,12 +560,6 @@ static float score_tilechoose_node(eval_state &state, board_t board, float cprob
 #endif
         if (i != state.trans_table.end()) {
             trans_table_entry_t entry = i->second;
-            /*
-            return heuristic from transposition table only if it means that
-            the node will have been evaluated to a minimum depth of state.depth_limit.
-            This will result in slightly fewer cache hits, but should not impact the
-            strength of the ai negatively.
-            */
             if(entry.depth <= state.curdepth)
             {
                 state.cachehits++;
@@ -664,7 +630,6 @@ float score_toplevel_move(board_t board, int move) {
     return res;
 }
 
-/* Find the best move for a given board. */
 int find_best_move(board_t board) {
     int move;
     float best = 0;

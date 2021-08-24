@@ -66,7 +66,6 @@ static void clear_screen(void)
   hStdOut = GetStdHandle( STD_OUTPUT_HANDLE );
   if (hStdOut == INVALID_HANDLE_VALUE) return;
 
-  /* Get the number of cells in the current buffer */
   if (full_clear == 1) {
       if (!GetConsoleScreenBufferInfo( hStdOut, &csbi )) return;
       cellCount = csbi.dwSize.X *csbi.dwSize.Y;
@@ -77,7 +76,6 @@ static void clear_screen(void)
       cellCount = 8192;
   }
 
-  /* Fill the entire buffer with spaces */
   if (!FillConsoleOutputCharacter(
     hStdOut,
     (TCHAR) ' ',
@@ -86,7 +84,6 @@ static void clear_screen(void)
     &count
     )) return;
 
-  /* Fill the entire buffer with the current colors and attributes */
   if (full_clear && !FillConsoleOutputAttribute(
     hStdOut,
     csbi.wAttributes,
@@ -95,7 +92,6 @@ static void clear_screen(void)
     &count
     )) return;
 
-  /* Move the cursor home */
   SetConsoleCursorPosition( hStdOut, homeCoords );
 }
 #elif defined(__BORLANDC__) || defined (__TURBOC__) || defined(__DJGPP__)
@@ -226,12 +222,6 @@ static int count_empty(board_t x)
     return (int)(x & 0xf);
 }
 
-/* We can perform state lookups one row at a time by using arrays with 65536 entries. */
-
-/* Move tables. Each row or compressed column is mapped to (oldrow^newrow) assuming row/col 0.
- *
- * Thus, the value is 0 if there is no move, and otherwise equals a value that can easily be
- * xor'ed into the current board state to update the board. */
 #ifdef FASTMODE
 #define TABLESIZE 65536
 static row_t row_left_table[TABLESIZE];
@@ -274,7 +264,6 @@ static void init_tables(void) {
                 i--;
             } else if (line[i] == line[j]) {
                 if(line[i] != 0xf) {
-                    /* Pretend that 32768 + 32768 = 32768 (representational limit). */
                     line[i]++;
                 }
                 line[j] = 0;
@@ -336,7 +325,6 @@ static row_t execute_move_helper(row_t row) {
             i--;
         } else if (line[i] == line[j]) {
             if(line[i] != 0xf) {
-                /* Pretend that 32768 + 32768 = 32768 (representational limit). */
                 line[i]++;
             }
             line[j] = 0;
@@ -379,7 +367,6 @@ static board_t execute_move_row(board_t board, int move) {
 
 #endif
 
-/* Execute a move. */
 static board_t execute_move(int move, board_t board) {
     switch(move) {
 #ifdef FASTMODE
