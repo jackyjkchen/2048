@@ -4,7 +4,7 @@
 
 通常的ISO C90跨平台实现，非严格C90内容仅为64位整数
 
-使用FASTMODE预处理，可启用快速模式，会增加512KiB的常驻内存开销（意味着dos必须使用dos扩展）
+使用FASTMODE预处理，可启用快速查表法，会增加512KiB的常驻内存开销（意味着dos必须使用dos扩展）
 
 已测试编译器和平台：
 ```
@@ -27,7 +27,7 @@ watcom c++ 11 (dos16 exe, dos16 com, win16)
 
 不使用64位整数的严格ISO C90实现
 
-使用FASTMODE预处理，可启用快速模式，会增加512KiB的常驻内存开销（意味着dos必须使用dos扩展）
+使用FASTMODE预处理，可启用快速查表法，会增加512KiB的常驻内存开销（意味着dos必须使用dos扩展）
 
 已测试编译器和平台：
 ```
@@ -75,7 +75,7 @@ AI的慢速实现，不使用C++ std::map cache，ISO C90实现，非严格C90�
 
 * 2048.py
 
-python实现，查表法（相当于2048.c + FASTMODE），已测试支持python2.4+，python3.0+，支持各种Posix变体和Win32。
+python实现，查表法（相当于2048.c + FASTMODE）。已测试支持python2.4+，python3.0+，支持各种Posix变体和Win32。
 
 
 * 2048.pas

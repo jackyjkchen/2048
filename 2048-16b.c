@@ -390,9 +390,9 @@ static board_t execute_move_col(board_t board, int move) {
     int i = 0;
     for (i = 0; i < 4; ++i) {
         row_t row = t[3-i];
-        if (move == 0) {
+        if (move == UP) {
             tmp = unpack_col(row ^ execute_move_helper(row));
-        } else if (move == 1) {
+        } else if (move == DOWN) {
             row_t rev_row = reverse_row(row);
             tmp =  unpack_col(row ^ reverse_row(execute_move_helper(rev_row)));
         }
@@ -410,9 +410,9 @@ static board_t execute_move_row(board_t board, int move) {
     int i = 0;
     for (i = 0; i < 4; ++i) {
         row_t row = t[3-i];
-        if (move == 2) {
+        if (move == LEFT) {
             t[3-i] ^= row ^ execute_move_helper(row);
-        } else if (move == 3) {
+        } else if (move == RIGHT) {
             row_t rev_row = reverse_row(row);
             t[3-i] ^= row ^ reverse_row(execute_move_helper(rev_row));
         }
