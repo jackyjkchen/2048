@@ -78,6 +78,13 @@ AI的慢速实现，不使用C++ std::map cache，ISO C90实现，非严格C90�
 python实现，使用查表法（相当于2048.c + FASTMODE）。已测试支持python2.4+，python3.0+，支持各种Posix变体和Win32。
 
 
+
 * 2048.pas
 
-现代pascal实现，使用查表法（相当于2048.c + FASTMODE）。用于free pascal、delphi等现代化pascal编译器。
+现代pascal实现，使用uint64+查表法（相当于2048.c + FASTMODE）。用于free pascal、delphi等现代化pascal编译器。
+
+
+
+* 2048-16b.pas
+
+不使用uint64的pascal实现，且不使用查表法（相当于2048-16b.c且不使用FASTMODE）。用于turbo pascal等旧版pascal编译器。

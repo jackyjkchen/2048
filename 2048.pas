@@ -169,7 +169,7 @@ begin
     until row = 65535; 
 end;
 
-function execute_move_col(board : board_t; table : row_table_t) : board_t;
+function execute_move_col(board : board_t; var table : row_table_t) : board_t;
 var
     ret, t : board_t;
 begin
@@ -182,7 +182,7 @@ begin
     execute_move_col := ret;
 end;
 
-function execute_move_row(board : board_t; table : row_table_t) : board_t;
+function execute_move_row(board : board_t; var table : row_table_t) : board_t;
 var
     ret : board_t;
 begin
@@ -211,7 +211,7 @@ begin
     execute_move := ret
 end;
 
-function score_helper(board : board_t; table : score_table_t) : uint32;
+function score_helper(board : board_t; var table : score_table_t) : uint32;
 begin
     score_helper := table[(board shr  0) and ROW_MASK] +
                     table[(board shr 16) and ROW_MASK] +
@@ -361,8 +361,7 @@ begin
         end;
 
         tile := draw_tile();
-        if tile = 2 then
-        begin 
+        if tile = 2 then begin
             scorepenalty := scorepenalty + 4;
             retract_penalty_vec[retract_pos] := 4;
         end else begin

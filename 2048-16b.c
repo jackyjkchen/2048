@@ -165,12 +165,12 @@ enum {
 typedef int (*get_move_func_t)(board_t);
 
 static board_t unpack_col(row_t row) {
-    board_t tmp;
-    tmp.r0 = (row & 0xF000) >> 12;
-    tmp.r1 = (row & 0x0F00) >>  8;
-    tmp.r2 = (row & 0x00F0) >>  4;
-    tmp.r3 = (row & 0x000F) >>  0;
-    return tmp;
+    board_t board;
+    board.r0 = (row & 0xF000) >> 12;
+    board.r1 = (row & 0x0F00) >>  8;
+    board.r2 = (row & 0x00F0) >>  4;
+    board.r3 = (row & 0x000F) >>  0;
+    return board;
 }
 
 static row_t reverse_row(row_t row) {
