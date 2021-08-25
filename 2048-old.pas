@@ -339,14 +339,14 @@ begin
     insert_tile_rand(board, draw_tile);
 end;
 
-function compare_board(var b1 : board_t; var b2 : board_t; length : integer) : boolean;
+function compare_board(var b1 : board_t; var b2 : board_t) : boolean;
 var
     ret : boolean;
     i   : integer;
 label 1;
 begin
     ret := true;
-    for i := 0 to (length - 1) do
+    for i := 0 to 3 do
     begin
         if b1[i] <>  b2[i] then
         begin
@@ -395,7 +395,7 @@ begin
         begin
             move(board, newboard, sizeof(board_t));
             execute_move(_move, newboard);
-            if not compare_board(board, newboard, 4) then
+            if not compare_board(board, newboard) then
                 goto 2;
             _move := _move + 1;
         end;
@@ -429,7 +429,7 @@ begin
 
         move(board, newboard, sizeof(board_t));
         execute_move(_move, newboard);
-        if compare_board(board, newboard, 4) then
+        if compare_board(board, newboard) then
         begin
             moveno := moveno - 1;
             goto 1;
