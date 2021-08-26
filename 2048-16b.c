@@ -30,7 +30,7 @@ typedef unsigned int uint32;
 #include <conio.h>
 #elif defined(MSDOS) || defined(__WINDOWS__)
 #include <conio.h>
-#elif defined(_POSIX_SOURCE) || defined(_POSIX_VERSION) || defined(__CYGWIN__) || defined(__MACH__)
+#elif defined(__linux__) || defined(__unix__) || defined(__CYGWIN__) || defined(__MACH__)
 #include <unistd.h>
 #include <termios.h>
 #endif
@@ -87,7 +87,7 @@ static void clear_screen(void) {
 #else
 #define clear_screen()  system("cls");
 #endif
-#elif defined(_POSIX_SOURCE) || defined(_POSIX_VERSION) || defined(__CYGWIN__) || defined(__MACH__)
+#elif defined(__linux__) || defined(__unix__) || defined(__CYGWIN__) || defined(__MACH__)
 #define clear_screen()  printf("\033[2J\033[H");
 #else
 #define clear_screen()
@@ -96,7 +96,7 @@ static void clear_screen(void) {
 #if defined(_WIN32) || defined(MSDOS) || defined(__WINDOWS__)
 #define TERM_INIT
 #define TERM_CLEAR
-#elif defined(_POSIX_SOURCE) || defined(_POSIX_VERSION) || defined(__CYGWIN__) || defined(__MACH__)
+#elif defined(__linux__) || defined(__unix__) || defined(__CYGWIN__) || defined(__MACH__)
 typedef struct {
     struct termios oldt, newt;
 } term_state;

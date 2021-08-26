@@ -1,49 +1,7 @@
 program main_2048
-use, intrinsic :: iso_c_binding, only : c_int, c_long, c_char, c_null_char
 implicit none
 
 interface
-
-#ifdef _WIN32
-function c_getch() bind(c, name='_getch')
-#else
-function c_getch() bind(c, name='getchar')
-#endif
-    import :: c_int
-    integer(c_int) :: c_getch
-end function c_getch
-
-subroutine c_srand(seed) bind(c, name='srand')
-    import :: c_int
-    integer(c_int) :: seed
-end subroutine c_srand
-
-function c_rand() bind(c, name='rand')
-    import :: c_int
-    integer(c_int) :: c_rand
-end function c_rand
-
-function c_time(tloc) bind(c, name='time')
-    import :: c_long
-    integer(kind=c_long), intent(in), value :: tloc
-    integer(kind=c_long) :: c_time
-end function c_time
-
-function c_system(cmd) bind(c, name='system')
-    import :: c_int, c_char
-    character(c_char), intent(in) :: cmd(*)
-    integer(c_int) :: c_system
-end function c_system
-
-#ifdef _WIN32
-#define TERM_INIT
-#define TERM_CLEAR
-#define CLEAR_SCREEN call exec_cmd(c_char_"cls"//c_null_char)
-#else
-#define TERM_INIT call exec_cmd(c_char_"stty -echo cbreak </dev/tty >/dev/tty 2>&1"//c_null_char)
-#define TERM_CLEAR call exec_cmd(c_char_"stty echo -cbreak </dev/tty >/dev/tty 2>&1"//c_null_char)
-#define CLEAR_SCREEN call exec_cmd(c_char_"clear"//c_null_char)
-#endif
 
 #define UP      0
 #define DOWN    1
@@ -59,46 +17,42 @@ integer(2) :: row_right_table(-32768:32767)
 integer(4) :: score_table(-32768:32767)
 #endif
 
-integer(8), parameter :: ROW_MASK = int(Z'FFFF', kind=8)
-integer(8), parameter :: COL_MASK = int(Z'000F000F000F000F', kind=8)
+integer(8), parameter :: ROW_MASK = int(65535, kind=8)
+integer(8), parameter :: COL_MASK = ior(ishft(int(983055, kind=8), 32), int(983055, kind=8))
 
-integer(2), parameter :: Z000F    = int(z'000F', kind=2)
-integer(2), parameter :: Z00F0    = int(z'00F0', kind=2)
-integer(2), parameter :: Z0F00    = int(z'0F00', kind=2)
+integer(2), parameter :: Z000F    = int(15, kind=2)
+integer(2), parameter :: Z00F0    = int(240, kind=2)
+integer(2), parameter :: Z0F00    = int(3840, kind=2)
 
 ! workaround for -frange-check
-integer(8), parameter :: ZF0F00F0FF0F00F0F = ior(ishft(int(z'F0F00F0F', kind=8), 32), int(z'F0F00F0F', kind=8))
-integer(8), parameter :: Z0000F0F00000F0F0 = int(z'0000F0F00000F0F0', kind=8)
-integer(8), parameter :: Z0F0F00000F0F0000 = int(z'0F0F00000F0F0000', kind=8)
-integer(8), parameter :: ZFF00FF0000FF00FF = ior(ishft(int(z'FF00FF00', kind=8), 32), int(z'00FF00FF', kind=8))
-integer(8), parameter :: Z00FF00FF00000000 = int(z'00FF00FF00000000', kind=8)
-integer(8), parameter :: Z00000000FF00FF00 = int(z'00000000FF00FF00', kind=8)
+integer(8), parameter :: ZF0F00F0F = ior(ishft(int(61680, kind=8), 16), int(3855,  kind=8))
+integer(8), parameter :: ZFF00FF00 = ior(ishft(int(65280, kind=8), 16), int(65280, kind=8))
 
-integer(8), parameter :: Z3333333333333333 = int(z'3333333333333333', kind=8)
-integer(8), parameter :: Z1111111111111111 = int(z'1111111111111111', kind=8)
+integer(8), parameter :: ZF0F00F0FF0F00F0F = ior(ishft(int(ZF0F00F0F,  kind=8), 32), int(ZF0F00F0F,  kind=8))
+integer(8), parameter :: Z0000F0F00000F0F0 = ior(ishft(int(61680,      kind=8), 32), int(61680,      kind=8))
+integer(8), parameter :: Z0F0F00000F0F0000 = ior(ishft(int(252641280,  kind=8), 32), int(252641280,  kind=8))
+integer(8), parameter :: ZFF00FF0000FF00FF = ior(ishft(int(ZFF00FF00,  kind=8), 32), int(16711935,   kind=8))
+integer(8), parameter :: Z00FF00FF00000000 = ior(ishft(int(16711935,   kind=8), 32), int(0,          kind=8))
+integer(8), parameter :: Z00000000FF00FF00 = ior(ishft(int(0,          kind=8), 32), int(ZFF00FF00,  kind=8))
+
+integer(8), parameter :: Z3333333333333333 = ior(ishft(int(858993459,  kind=8), 32), int(858993459,  kind=8))
+integer(8), parameter :: Z1111111111111111 = ior(ishft(int(286331153,  kind=8), 32), int(286331153,  kind=8))
 
 call main()
 
 contains
 
-subroutine exec_cmd(cmd)
-    character(c_char), intent(in) :: cmd(*)
-    integer(kind=c_int) :: ret
-
-    ret = c_system(cmd)
-end subroutine exec_cmd
-
 function unif_random(n)
-    integer(4), value, intent(in) :: n
+    integer(4), intent(in) :: n
     integer(4) :: unif_random
-    integer(4) :: rd
+    external c_rand
+    integer(4) :: c_rand
 
-    rd = c_rand()
-    unif_random = mod(rd, n)
+    unif_random = mod(c_rand(), n)
 end function unif_random
 
 function unpack_col(row)
-    integer(2), value, intent(in) :: row
+    integer(2), intent(in) :: row
     integer(8) :: unpack_col, t0, t1, t2, t3
 
     t0 = iand(int(row, kind=8), ROW_MASK)
@@ -110,7 +64,7 @@ function unpack_col(row)
 end function unpack_col
 
 function reverse_row(row)
-    integer(2), value, intent(in) :: row
+    integer(2), intent(in) :: row
     integer(2) :: reverse_row, t0, t1, t2, t3
 
     t0 = ishft(row, -12)
@@ -122,20 +76,22 @@ function reverse_row(row)
 end function reverse_row
 
 subroutine print_board(board)
-    integer(8), value :: board
+    integer(8), intent(in) :: board
+    integer(8) :: board_
     integer(2) :: i, j, power_val
 
+    board_ = board
     print *, '-----------------------------'
     do i = 0, 3
         do j = 0, 3
-            power_val = iand(board, int(Z000F, kind=8))
+            power_val = iand(board_, int(Z000F, kind=8))
 
             if (power_val == 0) then
                 write(*, fmt='(a, 6x)', advance='no') '|'
             else
                 write(*, fmt='(a, i6)', advance='no') '|', ishft(1, power_val)
             end if
-            board = ishft(board, -4)
+            board_ = ishft(board_, -4)
         end do
         print *, '|'
     end do
@@ -143,7 +99,7 @@ subroutine print_board(board)
 end subroutine print_board
 
 function transpose_board(x)
-    integer(8), value, intent(in) :: x
+    integer(8), intent(in) :: x
     integer(8) :: transpose_board, a1, a2, a3, a, b1, b2, b3
 
     a1 = iand(x, ZF0F00F0FF0F00F0F)
@@ -158,17 +114,19 @@ function transpose_board(x)
 end function transpose_board
 
 function count_empty(x)
-    integer(8), value :: x
+    integer(8), intent(in) :: x
+    integer(8) :: x_
     integer(4) :: count_empty
 
-    x = ior(x, iand(ishft(x, -2), Z3333333333333333))
-    x = ior(x, ishft(x, -1))
-    x = iand(not(x), Z1111111111111111)
-    x = x + ishft(x, -32)
-    x = x + ishft(x, -16)
-    x = x + ishft(x, -8)
-    x = x + ishft(x, -4)
-    count_empty = iand(x, int(Z000F, kind=8))
+    x_ = x
+    x_ = ior(x_, iand(ishft(x_, -2), Z3333333333333333))
+    x_ = ior(x_, ishft(x_, -1))
+    x_ = iand(not(x_), Z1111111111111111)
+    x_ = x_ + ishft(x_, -32)
+    x_ = x_ + ishft(x_, -16)
+    x_ = x_ + ishft(x_, -8)
+    x_ = x_ + ishft(x_, -4)
+    count_empty = iand(x_, int(Z000F, kind=8))
 end function count_empty
 
 #ifdef FASTMODE
@@ -244,7 +202,7 @@ end subroutine init_tables
 
 #ifdef FASTMODE
 function execute_move_col(board, table)
-    integer(8), value, intent(in) :: board
+    integer(8), intent(in) :: board
     integer(2) :: table(-32768:32767)
     integer(8) :: execute_move_col
     integer(8) :: ret, t
@@ -259,7 +217,7 @@ function execute_move_col(board, table)
 end function execute_move_col
 
 function execute_move_row(board, table)
-    integer(8), value, intent(in) :: board
+    integer(8), intent(in) :: board
     integer(2) :: table(-32768:32767)
     integer(8) :: execute_move_row
     integer(8) :: ret
@@ -274,7 +232,7 @@ end function execute_move_row
 
 #else
 function execute_move_helper(row)
-    integer(2), value, intent(in) :: row
+    integer(2), intent(in) :: row
     integer(2) :: execute_move_helper
     integer(2) :: i, j, t0, t1, t2, t3
     integer(2) :: row_line(0:3)
@@ -316,8 +274,8 @@ function execute_move_helper(row)
 end function execute_move_helper
 
 function execute_move_col(board, move)
-    integer(8), value, intent(in) :: board
-    integer(4), value, intent(in) :: move
+    integer(8), intent(in) :: board
+    integer(4), intent(in) :: move
     integer(8) :: execute_move_col
     integer(8) :: ret, t
     integer(2) :: row, rev_row, i
@@ -337,8 +295,8 @@ function execute_move_col(board, move)
 end function execute_move_col
 
 function execute_move_row(board, move)
-    integer(8), value, intent(in):: board
-    integer(4), value, intent(in) :: move
+    integer(8), intent(in):: board
+    integer(4), intent(in) :: move
     integer(8) :: execute_move_row
     integer(8) :: ret
     integer(2) :: row, rev_row, i
@@ -358,8 +316,8 @@ end function execute_move_row
 #endif
 
 function execute_move(move, board) 
-    integer(4), value, intent(in) :: move
-    integer(8), value, intent(in) :: board
+    integer(4), intent(in) :: move
+    integer(8), intent(in) :: board
     integer(8) :: execute_move
     integer(8) :: ret
 
@@ -386,7 +344,7 @@ end function execute_move
 
 #ifdef FASTMODE
 function score_helper(board, table)
-    integer(8), value, intent(in) :: board
+    integer(8), intent(in) :: board
     integer(4) :: table(-32768:32767)
     integer(4) :: score_helper
     integer(4) :: t0, t1, t2, t3
@@ -398,7 +356,7 @@ function score_helper(board, table)
 end function score_helper
 #else
 function score_helper(board)
-    integer(8), value, intent(in) :: board
+    integer(8), intent(in) :: board
     integer(4) :: score_helper
     integer(4) :: score
     integer(2) :: row, row_line(0:3), i, j, rank
@@ -423,7 +381,7 @@ end function score_helper
 #endif
 
 function score_board(board)
-    integer(8), value, intent(in) :: board
+    integer(8), intent(in) :: board
     integer(4) :: score_board
 #ifdef FASTMODE
     score_board = score_helper(board, score_table)
@@ -433,12 +391,14 @@ function score_board(board)
 end function score_board
 
 function ask_for_move(board)
-    integer(8), value, intent(in) :: board
+    integer(8), intent(in) :: board
     integer(4) :: ask_for_move
     integer(4) :: ret
     character :: movechar
     integer :: pos
     character(len=9) :: allmoves = 'wsadkjhl'
+    external c_getch
+    integer :: c_getch
 
     call print_board(board)
     ret = -1
@@ -476,27 +436,29 @@ function draw_tile()
 end function draw_tile
 
 function insert_tile_rand(board, tile)
-    integer(8), value, intent(in) :: board
-    integer(8), value :: tile
+    integer(8), intent(in) :: board
+    integer(8), intent(in) :: tile
     integer(8) :: insert_tile_rand
+    integer(8) :: tile_
     integer(8) :: tmp
     integer(1) :: pos
 
+    tile_ = tile
     pos = unif_random(count_empty(board))
     tmp = board
     do while (1>0)
         do while (iand(tmp, int(Z000F, kind=8)) /= 0)
             tmp = ishft(tmp, -4)
-            tile = ishft(tile, 4)
+            tile_ = ishft(tile_, 4)
         end do
         if (pos == 0) then
             exit
         end if
         pos = pos - 1
         tmp = ishft(tmp, -4)
-        tile = ishft(tile, 4)
+        tile_ = ishft(tile_, 4)
     end do
-    insert_tile_rand = ior(board, tile)
+    insert_tile_rand = ior(board, tile_)
 end function insert_tile_rand
 
 function initial_board()
@@ -518,6 +480,7 @@ subroutine play_game()
     integer(8) :: retract_vec(0:63)
     integer(1) :: retract_penalty_vec(0:63)
     integer(4) :: retract_pos, retract_num
+    external c_clear_screen
 
     board = initial_board()
     scorepenalty = 0
@@ -528,7 +491,7 @@ subroutine play_game()
     retract_num = 0
 
     do while (1 > 0)
-        CLEAR_SCREEN
+        call c_clear_screen()
         move = 0
         do while (move < 4)
             if (execute_move(move, board) /= board) then
@@ -594,13 +557,14 @@ subroutine play_game()
 end subroutine play_game
 
 subroutine main()
-    TERM_INIT
-    call c_srand(int(c_time(int(0, kind=c_long)), kind=c_int))
+    external c_term_init, c_term_clear
+
+    call c_term_init()
 #ifdef FASTMODE
     call init_tables()
 #endif
     call play_game()
-    TERM_CLEAR
+    call c_term_clear()
 end subroutine main
 
 end program main_2048

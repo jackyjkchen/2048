@@ -128,3 +128,19 @@ gcc-4.3+ (linux, win32, freebsd, macos)
 
 注1：gfortran不感知_WIN32等C语言预处理器，WIN32平台要在命令行显式指定-D_WIN32。
 
+
+* 2048.F90
+
+现代fortran90实现，与2048.c一样使用FSASTMODE预处理判定是否使用快速查表法。由于F95没有提供iso_c_binding，所以系统相关功能（无回显输入，清除屏幕），由f90deps.c提供
+
+已测试编译器和平台
+```
+gcc-4.0+ (linux, win32, freebsd, macos)
+```
+
+注1：编译命令行
+```
+gcc -std=c90 -O2 -c f90deps.c -o f90deps.o
+gfortran -DFASTMODE -std=f95 -O2 f90deps.o 2048.F90 -o 2048
+```
+
