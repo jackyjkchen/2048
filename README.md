@@ -98,31 +98,33 @@ free pascal 2.6.4/3.0.4/3.2.2 (linux, win32, freebsd, macos)
 * 2048-16b.pas
 
 不使用uint64的pascal实现，且不使用查表法（相当于2048-16b.c且不使用FASTMODE）。用于turbo pascal 7.x。
+
 已测试编译器和平台
 ```
 free pascal 2.6.4/3.0.4/3.2.2 (linux, win32, freebsd, macos)
 turbo pascal 7.1 (dos16 exe)
-
 ```
 
 
 * 2048-old.pas
 
 不使用uint64、break、continue、uses strings的pascal实现，且不使用查表法（相当于2048-16b.c且不使用FASTMODE）。用于turbo pascal 6以下等旧版pascal编译器。
+
 已测试编译器和平台
 ```
 free pascal 2.6.4/3.0.4/3.2.2 (linux, win32, freebsd, macos)
 turbo pascal 4.0/5.5/6.0/7.1 (dos16 exe)
-
 ```
 
 
 * 2048.F03
 
 现代fortran2003实现，与2048.c一样使用FSASTMODE预处理判定是否使用快速查表法。
+
 已测试编译器和平台
 ```
 gcc-4.3+ (linux, win32, freebsd, macos)
 ```
+
 注1：gfortran不感知_WIN32等C语言预处理器，WIN32平台要在命令行显式指定-D_WIN32。
 

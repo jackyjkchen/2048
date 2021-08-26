@@ -1,4 +1,4 @@
-module module_2048
+program main_2048
 use, intrinsic :: iso_c_binding, only : c_int, c_long, c_char, c_null_char
 implicit none
 
@@ -35,12 +35,6 @@ function c_system(cmd) bind(c, name='system')
     integer(c_int) :: c_system
 end function c_system
 
-function get_move_func_t(board)
-    integer(8), value :: board
-    integer(4) :: get_move_func_t
-end function get_move_func_t
-
-
 #ifdef _WIN32
 #define TERM_INIT
 #define TERM_CLEAR
@@ -76,8 +70,9 @@ integer(2) :: row_right_table(-32768:32767)
 integer(4) :: score_table(-32768:32767)
 #endif
 
-contains
+call main()
 
+contains
 
 subroutine exec_cmd(cmd)
     character(c_char), intent(in) :: cmd(*)
@@ -87,7 +82,7 @@ subroutine exec_cmd(cmd)
 end subroutine exec_cmd
 
 function unif_random(n)
-    integer(4), value :: n
+    integer(4), value, intent(in) :: n
     integer :: unif_random
     integer(4) :: rd
 
@@ -96,7 +91,7 @@ function unif_random(n)
 end function unif_random
 
 function unpack_col(row)
-    integer(2), value :: row
+    integer(2), value, intent(in) :: row
     integer(8) :: unpack_col, t0, t1, t2, t3
 
     t0 = iand(int(row, kind=8), ROW_MASK)
@@ -108,7 +103,7 @@ function unpack_col(row)
 end function unpack_col
 
 function reverse_row(row)
-    integer(2), value :: row
+    integer(2), value, intent(in) :: row
     integer(2) :: reverse_row, t0, t1, t2, t3
 
     t0 = ishft(row, -12)
@@ -140,7 +135,7 @@ subroutine print_board(board)
 end subroutine print_board
 
 function transpose_board(x)
-    integer(8), value :: x
+    integer(8), value, intent(in) :: x
     integer(8) :: transpose_board, a1, a2, a3, a, b1, b2, b3
 
     a1 = iand(x, ZF0F00F0FF0F00F0F)
@@ -241,7 +236,7 @@ end subroutine init_tables
 
 #ifdef FASTMODE
 function execute_move_col(board, table)
-    integer(8), value :: board
+    integer(8), value, intent(in) :: board
     integer(2) :: table(-32768:32767)
     integer(8) :: execute_move_col
     integer(8) :: ret, t
@@ -271,7 +266,7 @@ end function execute_move_row
 
 #else
 function execute_move_helper(row)
-    integer(2), value :: row
+    integer(2), value, intent(in) :: row
     integer(2) :: execute_move_helper
     integer(2) :: i, j, t0, t1, t2, t3
     integer(2) :: row_line(0:3)
@@ -313,8 +308,8 @@ function execute_move_helper(row)
 end function execute_move_helper
 
 function execute_move_col(board, move)
-    integer(8), value :: board
-    integer(4), value :: move
+    integer(8), value, intent(in) :: board
+    integer(4), value, intent(in) :: move
     integer(8) :: execute_move_col
     integer(8) :: ret, t
     integer(2) :: row, rev_row, i
@@ -334,8 +329,8 @@ function execute_move_col(board, move)
 end function execute_move_col
 
 function execute_move_row(board, move)
-    integer(8), value :: board
-    integer(4), value :: move
+    integer(8), value, intent(in):: board
+    integer(4), value, intent(in) :: move
     integer(8) :: execute_move_row
     integer(8) :: ret
     integer(2) :: row, rev_row, i
@@ -355,8 +350,8 @@ end function execute_move_row
 #endif
 
 function execute_move(move, board) 
-    integer(4), value :: move
-    integer(8), value :: board
+    integer(4), value, intent(in) :: move
+    integer(8), value, intent(in) :: board
     integer(8) :: execute_move
     integer(8) :: ret
 
@@ -383,7 +378,7 @@ end function execute_move
 
 #ifdef FASTMODE
 function score_helper(board, table)
-    integer(8), value :: board
+    integer(8), value, intent(in) :: board
     integer(4) :: table(-32768:32767)
     integer(4) :: score_helper
     integer(4) :: t0, t1, t2, t3
@@ -395,7 +390,7 @@ function score_helper(board, table)
 end function score_helper
 #else
 function score_helper(board)
-    integer(8), value :: board
+    integer(8), value, intent(in) :: board
     integer(4) :: score_helper
     integer(4) :: score
     integer(2) :: row, row_line(0:3), i, j, rank
@@ -420,7 +415,7 @@ end function score_helper
 #endif
 
 function score_board(board)
-    integer(8), value :: board
+    integer(8), value, intent(in) :: board
     integer(4) :: score_board
 #ifdef FASTMODE
     score_board = score_helper(board, score_table)
@@ -430,7 +425,7 @@ function score_board(board)
 end function score_board
 
 function ask_for_move(board)
-    integer(8), value :: board
+    integer(8), value, intent(in) :: board
     integer(4) :: ask_for_move
     integer(4) :: ret
     character :: movechar
@@ -473,8 +468,8 @@ function draw_tile()
 end function draw_tile
 
 function insert_tile_rand(board, tile)
-    integer(8), value :: board
-    integer(8) :: tile
+    integer(8), value, intent(in) :: board
+    integer(8), value :: tile
     integer(8) :: insert_tile_rand
     integer(8) :: tmp
     integer(1) :: pos
@@ -508,8 +503,7 @@ function initial_board()
     initial_board = insert_tile_rand(board, tile)
 end function initial_board
 
-subroutine play_game(get_move)
-    procedure(get_move_func_t) :: get_move
+subroutine play_game()
     integer(8) :: board, newboard, tile
     integer(4) :: scorepenalty, current_score, last_score, moveno, move
     integer(8) :: retract_vec(0:63)
@@ -542,7 +536,7 @@ subroutine play_game(get_move)
         print '("Move ", i0, ", current score=", i0, "(+", i0, ")")', moveno, current_score, (current_score - last_score)
         last_score = current_score
 
-        move = get_move(board)
+        move = ask_for_move(board)
         if (move < 0) then
             exit
         end if
@@ -596,15 +590,8 @@ subroutine main()
 #ifdef FASTMODE
     call init_tables()
 #endif
-    call play_game(ask_for_move)
+    call play_game()
     TERM_CLEAR
 end subroutine main
 
-end module module_2048
-
-
-program main_2048
-use module_2048
-
-call main()
 end program main_2048
