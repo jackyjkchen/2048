@@ -103,36 +103,33 @@ static void clear_screen(void) {
 #endif
 
 #if defined(_WIN32) || defined(MSDOS) || defined(__WINDOWS__)
+#define TERM_INIT
+#define TERM_CLEAR
 #elif defined(_POSIX_SOURCE) || defined(_POSIX_VERSION) || defined(__CYGWIN__) || defined(__MACH__)
 typedef struct {
     struct termios oldt, newt;
 } term_state;
-#endif
 
-#if defined(_WIN32) || defined(MSDOS) || defined(__WINDOWS__)
-#elif defined(_POSIX_SOURCE) || defined(_POSIX_VERSION) || defined(__CYGWIN__) || defined(__MACH__)
 static void term_init(term_state *s) {
     tcgetattr(STDIN_FILENO, &s->oldt);
     s->newt = s->oldt;
     s->newt.c_lflag &= ~(ICANON | ECHO);
     tcsetattr(STDIN_FILENO, TCSANOW, &s->newt);
 }
-#endif
 
-#if defined(_WIN32) || defined(MSDOS) || defined(__WINDOWS__)
-#elif defined(_POSIX_SOURCE) || defined(_POSIX_VERSION) || defined(__CYGWIN__) || defined(__MACH__)
 static void term_clear(term_state *s) {
     tcsetattr(STDIN_FILENO, TCSANOW, &s->oldt);
 }
+
+#define TERM_INIT term_state s;term_init(&s);
+#define TERM_CLEAR term_clear(&s);
 #endif
 
 static int get_ch(void) {
-#if defined(_WIN32) || defined(MSDOS) || defined(__WINDOWS__)
-#if defined(_MSC_VER) && _MSC_VER >= 900
+#if defined(_WIN32)
     return _getch();
-#else
+#elif defined(MSDOS) || defined(__WINDOWS__)
     return getch();
-#endif
 #else
     return getchar();
 #endif
@@ -264,7 +261,7 @@ static void init_tables(void) {
 
         row_left_table[row] = row ^ result;
         row_right_table[rev_row] = rev_row ^ rev_result;
-    } while (row++ != 65535);
+    } while (row++ != TABLESIZE - 1);
 }
 #endif
 
@@ -398,7 +395,7 @@ static uint32 score_helper(board_t board) {
     uint32 score = 0;
 
     for (j = 0; j < 4; ++j) {
-        row_t row = (row_t)(board >> (j << 4));
+        row_t row = (row_t)((board >> (j << 4)) & ROW_MASK);
 
         line[0] = (row >> 0) & 0xf;
         line[1] = (row >> 4) & 0xf;
@@ -545,21 +542,12 @@ void play_game(get_move_func_t get_move) {
 }
 
 int main() {
-#if defined(_WIN32) || defined(MSDOS) || defined(__WINDOWS__)
-#elif defined(_POSIX_SOURCE) || defined(_POSIX_VERSION) || defined(__CYGWIN__) || defined(__MACH__)
-    term_state s;
-
-    term_init(&s);
-#endif
-
+    TERM_INIT;
 #ifdef FASTMODE
     init_tables();
 #endif
     play_game(ask_for_move);
 
-#if defined(_WIN32) || defined(MSDOS) || defined(__WINDOWS__)
-#elif defined(_POSIX_SOURCE) || defined(_POSIX_VERSION) || defined(__CYGWIN__) || defined(__MACH__)
-    term_clear(&s);
-#endif
+    TERM_CLEAR;
     return 0;
 }

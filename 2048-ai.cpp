@@ -298,7 +298,7 @@ static void init_tables(void) {
 
         row_left_table[row] = row ^ result;
         row_right_table[rev_row] = rev_row ^ rev_result;
-    } while (row++ != 65535);
+    } while (row++ != TABLESIZE - 1);
 }
 #endif
 
@@ -463,7 +463,7 @@ static float score_helper(board_t board) {
     float score = 0.0f;
 
     for (j = 0; j < 4; ++j) {
-        row_t row = (row_t)(board >> (j << 4));
+        row_t row = (row_t)((board >> (j << 4)) & ROW_MASK);
 
         line[0] = (row >> 0) & 0xf;
         line[1] = (row >> 4) & 0xf;
@@ -486,7 +486,7 @@ static float score_heur_helper(board_t board) {
     float heur_score = 0.0f;
 
     for (j = 0; j < 4; ++j) {
-        row_t row = (row_t)(board >> (j << 4));
+        row_t row = (row_t)((board >> (j << 4)) & ROW_MASK);
 
         line[0] = (row >> 0) & 0xf;
         line[1] = (row >> 4) & 0xf;

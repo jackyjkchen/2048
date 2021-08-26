@@ -103,10 +103,10 @@ var
 
 procedure init_tables;
 var
-  row, rev_row, row_result, rev_result : row_t;
-  i, j, rank : integer;
-  row_line   : array[0..3] of byte;
-  score      : uint32;
+    row, rev_row, row_result, rev_result : row_t;
+    i, j, rank : integer;
+    row_line   : array[0..3] of byte;
+    score      : uint32;
 begin
     row := 0;
     rev_row := 0;
@@ -123,7 +123,7 @@ begin
         begin
             rank := row_line[i];
             if rank >= 2 then
-                score  := score + ((rank - 1) * (1 shl rank));
+                score := score + ((rank - 1) * (1 shl rank));
         end;
         score_table[row] := score;
 
@@ -165,7 +165,7 @@ begin
         row_right_table[rev_row] := rev_row xor rev_result;
 
         row := row + 1;
-    until row = 65535;
+    until row = (TABLESIZE - 1);
 end;
 
 function execute_move_col(board : board_t; var table : row_table_t) : board_t;
@@ -225,10 +225,10 @@ end;
 
 function ask_for_move(board : board_t) : integer;
 var
-  movechar : char;
-  _pos     : pchar;
+    movechar : char;
+    _pos     : pchar;
 const
-  allmoves : pchar = 'wsadkjhl';
+    allmoves : pchar = 'wsadkjhl';
 begin
     print_board(board);
     while true do
@@ -259,8 +259,8 @@ end;
 
 function insert_tile_rand(board : board_t; tile : board_t) : board_t;
 var
-  index : integer;
-  tmp : board_t;
+    index : integer;
+    tmp : board_t;
 begin
     index := unif_random(count_empty(board));
     tmp := board;
@@ -281,7 +281,7 @@ end;
 
 function initial_board : board_t;
 var
-  board : board_t;
+    board : board_t;
 begin
     board := board_t((draw_tile) shl (unif_random(16) shl 2));
     initial_board := insert_tile_rand(board, draw_tile);

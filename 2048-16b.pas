@@ -64,7 +64,7 @@ end;
 
 procedure transpose(var x : board_t);
 var
-  a1_0, a1_1, a1_2, a1_3, a2_1, a2_3, a3_0, a3_2, r0, r1, r2, r3, b1_0, b1_1, b1_2, b1_3, b2_0, b2_1, b3_2, b3_3 : word;
+    a1_0, a1_1, a1_2, a1_3, a2_1, a2_3, a3_0, a3_2, r0, r1, r2, r3, b1_0, b1_1, b1_2, b1_3, b2_0, b2_1, b3_2, b3_3 : word;
 begin
     a1_0 := x[0] and $F0F0;
     a1_1 := x[1] and $0F0F;
@@ -94,7 +94,7 @@ end;
 
 function count_empty(board : board_t) : integer;
 var
-  sum, x, i : word;
+    sum, x, i : word;
 begin
     sum := 0;
     x := 0;
@@ -113,8 +113,8 @@ end;
 
 function execute_move_helper(row : row_t) : row_t;
 var
-  i, j     : integer;
-  row_line : array[0..3] of byte;
+    i, j     : integer;
+    row_line : array[0..3] of byte;
 begin
     row_line[0] := (row shr  0) and $f;
     row_line[1] := (row shr  4) and $f;
@@ -152,9 +152,9 @@ end;
 
 procedure execute_move_col(var board : board_t; _move : integer);
 var
-  tran, tmp : board_t;
-  i : integer;
-  row, rev_row : row_t;
+    tran, tmp : board_t;
+    i : integer;
+    row, rev_row : row_t;
 begin
     move(board, tran, sizeof(board_t));
     transpose(tran);
@@ -176,8 +176,8 @@ end;
 
 procedure execute_move_row(var board : board_t; _move : integer);
 var
-  i : integer;
-  row, rev_row : row_t;
+    i : integer;
+    row, rev_row : row_t;
 begin
     for i := 0 to 3 do
     begin
@@ -201,11 +201,11 @@ end;
 
 function score_helper(board : board_t) : longint;
 var
-  i, j : integer;
-  row_line : array[0..3] of byte;
-  score : longint;
-  row : row_t;
-  rank : byte;
+    i, j : integer;
+    row_line : array[0..3] of byte;
+    score : longint;
+    row : row_t;
+    rank : byte;
 begin
     score := 0;
     for j := 0 to 3 do
@@ -232,11 +232,11 @@ end;
 
 function ask_for_move(board : board_t) : integer;
 var
-  movechar : char;
-  _pos     : pchar;
-  ret      : integer;
+    movechar : char;
+    _pos     : pchar;
+    ret      : integer;
 const
-  allmoves : pchar = 'wsadkjhl';
+    allmoves : pchar = 'wsadkjhl';
 begin
     print_board(board);
     while true do
@@ -275,8 +275,8 @@ end;
 
 procedure insert_tile_rand(var board : board_t; tile : word);
 var
-  index, shift : integer;
-  tmp, orig_tile : word;
+    index, shift : integer;
+    tmp, orig_tile : word;
 begin
     index := unif_random(count_empty(board));
     shift := 0;

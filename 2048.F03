@@ -1,0 +1,610 @@
+module module_2048
+use, intrinsic :: iso_c_binding, only : c_int, c_long, c_char, c_null_char
+implicit none
+
+interface
+
+#ifdef _WIN32
+function c_getch() bind(c, name='_getch')
+#else
+function c_getch() bind(c, name='getchar')
+#endif
+    import :: c_int
+    integer(c_int) :: c_getch
+end function c_getch
+
+subroutine c_srand(seed) bind(c, name='srand')
+    import :: c_int
+    integer(c_int) :: seed
+end subroutine c_srand
+
+function c_rand() bind(c, name='rand')
+    import :: c_int
+    integer(c_int) :: c_rand
+end function c_rand
+
+function c_time(tloc) bind(c, name='time')
+    import :: c_long
+    integer(kind=c_long), intent(in), value :: tloc
+    integer(kind=c_long) :: c_time
+end function c_time
+
+function c_system(cmd) bind(c, name='system')
+    import :: c_int, c_char
+    character(c_char), intent(in) :: cmd(*)
+    integer(c_int) :: c_system
+end function c_system
+
+function get_move_func_t(board)
+    integer(8), value :: board
+    integer(4) :: get_move_func_t
+end function get_move_func_t
+
+
+#ifdef _WIN32
+#define TERM_INIT
+#define TERM_CLEAR
+#define CLEAR_SCREEN call exec_cmd(c_char_"cls"//c_null_char)
+#else
+#define TERM_INIT call exec_cmd(c_char_"stty -echo cbreak </dev/tty >/dev/tty 2>&1"//c_null_char)
+#define TERM_CLEAR call exec_cmd(c_char_"stty echo -cbreak </dev/tty >/dev/tty 2>&1"//c_null_char)
+#define CLEAR_SCREEN call exec_cmd(c_char_"clear"//c_null_char)
+#endif
+
+#define ROW_MASK int(Z'FFFF', kind=8)
+#define COL_MASK int(Z'000F000F000F000F', kind=8)
+
+#define Z000F    int(z'000F', kind=2)
+#define Z00F0    int(z'00F0', kind=2)
+#define Z0F00    int(z'0F00', kind=2)
+
+#define UP      0
+#define DOWN    1
+#define LEFT    2
+#define RIGHT   3
+#define RETRACT 4
+
+! workaround for -frange-check
+#define ZF0F00F0FF0F00F0F ior(ishft(int(z'F0F00F0F', kind=8), 32), int(z'F0F00F0F', kind=8))
+#define ZFF00FF0000FF00FF ior(ishft(int(z'FF00FF00', kind=8), 32), int(z'00FF00FF', kind=8))
+
+end interface
+
+#ifdef FASTMODE
+integer(2) :: row_left_table(-32768:32767)
+integer(2) :: row_right_table(-32768:32767)
+integer(4) :: score_table(-32768:32767)
+#endif
+
+contains
+
+
+subroutine exec_cmd(cmd)
+    character(c_char), intent(in) :: cmd(*)
+    integer(kind=c_int) :: ret
+
+    ret = c_system(cmd)
+end subroutine exec_cmd
+
+function unif_random(n)
+    integer(4), value :: n
+    integer :: unif_random
+    integer(4) :: rd
+
+    rd = c_rand()
+    unif_random = mod(rd, n)
+end function unif_random
+
+function unpack_col(row)
+    integer(2), value :: row
+    integer(8) :: unpack_col, t0, t1, t2, t3
+
+    t0 = iand(int(row, kind=8), ROW_MASK)
+    t1 = ishft(t0, 12)
+    t2 = ishft(t0, 24)
+    t3 = ishft(t0, 36)
+
+    unpack_col = iand(ior(ior(ior(t0, t1), t2), t3), COL_MASK)
+end function unpack_col
+
+function reverse_row(row)
+    integer(2), value :: row
+    integer(2) :: reverse_row, t0, t1, t2, t3
+
+    t0 = ishft(row, -12)
+    t1 = iand(ishft(row, -4), Z00F0)
+    t2 = iand(ishft(row, 4), Z0F00)
+    t3 = ishft(row, 12)
+
+    reverse_row = ior(ior(ior(t0, t1), t2), t3)
+end function reverse_row
+
+subroutine print_board(board)
+    integer(8), value :: board
+    integer(2) :: i, j, power_val
+    print *, '-----------------------------'
+    do i = 0, 3
+        do j = 0, 3
+            power_val = iand(board, int(Z000F, kind=8))
+
+            if (power_val == 0) then
+                write(*, fmt='(a, 6x)', advance='no') '|'
+            else
+                write(*, fmt='(a, i6)', advance='no') '|', ishft(1, power_val)
+            end if
+            board = ishft(board, -4)
+        end do
+        print *, '|'
+    end do
+    print *, '-----------------------------'
+end subroutine print_board
+
+function transpose_board(x)
+    integer(8), value :: x
+    integer(8) :: transpose_board, a1, a2, a3, a, b1, b2, b3
+
+    a1 = iand(x, ZF0F00F0FF0F00F0F)
+    a2 = iand(x, int(z'0000F0F00000F0F0', kind=8))
+    a3 = iand(x, int(z'0F0F00000F0F0000', kind=8))
+    a = ior(ior(a1, ishft(a2, 12)), ishft(a3, -12))
+    b1 = iand(a, ZFF00FF0000FF00FF)
+    b2 = iand(a, int(z'00FF00FF00000000', kind=8))
+    b3 = iand(a, int(z'00000000FF00FF00', kind=8))
+
+    transpose_board = ior(ior(b1, ishft(b2, -24)), ishft(b3, 24))
+end function transpose_board
+
+function count_empty(x)
+    integer(8), value :: x
+    integer(4) :: count_empty
+
+    x = ior(x, iand(ishft(x, -2), int(z'3333333333333333', kind=8)))
+    x = ior(x, ishft(x, -1))
+    x = iand(not(x), int(z'1111111111111111', kind=8))
+    x = x + ishft(x, -32)
+    x = x + ishft(x, -16)
+    x = x + ishft(x, -8)
+    x = x + ishft(x, -4)
+    count_empty = iand(x, int(Z000F, kind=8))
+end function count_empty
+
+#ifdef FASTMODE
+subroutine init_tables()
+    integer(2) :: row, rev_row, row_result, rev_result, t0, t1, t2, t3
+    integer(2) :: i, j, rank
+    integer(2) :: row_line(0:3)
+    integer(4) :: score
+
+    row = 0
+    rev_row = 0
+    row_result = 0
+    rev_result = 0
+    do row = -32768, 32767
+        score = 0
+        row_line(0) = iand(row, int(Z000F, kind=2))
+        row_line(1) = iand(ishft(row, -4), int(Z000F, kind=2))
+        row_line(2) = iand(ishft(row, -8), int(Z000F, kind=2))
+        row_line(3) = iand(ishft(row, -12), int(Z000F, kind=2))
+
+        do i = 0, 3
+            rank = row_line(i)
+            if (rank >= 2) then
+                score = score + ((rank - 1) * ishft(1, rank))
+            end if
+        end do
+        score_table(row) = score
+
+        i = 0
+        do while (i < 3)
+            j = i + 1
+            do while (j < 4)
+                if (row_line(j) /= 0) then
+                    exit
+                end if
+                j = j + 1
+            end do
+            if (j == 4) then
+                exit
+            end if
+
+            if (row_line(i) == 0) then
+                row_line(i) = row_line(j)
+                row_line(j) = 0
+                i = i - 1
+            else if (row_line(i) == row_line(j)) then
+                if (row_line(i) /= 15) then
+                    row_line(i) = row_line(i) + 1
+                end if
+                row_line(j) = 0
+            end if
+            i = i + 1
+        end do
+
+        t0 = row_line(0)
+        t1 = ishft(row_line(1), 4)
+        t2 = ishft(row_line(2), 8)
+        t3 = ishft(row_line(3), 12)
+        row_result = ior(ior(ior(t0, t1), t2), t3)
+
+        rev_result = reverse_row(row_result)
+        rev_row    = reverse_row(row)
+
+        row_left_table(row)      = ieor(row, row_result)
+        row_right_table(rev_row) = ieor(rev_row, rev_result)
+
+        if (row == 32767) then
+            exit
+        end if
+    end do
+end subroutine init_tables
+#endif
+
+#ifdef FASTMODE
+function execute_move_col(board, table)
+    integer(8), value :: board
+    integer(2) :: table(-32768:32767)
+    integer(8) :: execute_move_col
+    integer(8) :: ret, t
+
+    ret = board
+    t = transpose_board(board)
+    ret = ieor(ret, unpack_col(table(int(iand(t, ROW_MASK), kind=2))))
+    ret = ieor(ret, ishft(unpack_col(table(int(iand(ishft(t, -16), ROW_MASK), kind=2))), 4))
+    ret = ieor(ret, ishft(unpack_col(table(int(iand(ishft(t, -32), ROW_MASK), kind=2))), 8))
+    ret = ieor(ret, ishft(unpack_col(table(int(iand(ishft(t, -48), ROW_MASK), kind=2))), 12))
+    execute_move_col = ret
+end function execute_move_col
+
+function execute_move_row(board, table)
+    integer(8), value :: board
+    integer(2) :: table(-32768:32767)
+    integer(8) :: execute_move_row
+    integer(8) :: ret
+
+    ret = board
+    ret = ieor(ret, int((table(int(iand(board, ROW_MASK), kind=2))), kind=8))
+    ret = ieor(ret, ishft(int((table(int(iand(ishft(board, -16), ROW_MASK), kind=2))), kind=8), 16))
+    ret = ieor(ret, ishft(int((table(int(iand(ishft(board, -32), ROW_MASK), kind=2))), kind=8), 32))
+    ret = ieor(ret, ishft(int((table(int(iand(ishft(board, -48), ROW_MASK), kind=2))), kind=8), 48))
+    execute_move_row = ret
+end function execute_move_row
+
+#else
+function execute_move_helper(row)
+    integer(2), value :: row
+    integer(2) :: execute_move_helper
+    integer(2) :: i, j, t0, t1, t2, t3
+    integer(2) :: row_line(0:3)
+
+    row_line(0) = iand(row, int(Z000F, kind=2))
+    row_line(1) = iand(ishft(row, -4), int(Z000F, kind=2))
+    row_line(2) = iand(ishft(row, -8), int(Z000F, kind=2))
+    row_line(3) = iand(ishft(row, -12), int(Z000F, kind=2))
+    i = 0
+    do while (i < 3)
+        j = i + 1
+        do while (j < 4)
+            if (row_line(j) /= 0) then
+                exit
+            end if
+            j = j + 1
+        end do
+        if (j == 4) then
+            exit
+        end if
+
+        if (row_line(i) == 0) then
+            row_line(i) = row_line(j)
+            row_line(j) = 0
+            i = i - 1
+        else if (row_line(i) == row_line(j)) then
+            if (row_line(i) /= 15) then
+                row_line(i) = row_line(i) + 1
+            end if
+            row_line(j) = 0
+        end if
+        i = i + 1
+    end do
+    t0 = row_line(0)
+    t1 = ishft(row_line(1), 4)
+    t2 = ishft(row_line(2), 8)
+    t3 = ishft(row_line(3), 12)
+    execute_move_helper = ior(ior(ior(t0, t1), t2), t3)
+end function execute_move_helper
+
+function execute_move_col(board, move)
+    integer(8), value :: board
+    integer(4), value :: move
+    integer(8) :: execute_move_col
+    integer(8) :: ret, t
+    integer(2) :: row, rev_row, i
+
+    ret = board
+    t = transpose_board(board)
+    do i = 0, 3
+        row = int(iand(ishft(t, -ishft(i, 4)), ROW_MASK), kind=2)
+        if (move == UP) then
+            ret = ieor(ret, ishft(unpack_col(ieor(row, execute_move_helper(row))), ishft(i, 2)))
+        else if (move == DOWN) then
+            rev_row = reverse_row(row)
+            ret = ieor(ret, ishft(unpack_col(ieor(row, reverse_row(execute_move_helper(rev_row)))), ishft(i, 2)))
+        end if
+    end do
+    execute_move_col = ret
+end function execute_move_col
+
+function execute_move_row(board, move)
+    integer(8), value :: board
+    integer(4), value :: move
+    integer(8) :: execute_move_row
+    integer(8) :: ret
+    integer(2) :: row, rev_row, i
+
+    ret = board
+    do i = 0, 3
+        row = int(iand(ishft(board, -ishft(i, 4)), ROW_MASK), kind=2)
+        if (move == LEFT) then
+            ret = ieor(ret, ishft(int(ieor(row, execute_move_helper(row)), kind=8), ishft(i, 4)))
+        else if (move == RIGHT) then
+            rev_row = reverse_row(row)
+            ret = ieor(ret, ishft(int(ieor(row, reverse_row(execute_move_helper(rev_row))), kind=8), ishft(i, 4)))
+        end if
+    end do
+    execute_move_row = ret
+end function execute_move_row
+#endif
+
+function execute_move(move, board) 
+    integer(4), value :: move
+    integer(8), value :: board
+    integer(8) :: execute_move
+    integer(8) :: ret
+
+#ifdef FASTMODE
+    if (move == UP) then
+        ret = execute_move_col(board, row_left_table)
+    else if (move == DOWN) then
+        ret = execute_move_col(board, row_right_table)
+    else if (move == LEFT) then
+        ret = execute_move_row(board, row_left_table)
+    else if (move == RIGHT) then
+        ret = execute_move_row(board, row_right_table)
+#else
+    if ((move == UP) .or. (move == DOWN)) then
+        ret = execute_move_col(board, move)
+    else if ((move == LEFT) .or. (move == RIGHT)) then
+        ret = execute_move_row(board, move)
+#endif
+    else
+        ret = not(int(0, kind=8))
+    end if
+    execute_move = ret 
+end function execute_move
+
+#ifdef FASTMODE
+function score_helper(board, table)
+    integer(8), value :: board
+    integer(4) :: table(-32768:32767)
+    integer(4) :: score_helper
+    integer(4) :: t0, t1, t2, t3
+    t0 = table(int(iand(board, ROW_MASK), kind=8))
+    t1 = table(int(iand(ishft(board, -16), ROW_MASK), kind=8))
+    t2 = table(int(iand(ishft(board, -32), ROW_MASK), kind=8))
+    t3 = table(int(iand(ishft(board, -48), ROW_MASK), kind=8))
+    score_helper = t0 + t1 + t2 + t3
+end function score_helper
+#else
+function score_helper(board)
+    integer(8), value :: board
+    integer(4) :: score_helper
+    integer(4) :: score
+    integer(2) :: row, row_line(0:3), i, j, rank
+
+    score = 0
+    do j = 0, 3
+        row = int(iand(ishft(board, -ishft(j, 4)), ROW_MASK), kind=2)
+        row_line(0) = iand(row, int(Z000F, kind=2))
+        row_line(1) = iand(ishft(row, -4), int(Z000F, kind=2))
+        row_line(2) = iand(ishft(row, -8), int(Z000F, kind=2))
+        row_line(3) = iand(ishft(row, -12), int(Z000F, kind=2))
+
+        do i = 0, 3
+            rank = row_line(i)
+            if (rank >= 2) then
+                score = score + ((rank - 1) * ishft(1, rank))
+            end if
+        end do
+    end do
+    score_helper = score
+end function score_helper
+#endif
+
+function score_board(board)
+    integer(8), value :: board
+    integer(4) :: score_board
+#ifdef FASTMODE
+    score_board = score_helper(board, score_table)
+#else
+    score_board = score_helper(board)
+#endif
+end function score_board
+
+function ask_for_move(board)
+    integer(8), value :: board
+    integer(4) :: ask_for_move
+    integer(4) :: ret
+    character :: movechar
+    integer :: pos
+    character(len=9) :: allmoves = 'wsadkjhl'
+
+    call print_board(board)
+    ret = -1
+    do while (1 > 0)
+        movechar = achar(c_getch())
+        if (movechar == 'q') then
+            ret = -1
+            exit
+        end if
+        if (movechar == 'r') then
+            ret = RETRACT
+            exit
+        end if
+        pos = index(allmoves, movechar)
+        if (pos == 0) then
+            cycle
+        end if
+        ret = mod(pos - 1, 4)
+        exit
+    end do
+    ask_for_move = ret
+end function ask_for_move
+
+function draw_tile()
+    integer(8) :: draw_tile
+    integer(1) :: ret
+
+    ret = unif_random(10)
+    if (ret < 9) then
+        ret = 1
+    else
+        ret = 2
+    end if
+    draw_tile = ret
+end function draw_tile
+
+function insert_tile_rand(board, tile)
+    integer(8), value :: board
+    integer(8) :: tile
+    integer(8) :: insert_tile_rand
+    integer(8) :: tmp
+    integer(1) :: pos
+    pos = unif_random(count_empty(board))
+    tmp = board
+    do while (1>0)
+        do while (iand(tmp, int(Z000F, kind=8)) /= 0)
+            tmp = ishft(tmp, -4)
+            tile = ishft(tile, 4)
+        end do
+        if (pos == 0) then
+            exit
+        end if
+        pos = pos - 1
+        tmp = ishft(tmp, -4)
+        tile = ishft(tile, 4)
+    end do
+    insert_tile_rand = ior(board, tile)
+end function insert_tile_rand
+
+function initial_board()
+    integer(8) :: initial_board
+    integer(8) :: board
+    integer(4) :: rd
+    integer(8) :: tile
+
+    rd = unif_random(16)
+    tile = draw_tile()
+    board = int(ishft(tile, ishft(rd, 2)), kind=8)
+    tile = draw_tile()
+    initial_board = insert_tile_rand(board, tile)
+end function initial_board
+
+subroutine play_game(get_move)
+    procedure(get_move_func_t) :: get_move
+    integer(8) :: board, newboard, tile
+    integer(4) :: scorepenalty, current_score, last_score, moveno, move
+    integer(8) :: retract_vec(0:63)
+    integer(1) :: retract_penalty_vec(0:63)
+    integer(4) :: retract_pos, retract_num
+
+    board = initial_board()
+    scorepenalty = 0
+    current_score = 0
+    last_score = 0
+    moveno = 0
+    retract_pos = 0
+    retract_num = 0
+
+    do while (1 > 0)
+        CLEAR_SCREEN
+        move = 0
+        do while (move < 4)
+            if (execute_move(move, board) /= board) then
+                exit
+            end if
+            move = move + 1
+        end do
+        if (move == 4) then
+            exit
+        end if
+
+        current_score = score_board(board) - scorepenalty
+        moveno = moveno + 1
+        print '("Move ", i0, ", current score=", i0, "(+", i0, ")")', moveno, current_score, (current_score - last_score)
+        last_score = current_score
+
+        move = get_move(board)
+        if (move < 0) then
+            exit
+        end if
+
+        if (move == RETRACT) then
+            if ((moveno <= 1) .or. (retract_num <= 0)) then
+                moveno = moveno - 1
+                cycle
+            end if
+            moveno = moveno - 2
+            if ((retract_pos == 0) .and. (retract_num > 0)) then
+                retract_pos = 64
+            end if
+            retract_pos = retract_pos - 1
+            board = retract_vec(retract_pos)
+            scorepenalty = scorepenalty - retract_penalty_vec(retract_pos)
+            retract_num = retract_num - 1
+            cycle
+        end if
+
+        newboard = execute_move(move, board)
+        if (newboard == board) then
+            moveno = moveno - 1
+            cycle
+        end if
+
+        tile = draw_tile()
+        if (tile == 2) then
+            scorepenalty = scorepenalty + 4
+            retract_penalty_vec(retract_pos) = 4
+        else
+            retract_penalty_vec(retract_pos) = 0
+        end if
+        retract_vec(retract_pos) = board
+        retract_pos = retract_pos + 1
+        if (retract_pos == 64) then
+            retract_pos = 0
+        end if
+        if (retract_num < 64) then
+            retract_num = retract_num + 1
+        board = insert_tile_rand(newboard, tile)
+        end if
+    end do
+    call print_board(board)
+    print '("Game over. Your score is ", i0, ".")', current_score
+end subroutine play_game
+
+subroutine main()
+    TERM_INIT
+    call c_srand(int(c_time(int(0, kind=c_long)), kind=c_int))
+#ifdef FASTMODE
+    call init_tables()
+#endif
+    call play_game(ask_for_move)
+    TERM_CLEAR
+end subroutine main
+
+end module module_2048
+
+
+program main_2048
+use module_2048
+
+call main()
+end program main_2048
