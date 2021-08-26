@@ -223,10 +223,10 @@ function execute_move_row(board, table)
     integer(8) :: ret
 
     ret = board
-    ret = ieor(ret, int((table(int(iand(board, ROW_MASK), kind=2))), kind=8))
-    ret = ieor(ret, ishft(int((table(int(iand(ishft(board, -16), ROW_MASK), kind=2))), kind=8), 16))
-    ret = ieor(ret, ishft(int((table(int(iand(ishft(board, -32), ROW_MASK), kind=2))), kind=8), 32))
-    ret = ieor(ret, ishft(int((table(int(iand(ishft(board, -48), ROW_MASK), kind=2))), kind=8), 48))
+    ret = ieor(ret, iand(int((table(int(iand(board, ROW_MASK), kind=2))), kind=8), ROW_MASK))
+    ret = ieor(ret, ishft(iand(int((table(int(iand(ishft(board, -16), ROW_MASK), kind=2))), kind=8), ROW_MASK), 16))
+    ret = ieor(ret, ishft(iand(int((table(int(iand(ishft(board, -32), ROW_MASK), kind=2))), kind=8), ROW_MASK), 32))
+    ret = ieor(ret, ishft(iand(int((table(int(iand(ishft(board, -48), ROW_MASK), kind=2))), kind=8), ROW_MASK), 48))
     execute_move_row = ret
 end function execute_move_row
 
@@ -305,10 +305,10 @@ function execute_move_row(board, move)
     do i = 0, 3
         row = int(iand(ishft(board, -ishft(i, 4)), ROW_MASK), kind=2)
         if (move == LEFT) then
-            ret = ieor(ret, ishft(int(ieor(row, execute_move_helper(row)), kind=8), ishft(i, 4)))
+            ret = ieor(ret, ishft(iand(int(ieor(row, execute_move_helper(row)), kind=8), ROW_MASK), ishft(i, 4)))
         else if (move == RIGHT) then
             rev_row = reverse_row(row)
-            ret = ieor(ret, ishft(int(ieor(row, reverse_row(execute_move_helper(rev_row))), kind=8), ishft(i, 4)))
+            ret = ieor(ret, ishft(iand(int(ieor(row, reverse_row(execute_move_helper(rev_row))), kind=8), ROW_MASK), ishft(i, 4)))
         end if
     end do
     execute_move_row = ret
@@ -348,10 +348,10 @@ function score_helper(board, table)
     integer(4) :: table(-32768:32767)
     integer(4) :: score_helper
     integer(4) :: t0, t1, t2, t3
-    t0 = table(int(iand(board, ROW_MASK), kind=8))
-    t1 = table(int(iand(ishft(board, -16), ROW_MASK), kind=8))
-    t2 = table(int(iand(ishft(board, -32), ROW_MASK), kind=8))
-    t3 = table(int(iand(ishft(board, -48), ROW_MASK), kind=8))
+    t0 = table(int(iand(board, ROW_MASK), kind=2))
+    t1 = table(int(iand(ishft(board, -16), ROW_MASK), kind=2))
+    t2 = table(int(iand(ishft(board, -32), ROW_MASK), kind=2))
+    t3 = table(int(iand(ishft(board, -48), ROW_MASK), kind=2))
     score_helper = t0 + t1 + t2 + t3
 end function score_helper
 #else
@@ -469,7 +469,7 @@ function initial_board()
 
     rd = unif_random(16)
     tile = draw_tile()
-    board = int(ishft(tile, ishft(rd, 2)), kind=8)
+    board = ishft(tile, ishft(rd, 2))
     tile = draw_tile()
     initial_board = insert_tile_rand(board, tile)
 end function initial_board
@@ -549,8 +549,8 @@ subroutine play_game()
         end if
         if (retract_num < 64) then
             retract_num = retract_num + 1
-        board = insert_tile_rand(newboard, tile)
         end if
+        board = insert_tile_rand(newboard, tile)
     end do
     call print_board(board)
     print '("Game over. Your score is ", i0, ".")', current_score
