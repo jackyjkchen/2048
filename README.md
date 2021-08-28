@@ -171,7 +171,7 @@ gfortran -std=gnu -O2 2048f.f f90deps.o -o 2048
 ```
 
 
-2048.lua + luadeps.c
+* 2048.lua + luadeps.c
 
 lua 5.3+实现，依赖lua 5.3或以上版本提供的原生64位整数运算支持，由于原生lua对操作系统判定和无回显输入不支持，相关功能由luadeps.c提供
 
