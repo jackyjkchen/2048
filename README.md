@@ -151,7 +151,7 @@ gfortran -DFASTMODE -std=f95 -O2 2048.F90 f90deps.o -o 2048
 传统fortran77实现，固定模式源码格式，2048f.f使用快速查表法，2048s.f不使用，由于f77没有提供iso_c_binding，所以系统相关功能（无回显输入，清除屏幕），由f77deps.c提供
 已测试编译器和平台
 ```
-gcc-2.9 - gcc-3.4 (linux, win32, freebsd, macos)
+gcc-2.9 - gcc-3.4 (linux, win32, freebsd)
 ```
 
 注1：编译命令行示例
