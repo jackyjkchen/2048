@@ -45,12 +45,6 @@ end function c_system
 #define CLEAR_SCREEN call exec_cmd(c_char_"clear"//c_null_char)
 #endif
 
-#define UP      0
-#define DOWN    1
-#define LEFT    2
-#define RIGHT   3
-#define RETRACT 4
-
 end interface
 
 #ifdef FASTMODE
@@ -58,6 +52,8 @@ integer(2) :: row_left_table(-32768:32767)
 integer(2) :: row_right_table(-32768:32767)
 integer(4) :: score_table(-32768:32767)
 #endif
+
+integer(4), parameter :: UP = 0, DOWN = 1, LEFT = 2, RIGHT = 3, RETRACT = 4
 
 integer(8), parameter :: ROW_MASK = int(Z'FFFF', kind=8)
 integer(8), parameter :: COL_MASK = int(Z'000F000F000F000F', kind=8)
@@ -379,7 +375,7 @@ function execute_move(move, board)
         ret = execute_move_row(board, move)
 #endif
     else
-        ret = not(int(0, kind=8))
+        ret = -1
     end if
     execute_move = ret 
 end function execute_move
@@ -390,6 +386,7 @@ function score_helper(board, table)
     integer(4) :: table(-32768:32767)
     integer(4) :: score_helper
     integer(4) :: t0, t1, t2, t3
+
     t0 = table(int(iand(board, ROW_MASK), kind=2))
     t1 = table(int(iand(ishft(board, -16), ROW_MASK), kind=2))
     t2 = table(int(iand(ishft(board, -32), ROW_MASK), kind=2))
@@ -425,6 +422,7 @@ end function score_helper
 function score_board(board)
     integer(8), value, intent(in) :: board
     integer(4) :: score_board
+
 #ifdef FASTMODE
     score_board = score_helper(board, score_table)
 #else
@@ -464,7 +462,7 @@ end function ask_for_move
 
 function draw_tile()
     integer(8) :: draw_tile
-    integer(1) :: ret
+    integer(4) :: ret
 
     ret = unif_random(10)
     if (ret < 9) then
@@ -480,7 +478,7 @@ function insert_tile_rand(board, tile)
     integer(8), value :: tile
     integer(8) :: insert_tile_rand
     integer(8) :: tmp
-    integer(1) :: pos
+    integer(4) :: pos
 
     pos = unif_random(count_empty(board))
     tmp = board
