@@ -74,7 +74,7 @@
 
       integer*8 function unpack_col(row)
         integer*2 :: row
-        integer*8 :: t0, t1, t2, t3, ta, tb
+        integer*8 :: t0, t1, t2, t3
 
         integer*8 :: ROW_MASK, COL_MASK
         common /MASK_NUM/ ROW_MASK, COL_MASK
