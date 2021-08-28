@@ -107,17 +107,18 @@
 
       subroutine print_board(board)
         integer*8 :: board
-        integer*8 :: board_
+        integer*8 :: board_, t_
         integer*2 :: i, j, power_val
 
         integer*2 :: Z000F, Z00F0, Z0F00
         common /CONST_NUM/  Z000F, Z00F0, Z0F00
 
         board_ = board
+        t_ = Z000F
         write(*, *) '-----------------------------'
         do i = 0, 3
           do j = 0, 3
-            power_val = iand(board_, Z000F)
+            power_val = iand(board_, t_)
 
             if (power_val == 0) then
               write(*, '(a, "      ", $)') '|'
@@ -160,7 +161,7 @@
 
       integer*4 function count_empty(x)
         integer*8 :: x
-        integer*8 :: x_
+        integer*8 :: x_, t_
 
         integer*2 :: Z000F, Z00F0, Z0F00
         common /CONST_NUM/  Z000F, Z00F0, Z0F00
@@ -177,7 +178,8 @@
         x_ = x_ + ishft(x_, -16)
         x_ = x_ + ishft(x_, -8)
         x_ = x_ + ishft(x_, -4)
-        count_empty = iand(x_, Z000F)
+        t_ = Z000F
+        count_empty = iand(x_, t_)
         return
       end
 
@@ -385,7 +387,7 @@
         integer*8 :: board
         integer*8 :: tile
         integer*8 :: tile_
-        integer*8 :: tmp
+        integer*8 :: tmp, t_
         integer*4 :: pos
 
         integer*4 :: unif_random, count_empty
@@ -396,8 +398,9 @@
         tile_ = tile
         pos = unif_random(count_empty(board))
         tmp = board
+        t_ = Z000F
         do while (1>0)
-          do while (iand(tmp, Z000F) /= 0)
+          do while (iand(tmp, t_) /= 0)
             tmp = ishft(tmp, -4)
             tile_ = ishft(tile_, 4)
           end do

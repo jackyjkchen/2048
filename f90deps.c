@@ -103,3 +103,11 @@ int c_getch_(void) {
     return getchar();
 #endif
 }
+
+void c_print_move_score_(int *moveno, int *current_score, int *last_score) {
+    printf("Move #%d, current score=%d(+%d)\n", *moveno, *current_score, *current_score - *last_score);
+}
+
+void c_print_final_score_(int *final_score) {
+    printf("Game over. Your score is %d.\n", *final_score);
+}
