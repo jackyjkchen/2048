@@ -239,9 +239,8 @@ begin
         if movechar = 'r' then 
             exit(RETRACT);
         _pos := strscan(allmoves, movechar);
-        if _pos = nil then 
-            continue;
-        exit((_pos - allmoves) mod 4);
+        if _pos <> nil then
+            exit((_pos - allmoves) mod 4);
     end;
 end;
 

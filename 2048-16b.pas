@@ -253,10 +253,11 @@ begin
             break;
         end;
         _pos := strscan(allmoves, movechar);
-        if _pos = nil then
-            continue;
-        ret := (_pos - allmoves) mod 4;
-        break;
+        if _pos <> nil then
+        begin
+            ret := (_pos - allmoves) mod 4;
+            break;
+        end;
     end;
     ask_for_move := ret;
 end;

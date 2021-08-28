@@ -252,30 +252,30 @@ var
   ret      : integer;
 const
   allmoves : string = 'wsadkjhl';
-label 1, 2;
+label 1;
 begin
     print_board(board);
     while true do
     begin
-        1:
         movechar := get_ch;
         if movechar = 'q' then
         begin
             ret := -1;
-            goto 2;
+            goto 1;
         end;
         if movechar = 'r' then
         begin
             ret :=RETRACT;
-            goto 2;
+            goto 1;
         end;
         _pos := strchr(allmoves, movechar);
-        if _pos = -1 then
+        if _pos <> -1 then
+        begin
+            ret := _pos mod 4;
             goto 1;
-        ret := _pos mod 4;
-        goto 2;
+        end;
     end;
-    2:
+    1:
     ask_for_move := ret;
 end;
 

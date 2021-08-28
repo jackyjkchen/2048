@@ -64,7 +64,7 @@ void c_clear_screen__(void) {
 void c_term_init__(void) {
 }
 
-void c_tern_clear__(void) {
+void c_term_clear__(void) {
 }
 
 #elif defined(__linux__) || defined(__unix__)|| defined(__CYGWIN__) || defined(__MACH__)
@@ -102,4 +102,12 @@ int c_getch__(void) {
 #else
     return getchar();
 #endif
+}
+
+void c_print_move_score__(int *moveno, int *current_score, int *last_score) {
+    printf("Move #%d, current score=%d(+%d)\n", *moveno, *current_score, *current_score - *last_score);
+}
+
+void c_print_final_score__(int *final_score) {
+    printf("Game over. Your score is %d.\n", *final_score);
 }

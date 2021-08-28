@@ -398,11 +398,10 @@
             exit
           end if
           pos = index(allmoves, movechar)
-          if (pos == 0) then
-            cycle
+          if (pos /= 0) then
+            ret = mod(pos - 1, 4)
+            exit
           end if
-          ret = mod(pos - 1, 4)
-          exit
         end do
         ask_for_move = ret
         return
@@ -477,7 +476,7 @@
         integer*1 :: retract_penalty_vec(0:63)
         integer*4 :: retract_pos, retract_num, move
 
-        external c_clear_screen
+        external c_clear_screen, c_print_move_score, c_print_final_score
         integer*8 :: initial_board, execute_move
         integer*8 :: draw_tile, insert_tile_rand
         integer*4 :: score_board, ask_for_move
@@ -505,9 +504,7 @@
 
           current_score = score_board(board) - scorepenalty
           moveno = moveno + 1
-          write(*, '("Move ", i6, ", current score=", i7,
-     & "(+", i6, ")")')  moveno, current_score,
-     & (current_score - last_score)
+          call c_print_move_score(moveno, current_score, last_score)
           last_score = current_score
 
           move = ask_for_move(board)
@@ -556,7 +553,7 @@
           board = insert_tile_rand(newboard, tile)
         end do
         call print_board(board)
-        write(*, '("Game over. Your score is ", i7, ".")') current_score
+        call c_print_final_score(current_score)
         return
       end
 

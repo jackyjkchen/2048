@@ -357,11 +357,10 @@
             exit
           end if
           pos = index(allmoves, movechar)
-          if (pos == 0) then
-            cycle
+          if (pos /= 0) then
+            ret = mod(pos - 1, 4)
+            exit
           end if
-          ret = mod(pos - 1, 4)
-          exit
         end do
         ask_for_move = ret
         return

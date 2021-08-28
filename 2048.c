@@ -435,11 +435,9 @@ int ask_for_move(board_t board) {
             return RETRACT;
         }
         pos = strchr(allmoves, movechar);
-        if (!pos) {
-            continue;
+        if (pos) {
+            return (pos - allmoves) % 4;
         }
-
-        return (pos - allmoves) % 4;
     }
 }
 

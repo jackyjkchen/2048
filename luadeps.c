@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
 
+#include <lauxlib.h>
 
 #if defined(_WIN32)
 #define WIN32_LEAN_AND_MEAN
@@ -12,18 +12,7 @@
 #include <termios.h>
 #endif
 
-unsigned int c_rand_() {
-    static unsigned int seeded = 0;
-
-    if (!seeded) {
-        srand((unsigned int)time(NULL));
-        seeded = 1;
-    }
-
-    return rand();
-}
-
-void c_clear_screen_(void) {
+int c_clear_screen(lua_State *L) {
 #if defined(_WIN32)
     HANDLE hStdOut;
     DWORD count;
@@ -57,14 +46,17 @@ void c_clear_screen_(void) {
 #elif defined(__linux__) || defined(__unix__) || defined(__CYGWIN__) || defined(__MACH__)
     printf("\033[2J\033[H");
 #endif
+    return 1;
 }
 
 #if defined(_WIN32)
 
-void c_term_init_(void) {
+int c_term_init(lua_State *L) {
+    return 1;
 }
 
-void c_term_clear_(void) {
+int c_term_clear(lua_State *L) {
+    return 1;
 }
 
 #elif defined(__linux__) || defined(__unix__)|| defined(__CYGWIN__) || defined(__MACH__)
@@ -86,20 +78,44 @@ static void _term_set(int mode) {
     }
 }
 
-void c_term_init_(void) {
+int c_term_init(lua_State *L) {
     _term_set(1);
+    return 1;
 }
 
-void c_term_clear_(void) {
+int c_term_clear(lua_State *L) {
     _term_set(0);
+    return 1;
 }
 
 #endif
 
-int c_getch_(void) {
+int c_getch(lua_State *L) {
+    int ret = 0;
+
 #if defined(_WIN32)
-    return _getch();
+    ret = _getch();
 #else
-    return getchar();
+    ret = getchar();
 #endif
+    lua_pushnumber(L, ret);
+    return 1;
+}
+
+static const struct luaL_Reg luadeps[] = {
+    {"c_clear_screen", c_clear_screen},
+    {"c_term_init", c_term_init},
+    {"c_term_clear", c_term_clear},
+    {"c_getch", c_getch},
+    {NULL, NULL}
+};
+
+#if defined(_WIN32)
+#define DLLEXPORT __declspec(dllexport)
+#else
+#define DLLEXPORT
+#endif
+DLLEXPORT int luaopen_luadeps(lua_State *L) {
+    luaL_newlib(L, luadeps);
+    return 1;
 }
