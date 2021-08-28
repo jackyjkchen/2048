@@ -151,7 +151,8 @@ gfortran -DFASTMODE -std=f95 -O2 2048.F90 f90deps.o -o 2048
 传统fortran77实现，固定模式源码格式，2048f.f使用快速查表法，2048s.f不使用，由于f77没有提供iso_c_binding，所以系统相关功能（无回显输入，清除屏幕），由f77deps.c提供
 已测试编译器和平台
 ```
-gcc-2.9 - gcc-3.4 (linux, win32, freebsd)
+g77-2.9 - g77-3.4 (linux, win32, freebsd)
+gfortran-4.0+ (linux, win32, freebsd)
 ```
 
 注1：编译命令行示例
@@ -159,6 +160,13 @@ gcc-2.9 - gcc-3.4 (linux, win32, freebsd)
 ```
 gcc-3.4.6 -O2 -c f77deps.c -o f77deps.o
 g77-3.4.6 -O2 2048f.f f77deps.o -o 2048
+```
+
+注2：使用-std=gnu，也可使用gfortran编译器
+
+```
+gcc -std=c90 -O2 -c f90deps.c -o f90deps.o
+gfortran -std=gnu -O2 2048f.f f90deps.o -o 2048
 ```
 
 
@@ -179,4 +187,5 @@ gcc -std=c99 -I/usr/include/lua5.4 -shared -fPIC -O2 luadeps.c  -o luadeps.so
 ./2048.lua
 
 ```
+
 
