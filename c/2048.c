@@ -57,6 +57,9 @@ static unsigned int unif_random(unsigned int n) {
 
 #if defined(_WIN32)
 static void clear_screen(void) {
+#ifdef __TINYC__
+    system("cls");
+#else
     HANDLE hStdOut;
     DWORD count;
     DWORD cellCount;
@@ -86,6 +89,7 @@ static void clear_screen(void) {
         return;
 
     SetConsoleCursorPosition(hStdOut, homeCoords);
+#endif
 }
 #elif defined(__BORLANDC__) || defined (__TURBOC__) || defined(__DJGPP__)
 #define clear_screen() clrscr()
@@ -439,6 +443,7 @@ int ask_for_move(board_t board) {
             return (pos - allmoves) % 4;
         }
     }
+    return -1;
 }
 
 static uint16 draw_tile(void) {

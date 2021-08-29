@@ -14,6 +14,9 @@
 
 int c_clear_screen(lua_State *L) {
 #if defined(_WIN32)
+#ifdef __TINYC__
+    system("cls");
+#else
     HANDLE hStdOut;
     DWORD count;
     DWORD cellCount;
@@ -43,6 +46,7 @@ int c_clear_screen(lua_State *L) {
         return;
 
     SetConsoleCursorPosition(hStdOut, homeCoords);
+#endif
 #elif defined(__linux__) || defined(__unix__) || defined(__CYGWIN__) || defined(__MACH__)
     printf("\033[2J\033[H");
 #endif

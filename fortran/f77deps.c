@@ -25,6 +25,9 @@ unsigned int c_rand__() {
 
 void c_clear_screen__(void) {
 #if defined(_WIN32)
+#ifdef __TINYC__
+    system("cls");
+#else
     HANDLE hStdOut;
     DWORD count;
     DWORD cellCount;
@@ -54,6 +57,7 @@ void c_clear_screen__(void) {
         return;
 
     SetConsoleCursorPosition(hStdOut, homeCoords);
+#endif
 #elif defined(__linux__) || defined(__unix__) || defined(__CYGWIN__) || defined(__MACH__)
     printf("\033[2J\033[H");
 #endif
