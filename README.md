@@ -15,7 +15,7 @@ openwatcom c++ 1.9 (win32, win386, dos32 pmode, dos4gw)
 borland c++ 5.5 (win32)
 ```
 
-注1：VC++ 2.0使用release版编译会报错，VC自己的bug
+注1：msvc 2.0使用release版编译会报错，VC自己的bug
 
 注2：gcc低版本需要大量补丁用于支持现代化系统，[参见](https://github.com/jackyjkchen/legacy-gcc)
 
@@ -62,10 +62,12 @@ AI实现，ISO C++98实现
 ```
 gcc 2.8+ (linux, freebsd, macos, mingw, mingw-w64, cygwin, djgpp)
 clang 3.0+ (linux, macos, freebsd, win32)
-msvc 6.0+ (win32)
+msvc 5.0sp3+ (win32)
 openwatcom c++ 1.9 (win32, win386, dos32 pmode, dos4gw)
 borland c++ 5.5 (win32)
 ```
+
+注1：msvc 5.0必须应用SP3，否则优化选项会有问题
 
 
 * c/2048-sai.c

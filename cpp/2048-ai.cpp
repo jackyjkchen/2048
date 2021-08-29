@@ -125,6 +125,13 @@ typedef std::unordered_map<board_t, trans_table_entry_t> trans_table_t;
 typedef std::map<board_t, trans_table_entry_t> trans_table_t;
 #endif
 
+#if __cplusplus >= 199711L
+#define max std::max
+#define min std::min
+#else
+#define max(a,b) ( ((a)>(b)) ? (a):(b) )
+#define min(a,b) ( ((a)>(b)) ? (b):(a) )
+#endif
 
 enum {
     UP = 0,
@@ -270,7 +277,7 @@ static void init_tables(void) {
         }
 
         heur_score_table[row] = SCORE_LOST_PENALTY + SCORE_EMPTY_WEIGHT * empty + SCORE_MERGES_WEIGHT * merges -
-            SCORE_MONOTONICITY_WEIGHT * std::min(monotonicity_left, monotonicity_right) - SCORE_SUM_WEIGHT * sum;
+            SCORE_MONOTONICITY_WEIGHT * min(monotonicity_left, monotonicity_right) - SCORE_SUM_WEIGHT * sum;
 
         for (i = 0; i < 3; ++i) {
             for (j = i + 1; j < 4; ++j) {
@@ -533,7 +540,7 @@ static float score_heur_helper(board_t board) {
             }
         }
         heur_score += SCORE_LOST_PENALTY + SCORE_EMPTY_WEIGHT * empty + SCORE_MERGES_WEIGHT * merges -
-            SCORE_MONOTONICITY_WEIGHT * std::min(monotonicity_left, monotonicity_right) - SCORE_SUM_WEIGHT * sum;
+            SCORE_MONOTONICITY_WEIGHT * min(monotonicity_left, monotonicity_right) - SCORE_SUM_WEIGHT * sum;
     }
     return heur_score;
 }
@@ -561,7 +568,7 @@ static const uint16 CACHE_DEPTH_LIMIT = 15;
 static float score_move_node(eval_state & state, board_t board, float cprob);
 static float score_tilechoose_node(eval_state & state, board_t board, float cprob) {
     if (cprob < CPROB_THRESH_BASE || state.curdepth >= state.depth_limit) {
-        state.maxdepth = std::max(state.curdepth, state.maxdepth);
+        state.maxdepth = max(state.curdepth, state.maxdepth);
         return score_heur_board(board);
     }
     if (state.curdepth < CACHE_DEPTH_LIMIT) {
@@ -616,7 +623,7 @@ static float score_move_node(eval_state &state, board_t board, float cprob) {
         state.moves_evaled++;
 
         if (board != newboard) {
-            best = std::max(best, score_tilechoose_node(state, newboard, cprob));
+            best = max(best, score_tilechoose_node(state, newboard, cprob));
         }
     }
     state.curdepth--;
@@ -637,7 +644,7 @@ float score_toplevel_move(board_t board, int move) {
     float res = 0.0f;
     eval_state state;
 
-    state.depth_limit = std::max(3, count_distinct_tiles(board) - 2);
+    state.depth_limit = max(3, count_distinct_tiles(board) - 2);
 
     res = _score_toplevel_move(state, board, move);
 
