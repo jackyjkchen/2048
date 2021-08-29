@@ -126,7 +126,7 @@ static void term_clear(term_state *s) {
 #endif
 
 static int get_ch(void) {
-#if defined(_WIN32)
+#if defined(_WIN32) || (defined(_MSC_VER) && _MSC_VER >= 700 && defined(__STDC__))
     return _getch();
 #elif defined(MSDOS) || defined(__WINDOWS__)
     return getch();

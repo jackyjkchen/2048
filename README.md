@@ -10,7 +10,7 @@
 ```
 gcc 2.0+ (linux, freebsd, macos, mingw, mingw-w64, cygwin, djgpp)
 clang 3.0+ (linux, macos, freebsd, win32)
-visual c++ 2.0+ (win32)
+msvc 2.0+ (win32)
 openwatcom c++ 1.9 (win32, win386, dos32 pmode, dos4gw)
 borland c++ 5.5 (win32)
 ```
@@ -22,7 +22,7 @@ borland c++ 5.5 (win32)
 
 不使用FASTMODE预处理，代码和数据段可控制在64KiB以内，额外支持：
 ```
-openwatcom c++ 1.9 (dos16 exe, dos16 com, win16)
+openwatcom c++ 1.9 (dos16, win16)
 ```
 
 
@@ -36,17 +36,19 @@ openwatcom c++ 1.9 (dos16 exe, dos16 com, win16)
 ```
 gcc 2.0+ (linux, freebsd, macos, mingw, mingw-w64, cygwin, djgpp)
 clang 3.0+ (linux, macos, freebsd, win32)
-visual c++ 2.0+ (win32)
+msvc 2.0+ (win32)
 openwatcom c++ 1.9 (win32, win386, dos32 pmode, dos4gw)
 borland c++ 5.5 (win32)
 ```
 
 不使用FASTMODE预处理，代码和数据段可控制在64KiB以内，额外支持：
 ```
-openwatcom c++ 1.9 (dos16 exe, dos16 com, win16)
-borland c++ 3.1 (dos16 exe, dos16 com, win16)
-turbo c++ 1.01/3.0 (dos16 exe, dos16 com)
-turbo c 1.5/2.01 (dos16 exe, dos16 com)
+openwatcom c++ 1.9 (dos16, win16)
+msvc 1.52 (dos16)
+msc 6.0/7.0 (dos16)
+borland c++ 3.1 (dos16)
+turbo c++ 1.01/3.0 (dos16)
+turbo c 1.5/2.01 (dos16)
 ```
 
 
@@ -60,7 +62,7 @@ AI实现，ISO C++98实现
 ```
 gcc 2.8+ (linux, freebsd, macos, mingw, mingw-w64, cygwin, djgpp)
 clang 3.0+ (linux, macos, freebsd, win32)
-visual c++ 6.0+ (win32)
+msvc 6.0+ (win32)
 openwatcom c++ 1.9 (win32, win386, dos32 pmode, dos4gw)
 borland c++ 5.5 (win32)
 ```
@@ -123,7 +125,7 @@ turbo pascal 4.0/5.5/6.0/7.1 (dos16 exe)
 
 已测试编译器和平台
 ```
-gcc-4.3+ (linux, win32, freebsd, macos)
+gcc 4.3+ (linux, win32, freebsd, macos)
 ```
 
 注1：gfortran不感知_WIN32等C语言预处理器，WIN32平台要在命令行显式指定-D_WIN32。
@@ -136,7 +138,7 @@ gcc-4.3+ (linux, win32, freebsd, macos)
 
 已测试编译器和平台
 ```
-gcc-4.0+ (linux, win32, freebsd, macos)
+gcc 4.0+ (linux, win32, freebsd, macos)
 ```
 
 注1：编译命令行示例
@@ -152,8 +154,8 @@ gfortran -DFASTMODE -std=f95 -O2 fortran/2048.F90 f90deps.o -o 2048
 
 已测试编译器和平台
 ```
-g77-2.9 - g77-3.4 (linux, win32, freebsd)
-gfortran-4.0+ (linux, win32, freebsd)
+g77 2.9-3.4 (linux, win32, freebsd)
+gfortran 4.0+ (linux, win32, freebsd)
 ```
 
 注1：编译命令行示例

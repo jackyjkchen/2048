@@ -117,7 +117,7 @@ static void term_clear(term_state *s) {
 #endif
 
 static int get_ch(void) {
-#if defined(_WIN32)
+#if defined(_WIN32) || (defined(_MSC_VER) && _MSC_VER >= 700 && defined(__STDC__))
     return _getch();
 #elif defined(MSDOS) || defined(__WINDOWS__)
     return getch();
@@ -237,7 +237,7 @@ static void init_tables(void) {
 
     do {
         int i = 0, j = 0;
-        uint8 line[4] = { 0 };
+        uint8 line[4];
         uint32 score = 0;
 
         line[0] = (row >> 0) & 0xf;
@@ -286,10 +286,12 @@ static void init_tables(void) {
 
 #ifdef FASTMODE
 static board_t execute_move_col(board_t board, row_t *table) {
-    board_t ret = board, tmp;
-    board_t tran = transpose(board);
+    board_t ret, tmp;
+    board_t tran;
     uint16 *t = (uint16 *)&tran;
 
+    ret = board;
+    tran = transpose(board);
     tmp = unpack_col(table[t[3]]);
     ret.r0 ^= tmp.r0;
     ret.r1 ^= tmp.r1;
@@ -314,8 +316,9 @@ static board_t execute_move_col(board_t board, row_t *table) {
 }
 
 static board_t execute_move_row(board_t board, row_t *table) {
-    board_t ret = board;
+    board_t ret;
 
+    ret = board;
     ret.r3 ^= table[ret.r3];
     ret.r2 ^= table[ret.r2];
     ret.r1 ^= table[ret.r1];
@@ -326,7 +329,7 @@ static board_t execute_move_row(board_t board, row_t *table) {
 #else
 static row_t execute_move_helper(row_t row) {
     int i = 0, j = 0;
-    uint8 line[4] = { 0 };
+    uint8 line[4];
 
     line[0] = (row >> 0) & 0xf;
     line[1] = (row >> 4) & 0xf;
@@ -357,11 +360,12 @@ static row_t execute_move_helper(row_t row) {
 }
 
 static board_t execute_move_col(board_t board, int move) {
-    board_t ret = board;
-    board_t tran = transpose(board), tmp;
+    board_t ret, tran, tmp;
     uint16 *t = (uint16 *)&tran;
     int i = 0;
 
+    ret = board;
+    tran = transpose(board);
     for (i = 0; i < 4; ++i) {
         row_t row = t[3 - i];
 
@@ -381,10 +385,11 @@ static board_t execute_move_col(board_t board, int move) {
 }
 
 static board_t execute_move_row(board_t board, int move) {
-    board_t ret = board;
+    board_t ret;
     uint16 *t = (uint16 *)&ret;
     int i = 0;
 
+    ret = board;
     for (i = 0; i < 4; ++i) {
         row_t row = t[3 - i];
 
@@ -435,7 +440,7 @@ static uint32 score_helper(board_t board, const uint32 *table) {
 #else
 static uint32 score_helper(board_t board) {
     int i = 0, j = 0;
-    uint8 line[4] = { 0 };
+    uint8 line[4];
     uint32 score = 0;
 
     for (j = 0; j < 4; ++j) {
@@ -533,13 +538,16 @@ static board_t initial_board(void) {
 
 #define MAX_RETRACT 64
 void play_game(get_move_func_t get_move) {
-    board_t board = initial_board();
+    board_t board, tmp;
     int scorepenalty = 0;
     long last_score = 0, current_score = 0, moveno = 0;
-    board_t retract_vec[MAX_RETRACT] = { 0 };
-    uint8 retract_penalty_vec[MAX_RETRACT] = { 0 };
+    board_t retract_vec[MAX_RETRACT];
+    uint8 retract_penalty_vec[MAX_RETRACT];
     int retract_pos = 0, retract_num = 0;
 
+    board = initial_board();
+    memset(retract_vec, 0x00, MAX_RETRACT * sizeof(board_t));
+    memset(retract_penalty_vec, 0x00, MAX_RETRACT * sizeof(uint8));
     while (1) {
         int move = 0;
         uint16 tile = 0;
@@ -547,7 +555,7 @@ void play_game(get_move_func_t get_move) {
 
         clear_screen();
         for (move = 0; move < 4; move++) {
-            board_t tmp = execute_move(move, board);
+            tmp = execute_move(move, board);
             if (memcmp(&tmp, &board, sizeof(board_t)) != 0)
                 break;
         }
