@@ -11,7 +11,7 @@
 gcc 2.0+ (linux, freebsd, macos, mingw, mingw-w64, cygwin, djgpp)
 clang 3.0+ (linux, macos, freebsd, win32)
 msvc 2.0+ (win32)
-openwatcom c++ 1.9 (win32, win386, dos32 pmode, dos4gw)
+openwatcom 1.9 (win32, win386, dos32 pmode, dos4gw)
 borland c++ 5.5+ (win32)
 tcc 0.9.27 (linux, win32)
 lcc 4.0 (win32)
@@ -41,7 +41,7 @@ openwatcom c++ 1.9 (dos16, win16)
 gcc 2.0+ (linux, freebsd, macos, mingw, mingw-w64, cygwin, djgpp)
 clang 3.0+ (linux, macos, freebsd, win32)
 msvc 2.0+ (win32)
-openwatcom c++ 1.9 (win32, win386, dos32 pmode, dos4gw)
+openwatcom 1.9 (win32, win386, dos32 pmode, dos4gw)
 borland c++ 5.5+ (win32)
 tcc 0.9.27 (linux, win32)
 lcc 4.0 (win32)
@@ -49,12 +49,27 @@ lcc 4.0 (win32)
 
 不使用FASTMODE预处理，代码和数据段可控制在64KiB以内，额外支持：
 ```
-openwatcom c++ 1.9 (dos16, win16)
+openwatcom 1.9 (dos16, win16)
 msvc 1.52 (dos16)
-msc 6.0/7.0 (dos16)
+msc 5.1/6.0/7.0 (dos16)
+quickc 2.0/2.51 (dos16)
 borland c++ 3.1 (dos16)
 turbo c++ 1.01/3.0 (dos16)
 turbo c 1.5/2.01 (dos16)
+```
+
+注1：msc 5.1不能使用优化
+
+
+* c/2048-kr.c
+
+在2048-16b.c基础上改用K&R格式，用于兼容一些老编译器，由于目标是老编译器，因此去掉了快速查表法部分的代码。
+
+因为大部分现代编译器仍然支持K&R格式，能编译2048-16b.c的编译器应该也能编译2048-kr.c，因此只列出新增编译器支持。
+
+已测试编译器和平台：
+```
+msc 3.0 (dos16)
 ```
 
 
