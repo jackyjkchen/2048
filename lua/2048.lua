@@ -270,7 +270,7 @@ function play_game(get_move)
                 break
             end
 
-            newboard = execute_move(move, board)
+            local newboard = execute_move(move, board)
             if (newboard == board) then
                 moveno = moveno - 1
                 break

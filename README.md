@@ -1,4 +1,16 @@
-# 2048
+# 项目背景
+
+2048这个游戏复杂性恰到好处，他几乎是全算法+标准输出组成，但是为了更好的游戏体验，又得实现无回显输入和清屏两个系统相关通常不在大多数语言标准库中的功能。
+
+而且跨平台部分的算法，分支、循环、数学运算、逻辑运算、位运算、数组查表等都有，涵盖了一门结构化编程语言大多数基本特性，实现过程中我们还测出并修复了多个老编译器的bug，比如[gcc 2.0-2.2生成错误的移位代码](https://github.com/jackyjkchen/legacy-gcc/commit/03651dd3439f7b2df3a6205a85e7f28b9a86283b)
+
+绝大部分的可跨平台的功能+两个平台相关功能，因此它非常适合作为跨平台跨编译器测试。
+
+本项目中所有实现的手工版本2048，其输出的格式完全一致（精确到字节），其输入游戏体验完全一致。
+
+本项目中所有实现的AI版本2048，其输出格式完全一致。
+
+# C&C++
 
 * c/2048.c
 
@@ -17,7 +29,7 @@ tcc 0.9.27 (linux, win32)
 lcc 4.0 (win32)
 ```
 
-注1：msvc 2.0使用release版编译会报错，VC自己的bug
+注1：msvc 2.0不能使用优化
 
 注2：gcc低版本需要大量补丁用于支持现代化系统，[参见](https://github.com/jackyjkchen/legacy-gcc)
 
@@ -28,7 +40,6 @@ lcc 4.0 (win32)
 ```
 openwatcom c++ 1.9 (dos16, win16)
 ```
-
 
 * c/2048-16b.c
 
@@ -75,7 +86,7 @@ msc 3.0 (dos16)
 
 * cpp/2048-ai.cpp
 
-AI实现，ISO C++98实现
+AI版本，ISO C++98实现
 
 由于使用std::map且动态增长内存（可能超过1MiB），因此不支持dos16/win16，无论是否启用FASTMODE预处理（增加768KiB内存占用），编译器和平台支持均一致。
 
@@ -94,11 +105,12 @@ lcc 4.0 (win32)
 
 * c/2048-sai.c
 
-AI的慢速实现，不使用C++ std::map cache，ISO C90实现，非严格C90内容仅为64位整数
+AI版本的慢速实现，不使用C++ std::map cache，ISO C90实现，非严格C90内容仅为64位整数
 
 编译器和平台支持与2048.c相同
 
 
+# Python
 
 * python/2048.py
 
@@ -110,6 +122,7 @@ python 2.4-2.7 (linux, win32, freebsd, macos)
 python 3.0+ (linux, win32, freebsd, macos)
 ```
 
+# Pascal
 
 * pascal/2048.pas
 
@@ -142,6 +155,7 @@ free pascal 2.6.4/3.0.4/3.2.2 (linux, win32, freebsd, macos)
 turbo pascal 4.0/5.5/6.0/7.1 (dos16 exe)
 ```
 
+# Fortran
 
 * fortran/2048.F03
 
@@ -196,6 +210,7 @@ gcc -std=c90 -O2 -c fortran/f90deps.c -o f90deps.o
 gfortran -std=gnu -O2 fortran/2048f.f f90deps.o -o 2048
 ```
 
+# Lua
 
 * lua/2048.lua + lua/luadeps.c
 
@@ -213,3 +228,17 @@ gcc -std=c99 -I/usr/include/lua5.4 -shared -fPIC -O2 lua/luadeps.c  -o luadeps.s
 ./lua/2048.lua
 
 ```
+
+
+# Shell
+
+* shell/2048.sh
+
+bash实现，仅能用于posix兼容系统（依赖tty设备），bash版本要求3.0以上（支持64位整数），由于bash数组性能较差，因此使用非查表实现
+
+测试编译器和平台
+```
+bash 3.0+ (linux, freebsd, macos)
+```
+
+注1：声称兼容bash语法的zsh不支持64位无符号整数，因此无法运行
