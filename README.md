@@ -168,7 +168,7 @@ turbo pascal 4.0/5.5/6.0/7.1 (dos16)
 
 * fortran/2048.F03
 
-现代fortran2003实现，与2048.c一样使用FSASTMODE预处理判定是否使用快速查表法。
+现代fortran2003实现，与2048.c一样使用FASTMODE预处理判定是否使用快速查表法。
 
 已测试编译器和平台
 ```
