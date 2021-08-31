@@ -228,7 +228,7 @@ perl实现，由于脚本语言初始化大数组较慢，因此不使用查表�
 
 已测试perl版本和平台
 ```
-perl 5+ (linux, win32, freebsd, macos)
+perl 5.8+ (linux, win32, freebsd, macos)
 ```
 
 
@@ -256,7 +256,6 @@ lua-5.3+ (linux, win32, freebsd, macos)
 ```
 gcc -std=c99 -I/usr/include/lua5.4 -shared -fPIC -O2 lua/luadeps.c  -o luadeps.so
 ./lua/2048.lua
-
 ```
 
 
