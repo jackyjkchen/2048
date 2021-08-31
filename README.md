@@ -150,7 +150,7 @@ free pascal 2.6.4/3.0.4/3.2.2 (linux, win32, freebsd, macos)
 已测试编译器和平台
 ```
 free pascal 2.6.4/3.0.4/3.2.2 (linux, win32, freebsd, macos)
-turbo pascal 7.1 (dos16 exe)
+turbo pascal 7.1 (dos16)
 ```
 
 
@@ -161,7 +161,7 @@ turbo pascal 7.1 (dos16 exe)
 已测试编译器和平台
 ```
 free pascal 2.6.4/3.0.4/3.2.2 (linux, win32, freebsd, macos)
-turbo pascal 4.0/5.5/6.0/7.1 (dos16 exe)
+turbo pascal 4.0/5.5/6.0/7.1 (dos16)
 ```
 
 # Fortran
