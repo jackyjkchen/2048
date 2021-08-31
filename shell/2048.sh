@@ -3,6 +3,16 @@
 ROW_MASK=$((0xFFFF))
 COL_MASK=$((0x000F000F000F000F))
 
+function unif_random() {
+    local n=$1
+    if [ $((n)) -ne 0 ]
+    then
+        echo $(($RANDOM % n))
+    else
+        echo 0
+    fi
+}
+
 function unpack_col() {
     local row=$1
     echo $(((row | (row << 12) | (row << 24) | (row << 36)) & COL_MASK))
@@ -242,7 +252,7 @@ function ask_for_move() {
 }
 
 function draw_tile() {
-    local rd=$(($RANDOM % 10))
+    local rd=$(unif_random 10)
     if [ $((rd)) -lt 9 ]
     then
        echo 1
@@ -254,14 +264,8 @@ function draw_tile() {
 function insert_tile_rand() {
     local board=$1
     local tile=$2
-    local empty=$(count_empty $((board)))
-    local index=0
+    local index=$(unif_random $(count_empty $((board))))
     local tmp=board
-
-    if [ $((empty)) -ne 0 ]
-    then
-        index=$(($RANDOM % empty))
-    fi
 
     while true
     do
@@ -283,7 +287,7 @@ function insert_tile_rand() {
 
 function initial_board() {
     local board
-    board=$(($(draw_tile) << (($RANDOM % 10) << 2)))
+    board=$(($(draw_tile) << ($(unif_random 10) << 2)))
     echo $(insert_tile_rand $((board)) $(draw_tile))
 }
 

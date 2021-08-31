@@ -92,78 +92,87 @@ def count_empty(x):
     x += x >>  4
     return x & 0xf
 
-def execute_move_helper(row):
-    i = 0
-    line = [row & 0xf, (row >> 4) & 0xf, (row >> 8) & 0xf, (row >> 12) & 0xf]
-    while i < 3:
-        j = i + 1
-        while j < 4:
-            if line[j] != 0:
-                break
-            j += 1
-        if j == 4:
-            break
+TABLESIZE = 65536
+row_left_table = [0] * TABLESIZE
+row_right_table = [0] * TABLESIZE
+score_table = [0] * TABLESIZE
 
-        if line[i] == 0:
-            line[i] = line[j]
-            line[j] = 0
-            i -= 1
-        elif line[i] == line[j]:
-            if line[i] != 0xf:
-                line[i] += 1
-            line[j] = 0
-        i += 1
-
-    return  line[0] | (line[1] << 4) | (line[2] << 8) | (line[3] << 12)
-
-def execute_move_col(board, move):
-    ret = board
-    t = transpose(board)
-
-    for i in range(0, 4):
-        row = (t >> (i << 4)) & ROW_MASK
-        if move == UP:
-            ret ^= unpack_col(row ^ execute_move_helper(row)) << (i << 2)
-        elif move == DOWN:
-            rev_row = reverse_row(row)
-            ret ^= unpack_col(row ^ reverse_row(execute_move_helper(rev_row))) << (i << 2)
-    return ret
-
-def execute_move_row(board, move):
-    ret = board
-
-    for i in range(0, 4):
-        row = (board >> (i << 4)) & ROW_MASK
-
-        if move == LEFT:
-            ret ^= (row ^ execute_move_helper(row)) << (i << 4)
-        elif move == RIGHT:
-            rev_row = reverse_row(row)
-            ret ^= (row ^ reverse_row(execute_move_helper(rev_row))) << (i << 4)
-    return ret
-
-def execute_move(move, board):
-    if (move == UP) or (move == DOWN):
-        return execute_move_col(board, move)
-    elif (move == LEFT) or (move == RIGHT):
-        return execute_move_row(board, move)
-    else:
-        return 0xFFFFFFFFFFFFFFFF
-
-def score_helper(board):
-    score = 0
-    for j in range(0, 4):
-        row = (board >> (j << 4)) & ROW_MASK
+def init_tables():
+    for row in range(0, 65536):
+        rev_row = 0
+        result = 0
+        rev_result = 0
+        score = 0
         line = [row & 0xf, (row >> 4) & 0xf, (row >> 8) & 0xf, (row >> 12) & 0xf]
 
         for i in range(0, 4):
             rank = line[i]
             if rank >= 2:
                 score += (rank - 1) * (1 << rank)
-    return score
+        score_table[row] = score
+
+        i = 0
+        while i < 3:
+            j = i + 1
+            while j < 4:
+                if line[j] != 0:
+                    break
+                j += 1
+            if j == 4:
+                break
+
+            if line[i] == 0:
+                line[i] = line[j]
+                line[j] = 0
+                i -= 1
+            elif line[i] == line[j]:
+                if line[i] != 0xf:
+                    line[i] += 1
+                line[j] = 0
+            i += 1
+
+        result = line[0] | (line[1] << 4) | (line[2] << 8) | (line[3] << 12)
+        rev_result = reverse_row(result)
+        rev_row = reverse_row(row)
+
+        row_left_table [    row] =     row ^     result
+        row_right_table[rev_row] = rev_row ^ rev_result
+
+def execute_move_col(board, table):
+    ret = board
+    t = transpose(board)
+    ret ^= unpack_col(table[(t >>  0) & ROW_MASK]) <<  0
+    ret ^= unpack_col(table[(t >> 16) & ROW_MASK]) <<  4
+    ret ^= unpack_col(table[(t >> 32) & ROW_MASK]) <<  8
+    ret ^= unpack_col(table[(t >> 48) & ROW_MASK]) << 12
+    return ret
+
+def execute_move_row(board, table):
+    ret = board
+    ret ^= table[(board >>  0) & ROW_MASK] <<  0
+    ret ^= table[(board >> 16) & ROW_MASK] << 16
+    ret ^= table[(board >> 32) & ROW_MASK] << 32
+    ret ^= table[(board >> 48) & ROW_MASK] << 48
+    return ret
+
+def execute_move(move, board):
+    if (move == UP):
+        return execute_move_col(board, row_left_table)
+    elif (move == DOWN):
+        return execute_move_col(board, row_right_table)
+    elif (move == LEFT):
+        return execute_move_row(board, row_left_table)
+    elif (move == RIGHT):
+        return execute_move_row(board, row_right_table)
+    else:
+        return 0xFFFFFFFFFFFFFFFF
+
+def score_helper(board, table):
+    return table[(board >>  0) & ROW_MASK] + table[(board >> 16) & ROW_MASK] + \
+           table[(board >> 32) & ROW_MASK] + table[(board >> 48) & ROW_MASK]
 
 def score_board(board):
-    return score_helper(board)
+    return score_helper(board, score_table)
 
 def ask_for_move(board):
     print_board(board)
@@ -279,4 +288,5 @@ def play_game(get_move):
 
 
 if __name__ == "__main__":
+    init_tables()
     play_game(ask_for_move)

@@ -65,6 +65,11 @@ function count_empty(x)
     return x & 0xf
 end
 
+TABLESIZE = 65536
+row_left_table = {}
+row_right_table = {}
+score_table = {}
+
 function cindex(i)
     return i + 1
 end
@@ -76,6 +81,7 @@ function init_tables()
         local rev_result = 0
         local score = 0
         local line = {row & 0xf, (row >> 4) & 0xf, (row >> 8) & 0xf, (row >> 12) & 0xf}
+        local i = 0
 
         for i = 0, 3, 1 do
             local rank = line[cindex(i)]
@@ -120,97 +126,46 @@ function init_tables()
     end
 end
 
-function execute_move_helper(row)
-    local line = {row & 0xf, (row >> 4) & 0xf, (row >> 8) & 0xf, (row >> 12) & 0xf}
-
-    local i = 0
-    while (i < 3) do
-        j = i + 1
-        while (j < 4) do
-            if (line[cindex(j)] ~= 0) then
-                break
-            end
-            j = j + 1
-        end
-        if (j == 4) then
-            break
-        end
-
-        if (line[cindex(i)] == 0) then
-            line[cindex(i)] = line[cindex(j)]
-            line[cindex(j)] = 0
-            i = i - 1
-        elseif (line[cindex(i)] == line[cindex(j)]) then
-            if (line[cindex(i)] ~= 0xf) then
-                line[cindex(i)] = line[cindex(i)] + 1
-            end
-            line[cindex(j)] = 0
-        end
-        i = i + 1
-    end
-
-    return line[cindex(0)] | (line[cindex(1)] << 4) | (line[cindex(2)] << 8) | (line[cindex(3)] << 12)
-end
-
-function execute_move_col(board, move)
-    ret = board
-    t = transpose(board)
-
-    for i = 0, 3, 1 do
-        row = (t >> (i << 4)) & ROW_MASK
-        if (move == UP) then
-            ret = ret ~ (unpack_col(row ~ execute_move_helper(row)) << (i << 2))
-        elseif (move == DOWN) then
-            rev_row = reverse_row(row)
-            ret = ret ~ (unpack_col(row ~ reverse_row(execute_move_helper(rev_row))) << (i << 2))
-        end
-    end
+function execute_move_col(board, table)
+    local ret = board
+    local t = transpose(board)
+    ret = ret ~ (unpack_col(table[cindex((t >>  0) & ROW_MASK)]) <<  0)
+    ret = ret ~ (unpack_col(table[cindex((t >> 16) & ROW_MASK)]) <<  4)
+    ret = ret ~ (unpack_col(table[cindex((t >> 32) & ROW_MASK)]) <<  8)
+    ret = ret ~ (unpack_col(table[cindex((t >> 48) & ROW_MASK)]) << 12)
     return ret
 end
 
-function execute_move_row(board, move)
-    ret = board
-
-    for i = 0, 3, 1 do
-        row = (board >> (i << 4)) & ROW_MASK
-        if (move == LEFT) then
-            ret = ret ~ ((row ~ execute_move_helper(row)) << (i << 4))
-        elseif (move == RIGHT) then
-            rev_row = reverse_row(row)
-            ret = ret ~ ((row ~ reverse_row(execute_move_helper(rev_row))) << (i << 4))
-        end
-    end
+function execute_move_row(board, table)
+    local ret = board
+    ret = ret ~ (table[cindex((board >>  0) & ROW_MASK)] <<  0)
+    ret = ret ~ (table[cindex((board >> 16) & ROW_MASK)] << 16)
+    ret = ret ~ (table[cindex((board >> 32) & ROW_MASK)] << 32)
+    ret = ret ~ (table[cindex((board >> 48) & ROW_MASK)] << 48)
     return ret
 end
 
 function execute_move(move, board)
-    if ((move == UP) or (move == DOWN) ) then
-        return execute_move_col(board, move)
-    elseif ((move == LEFT) or (move == RIGHT) ) then
-        return execute_move_row(board, move)
+    if (move == UP) then
+        return execute_move_col(board, row_left_table)
+    elseif (move == DOWN) then
+        return execute_move_col(board, row_right_table)
+    elseif (move == LEFT) then
+        return execute_move_row(board, row_left_table)
+    elseif (move == RIGHT) then
+        return execute_move_row(board, row_right_table)
     else
         return 0xFFFFFFFFFFFFFFFF
     end
 end
 
-function score_helper(board)
-    local score = 0
-
-    for j = 0, 3, 1 do
-        row = (board >> (j << 4)) & ROW_MASK
-        local line = {row & 0xf, (row >> 4) & 0xf, (row >> 8) & 0xf, (row >> 12) & 0xf}
-        for i = 0, 3, 1 do
-            local rank = line[cindex(i)]
-            if (rank >= 2) then
-                score = score + (rank - 1) * (1 << rank)
-            end
-        end
-    end
-    return score
+function score_helper(board, table)
+    return table[cindex((board >>  0) & ROW_MASK)] + table[cindex((board >> 16) & ROW_MASK)] +
+           table[cindex((board >> 32) & ROW_MASK)] + table[cindex((board >> 48) & ROW_MASK)]
 end
 
 function score_board(board)
-    return score_helper(board)
+    return score_helper(board, score_table)
 end
 
 function ask_for_move(board)
@@ -351,5 +306,6 @@ function play_game(get_move)
 end
 
 luadeps.c_term_init()
+init_tables()
 play_game(ask_for_move)
 luadeps.c_term_clear()
