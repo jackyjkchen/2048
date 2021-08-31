@@ -128,11 +128,7 @@ python 3.0+ (linux, win32, freebsd, macos)
 
 python实现，使用查表法，在低配置设备上启动较慢，但执行较快。支持python2.4+，python3.0+，支持各种Posix变体和Win32。
 
-已测试python版本和平台
-```
-python 2.4-2.7 (linux, win32, freebsd, macos)
-python 3.0+ (linux, win32, freebsd, macos)
-```
+python版本和平台支持同上
 
 
 # Pascal
@@ -223,13 +219,34 @@ gcc -std=c90 -O2 -c fortran/f90deps.c -o f90deps.o
 gfortran -std=gnu -O2 fortran/2048f.f f90deps.o -o 2048
 ```
 
+
+# Perl
+
+* perl/2048.pl
+
+perl实现，由于脚本语言初始化大数组较慢，因此不使用查表法。依赖Term::ReadKey和Term::ANSIScreen两个CPAN模块。
+
+已测试perl版本和平台
+```
+perl 5+ (linux, win32, freebsd, macos)
+```
+
+
+* perl/2048-tab.pl
+
+perl实现，使用查表法，在低配置设备上启动较慢，但执行较快。依赖Term::ReadKey和Term::ANSIScreen两个CPAN模块。
+
+perl版本和平台支持同上
+
+
+
 # Lua
 
 * lua/2048.lua + lua/luadeps.c
 
 lua 5.3+实现，依赖lua 5.3或以上版本提供的原生64位整数运算支持，由于原生lua对操作系统判定和无回显输入不支持，相关功能由luadeps.c提供。由于脚本语言初始化大数组较慢，因此不使用查表法。
 
-已测试编译器和平台
+已测试lua版本和平台
 ```
 lua-5.3+ (linux, win32, freebsd, macos)
 ```
@@ -247,18 +264,8 @@ gcc -std=c99 -I/usr/include/lua5.4 -shared -fPIC -O2 lua/luadeps.c  -o luadeps.s
 
 lua 5.3+实现，依赖lua 5.3或以上版本提供的原生64位整数运算支持，由于原生lua对操作系统判定和无回显输入不支持，相关功能由luadeps.c提供。使用查表法，低配置设备上启动较慢，但执行较快。
 
-已测试编译器和平台
-```
-lua-5.3+ (linux, win32, freebsd, macos)
-```
+lua版本和平台支持同上
 
-注1：编译运行命令行示例
-
-```
-gcc -std=c99 -I/usr/include/lua5.4 -shared -fPIC -O2 lua/luadeps.c  -o luadeps.so
-./lua/2048-tab.lua
-
-```
 
 
 # Shell
@@ -267,7 +274,7 @@ gcc -std=c99 -I/usr/include/lua5.4 -shared -fPIC -O2 lua/luadeps.c  -o luadeps.s
 
 bash实现，仅能用于posix兼容系统（依赖tty设备），bash版本要求3.0以上（支持64位整数），由于bash数组性能很差，因此使用非查表实现
 
-测试编译器和平台
+测试shell和平台
 ```
 bash 3.0+ (linux, freebsd, macos)
 ```

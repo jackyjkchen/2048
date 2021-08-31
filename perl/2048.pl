@@ -84,104 +84,84 @@ sub count_empty {
     return $x & 0xf;
 }
 
-our $TABLESIZE = 65536;
-our @row_left_table;
-our @row_right_table;
-our @score_table;
+sub execute_move_helper {
+    my $row = $_[0];
+    my @line;
+    my $i = 0;
+    my $j = 0;
 
-sub init_tables {
-    my $row = 0;
-    my $rev_row = 0;
-    my $result = 0;
-    my $rev_result = 0;
+    @line[0] = ($row >> 0) & 0xf;
+    @line[1] = ($row >> 4) & 0xf;
+    @line[2] = ($row >> 8) & 0xf;
+    @line[3] = ($row >> 12) & 0xf;
 
-    do {
-        my $i = 0;
-        my $j = 0;
-        my $score = 0;
-        my @line;
-
-        @line[0] = ($row >> 0) & 0xf;
-        @line[1] = ($row >> 4) & 0xf;
-        @line[2] = ($row >> 8) & 0xf;
-        @line[3] = ($row >> 12) & 0xf;
-
-        for ($i=0; $i<4; $i++) {
-            my $rank = @line[$i];
-
-            if ($rank >= 2) {
-                $score += ($rank - 1) * (1 << $rank);
-            }
-        }
-        @score_table[$row] = $score;
-
-        for ($i=0; $i<3; ++$i) {
-            for ($j=$i+1; $j<4; ++$j) {
-                if (@line[$j] != 0) {
-                    last;
-                }
-            }
-            if ($j == 4) {
+    for ($i=0; $i<3; ++$i) {
+        for ($j=$i+1; $j<4; ++$j) {
+            if (@line[$j] != 0) {
                 last;
             }
-
-            if (@line[$i] == 0) {
-                @line[$i] = @line[$j];
-                @line[$j] = 0;
-                $i--;
-            } elsif (@line[$i] == @line[$j]) {
-                if (@line[$i] != 0xf) {
-                    @line[$i]++;
-                }
-                @line[$j] = 0;
-            }
+        }
+        if ($j == 4) {
+            last;
         }
 
-        $result = (@line[0] << 0) | (@line[1] << 4) | (@line[2] << 8) | (@line[3] << 12);
-        $rev_result = reverse_row($result);
-        $rev_row = reverse_row($row);
+        if (@line[$i] == 0) {
+            @line[$i] = @line[$j];
+            @line[$j] = 0;
+            $i--;
+        } elsif (@line[$i] == @line[$j]) {
+            if (@line[$i] != 0xf) {
+                @line[$i]++;
+            }
+            @line[$j] = 0;
+        }
+    }
 
-        @row_left_table[$row] = $row ^ $result;
-        @row_right_table[$rev_row] = $rev_row ^ $rev_result;
-    } while ($row++ != ($TABLESIZE - 1));
+    return (@line[0] << 0) | (@line[1] << 4) | (@line[2] << 8) | (@line[3] << 12);
 }
 
 sub execute_move_col {
     my $board = $_[0];
-    my $table = $_[1];
+    my $move = $_[1];
     my $ret = $board;
     my $t = transpose($board);
 
-    $ret ^= unpack_col(@$table[($t >> 0) & $ROW_MASK]) << 0;
-    $ret ^= unpack_col(@$table[($t >> 16) & $ROW_MASK]) << 4;
-    $ret ^= unpack_col(@$table[($t >> 32) & $ROW_MASK]) << 8;
-    $ret ^= unpack_col(@$table[($t >> 48) & $ROW_MASK]) << 12;
+    for (my $i=0; $i<4; ++$i) {
+        my $row = ($t >> ($i << 4)) & $ROW_MASK;
+        if ($move == $UP) {
+            $ret ^= unpack_col($row ^ execute_move_helper($row)) << ($i << 2);
+        } elsif ($move == $DOWN) {
+            my $rev_row = reverse_row($row);
+            $ret ^= unpack_col($row ^ reverse_row(execute_move_helper($rev_row))) << ($i << 2);
+        }
+    }
     return $ret;
 }
 
 sub execute_move_row {
     my $board = $_[0];
-    my $table = $_[1];
+    my $move = $_[1];
     my $ret = $board;
 
-    $ret ^= (@$table[($board >> 0) & $ROW_MASK]) << 0;
-    $ret ^= (@$table[($board >> 16) & $ROW_MASK]) << 16;
-    $ret ^= (@$table[($board >> 32) & $ROW_MASK]) << 32;
-    $ret ^= (@$table[($board >> 48) & $ROW_MASK]) << 48;
+    for (my $i=0; $i<4; ++$i) {
+        my $row = ($board >> ($i << 4)) & $ROW_MASK;
+        if ($move == $LEFT) {
+            $ret ^= ($row ^ execute_move_helper($row)) << ($i << 4);
+        } elsif ($move == $RIGHT) {
+            my $rev_row = reverse_row($row);
+            $ret ^= ($row ^ reverse_row(execute_move_helper($rev_row))) << ($i << 4);
+        }
+    }
     return $ret;
 }
 
 sub execute_move {
     my $move = $_[0];
     my $board = $_[1];
-    if ($move == $UP) {
-        return execute_move_col($board, \@row_left_table);
-    } elsif ($move == $DOWN) {
-        return execute_move_col($board, \@row_right_table);
-    } elsif ($move == $LEFT) {
-        return execute_move_row($board, \@row_left_table);
-    } elsif ($move == $RIGHT) {
-        return execute_move_row($board, \@row_right_table);
+    if ($move == $UP || $move == $DOWN) {
+        return execute_move_col($board, $move);
+    } elsif ($move == $LEFT || $move == $RIGHT) {
+        return execute_move_row($board, $move);
     } else {
         return 0xFFFFFFFFFFFFFFFF;
     }
@@ -189,14 +169,29 @@ sub execute_move {
 
 sub score_helper {
     my $board = $_[0];
-    my $table = $_[1];
-    return @$table[($board >> 0) & $ROW_MASK] + @$table[($board >> 16) & $ROW_MASK] +
-        @$table[($board >> 32) & $ROW_MASK] + @$table[($board >> 48) & $ROW_MASK];
+    my @line;
+    my $score = 0;
+
+    for (my $j=0; $j<4; ++$j) {
+        my $row = ($board >> ($j << 4)) & $ROW_MASK;
+
+        @line[0] = ($row >> 0) & 0xf;
+        @line[1] = ($row >> 4) & 0xf;
+        @line[2] = ($row >> 8) & 0xf;
+        @line[3] = ($row >> 12) & 0xf;
+        for (my $i=0; $i<4; ++$i) {
+            my $rank = @line[$i];
+            if ($rank >= 2) {
+                $score += ($rank - 1) * (1 << $rank);
+            }
+        }
+    }
+    return $score;
 }
 
 sub score_board {
     my $board = $_[0];
-    return score_helper($board, \@score_table);
+    return score_helper($board);
 }
 
 sub ask_for_move {
@@ -332,5 +327,4 @@ sub play_game {
     printf("Game over. Your score is %d.\n", $current_score);
 }
 
-init_tables();
 play_game();
