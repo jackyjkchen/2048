@@ -255,7 +255,7 @@ begin
         _pos := strscan(allmoves, movechar);
         if _pos <> nil then
         begin
-            ret := (_pos - allmoves) mod 4;
+            ret := (longint(_pos) - longint(allmoves)) mod 4;
             break;
         end;
     end;

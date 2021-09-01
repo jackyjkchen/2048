@@ -107,14 +107,17 @@ typedef struct {
     struct termios oldt, newt;
 } term_state;
 
-static void term_init(term_state *s) {
+static void term_init(s)
+     term_state *s;
+{
     tcgetattr(STDIN_FILENO, &s->oldt);
     s->newt = s->oldt;
     s->newt.c_lflag &= ~(ICANON | ECHO);
     tcsetattr(STDIN_FILENO, TCSANOW, &s->newt);
 }
 
-static void term_clear(term_state *s) {
+static void term_clear(s) {
+     term_state *s;
     tcsetattr(STDIN_FILENO, TCSANOW, &s->oldt);
 }
 

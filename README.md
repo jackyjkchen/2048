@@ -131,6 +131,7 @@ free pascal 2.2+ (linux, win32, freebsd, macos)
 ```
 free pascal 2.2+ (linux, win32, freebsd, macos)
 turbo pascal 7.1 (dos16)
+gnu pascal 2.1 (linux, mingw, djgpp)
 ```
 
 
@@ -142,6 +143,7 @@ turbo pascal 7.1 (dos16)
 ```
 free pascal 2.2+ (linux, win32, freebsd, macos)
 turbo pascal 4.0/5.5/6.0/7.1 (dos16)
+gnu pascal 2.1 (linux, mingw, djgpp)
 ```
 
 # Fortran
