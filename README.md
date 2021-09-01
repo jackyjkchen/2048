@@ -154,7 +154,7 @@ gnu pascal 2.1 (linux, mingw, djgpp)
 
 已测试编译器和平台
 ```
-gcc 4.3+ (linux, win32, freebsd, macos)
+gcc 4.3+ (linux, mingw, mingw-w64, cygwin, freebsd, macos, djgpp)
 ```
 
 注1：gfortran不感知_WIN32等C语言预处理器，WIN32平台要在命令行显式指定-D_WIN32。
@@ -167,7 +167,7 @@ gcc 4.3+ (linux, win32, freebsd, macos)
 
 已测试编译器和平台
 ```
-gcc 4.0+ (linux, win32, freebsd, macos)
+gcc 4.0+ (linux, mingw, mingw-w64, cygwin, freebsd, macos, djgpp)
 ```
 
 注1：编译命令行示例
@@ -183,8 +183,8 @@ gfortran -DFASTMODE -std=f95 -O2 fortran/2048.F90 f90deps.o -o 2048
 
 已测试编译器和平台
 ```
-g77 2.9-3.4 (linux, win32, freebsd)
-gfortran 4.0+ (linux, win32, freebsd)
+g77 2.9-3.4 (linux, mingw, cygwin, freebsd, djgpp)
+gfortran 4.0+ (linux, mingw, mingw-w64, cygwin, freebsd, djgpp)
 ```
 
 注1：编译命令行示例
