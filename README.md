@@ -140,7 +140,7 @@ turbo pascal 7.1 (dos16)
 
 已测试编译器和平台
 ```
-free pascal 2.6.4/3.0.4/3.2.2 (linux, win32, freebsd, macos)
+free pascal 2.2+ (linux, win32, freebsd, macos)
 turbo pascal 4.0/5.5/6.0/7.1 (dos16)
 ```
 
@@ -264,7 +264,7 @@ perl 5.8+ (linux, win32, freebsd, macos)
 
 * shell/2048.sh
 
-bash实现，仅能用于posix兼容系统（依赖tty设备），由于bash数组性能很差，因此使用非查表实现
+bash实现，仅能用于posix兼容系统（依赖tty设备），由于bash数组性能很差，因此使用非查表实现。
 
 测试shell和平台
 ```
