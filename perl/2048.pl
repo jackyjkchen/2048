@@ -1,5 +1,6 @@
 #!/usr/bin/env perl
 
+use bigint;
 use Term::ReadKey;
 use Term::ANSIScreen;
 
@@ -90,14 +91,14 @@ sub execute_move_helper {
     my $i = 0;
     my $j = 0;
 
-    @line[0] = ($row >> 0) & 0xf;
-    @line[1] = ($row >> 4) & 0xf;
-    @line[2] = ($row >> 8) & 0xf;
-    @line[3] = ($row >> 12) & 0xf;
+    $line[0] = ($row >> 0) & 0xf;
+    $line[1] = ($row >> 4) & 0xf;
+    $line[2] = ($row >> 8) & 0xf;
+    $line[3] = ($row >> 12) & 0xf;
 
     for ($i=0; $i<3; ++$i) {
         for ($j=$i+1; $j<4; ++$j) {
-            if (@line[$j] != 0) {
+            if ($line[$j] != 0) {
                 last;
             }
         }
@@ -105,19 +106,19 @@ sub execute_move_helper {
             last;
         }
 
-        if (@line[$i] == 0) {
-            @line[$i] = @line[$j];
-            @line[$j] = 0;
+        if ($line[$i] == 0) {
+            $line[$i] = $line[$j];
+            $line[$j] = 0;
             $i--;
-        } elsif (@line[$i] == @line[$j]) {
-            if (@line[$i] != 0xf) {
-                @line[$i]++;
+        } elsif ($line[$i] == $line[$j]) {
+            if ($line[$i] != 0xf) {
+                $line[$i] += 1;
             }
-            @line[$j] = 0;
+            $line[$j] = 0;
         }
     }
 
-    return (@line[0] << 0) | (@line[1] << 4) | (@line[2] << 8) | (@line[3] << 12);
+    return ($line[0] << 0) | ($line[1] << 4) | ($line[2] << 8) | ($line[3] << 12);
 }
 
 sub execute_move_col {
@@ -175,12 +176,12 @@ sub score_helper {
     for (my $j=0; $j<4; ++$j) {
         my $row = ($board >> ($j << 4)) & $ROW_MASK;
 
-        @line[0] = ($row >> 0) & 0xf;
-        @line[1] = ($row >> 4) & 0xf;
-        @line[2] = ($row >> 8) & 0xf;
-        @line[3] = ($row >> 12) & 0xf;
+        $line[0] = ($row >> 0) & 0xf;
+        $line[1] = ($row >> 4) & 0xf;
+        $line[2] = ($row >> 8) & 0xf;
+        $line[3] = ($row >> 12) & 0xf;
         for (my $i=0; $i<4; ++$i) {
-            my $rank = @line[$i];
+            my $rank = $line[$i];
             if ($rank >= 2) {
                 $score += ($rank - 1) * (1 << $rank);
             }
@@ -293,8 +294,8 @@ sub play_game {
             if ($retract_pos == 0 && $retract_num > 0) {
                 $retract_pos = $MAX_RETRACT;
             }
-            $board = @retract_vec[--$retract_pos];
-            $scorepenalty -= @retract_penalty_vec[@retract_pos];
+            $board = $retract_vec[--$retract_pos];
+            $scorepenalty -= $retract_penalty_vec[$retract_pos];
             $retract_num--;
             next;
         }
@@ -308,11 +309,11 @@ sub play_game {
         $tile = draw_tile();
         if ($tile == 2) {
             $scorepenalty += 4;
-            @retract_penalty_vec[$retract_pos] = 4;
+            $retract_penalty_vec[$retract_pos] = 4;
         } else {
-            @retract_penalty_vec[$retract_pos] = 0;
+            $retract_penalty_vec[$retract_pos] = 0;
         }
-        @retract_vec[$retract_pos++] = $board;
+        $retract_vec[$retract_pos++] = $board;
         if ($retract_pos == $MAX_RETRACT) {
             $retract_pos = 0;
         }

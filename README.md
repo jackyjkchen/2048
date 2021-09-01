@@ -220,26 +220,6 @@ gfortran -std=gnu -O2 fortran/2048f.f f90deps.o -o 2048
 ```
 
 
-# Perl
-
-* perl/2048.pl
-
-perl实现，由于脚本语言初始化大数组较慢，因此不使用查表法。依赖Term::ReadKey和Term::ANSIScreen两个CPAN模块。
-
-已测试perl版本和平台
-```
-perl 5.8+ (linux, win32, freebsd, macos)
-```
-
-
-* perl/2048-tab.pl
-
-perl实现，使用查表法，在低配置设备上启动较慢，但执行较快。依赖Term::ReadKey和Term::ANSIScreen两个CPAN模块。
-
-perl版本和平台支持同上
-
-
-
 # Lua
 
 * lua/2048.lua + lua/luadeps.c
@@ -265,6 +245,18 @@ lua 5.3+实现，依赖lua 5.3或以上版本提供的原生64位整数运算支
 
 lua版本和平台支持同上
 
+
+
+# Perl
+
+* perl/2048.pl
+
+perl实现，由于脚本语言初始化大数组较慢，因此不使用查表法。依赖Term::ReadKey和Term::ANSIScreen两个CPAN模块。
+
+已测试perl版本和平台
+```
+perl 5.8+ (linux, win32, freebsd, macos)
+```
 
 
 # Shell
