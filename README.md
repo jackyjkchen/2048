@@ -264,11 +264,11 @@ perl 5.8+ (linux, win32, freebsd, macos)
 
 * shell/2048.sh
 
-bash实现，仅能用于posix兼容系统（依赖tty设备），bash版本要求3.0以上（支持64位整数），由于bash数组性能很差，因此使用非查表实现
+bash实现，仅能用于posix兼容系统（依赖tty设备），由于bash数组性能很差，因此使用非查表实现
 
 测试shell和平台
 ```
-bash 3.0+ (linux, freebsd, macos)
+bash 3.1+ (linux, freebsd, macos)
 ```
 
 注1：声称兼容bash语法的zsh不支持64位无符号整数，因此无法运行
