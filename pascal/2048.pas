@@ -18,8 +18,8 @@ begin
 end;
 
 type
-    board_t = uint64;
-    row_t   = uint16;
+    board_t = qword;
+    row_t   = word;
 
 const
     ROW_MASK : row_t   = $FFFF;
@@ -93,8 +93,8 @@ end;
 const
     TABLESIZE = 65536;
 type
-    row_table_t   =  array[0..(TABLESIZE)-1] of uint16;
-    score_table_t =  array[0..(TABLESIZE)-1] of uint32;
+    row_table_t   =  array[0..(TABLESIZE)-1] of word;
+    score_table_t =  array[0..(TABLESIZE)-1] of dword;
 
 var
     row_left_table  : row_table_t;
@@ -106,7 +106,7 @@ var
     row, rev_row, row_result, rev_result : row_t;
     i, j, rank : integer;
     row_line   : array[0..3] of byte;
-    score      : uint32;
+    score      : dword;
 begin
     row := 0;
     rev_row := 0;
@@ -210,7 +210,7 @@ begin
     execute_move := ret
 end;
 
-function score_helper(board : board_t; var table : score_table_t) : uint32;
+function score_helper(board : board_t; var table : score_table_t) : dword;
 begin
     score_helper := table[(board shr  0) and ROW_MASK] +
                     table[(board shr 16) and ROW_MASK] +
@@ -218,7 +218,7 @@ begin
                     table[(board shr 48) and ROW_MASK];
 end;
 
-function score_board(board : board_t) : uint32;
+function score_board(board : board_t) : dword;
 begin
     score_board := score_helper(board, score_table);
 end;
@@ -244,7 +244,7 @@ begin
     end;
 end;
 
-function draw_tile : uint16;
+function draw_tile : word;
 var
     ret : integer;
 begin
@@ -295,12 +295,12 @@ const
 var
     board               : board_t;
     newboard            : board_t;
-    scorepenalty        : int32;
-    current_score       : int32;
-    last_score          : int32;
-    moveno              : uint32;
+    scorepenalty        : longint;
+    current_score       : longint;
+    last_score          : longint;
+    moveno              : dword;
     _move               : integer;
-    tile                : uint16;
+    tile                : word;
     retract_vec         : array[0..(MAX_RETRACT)-1] of board_t;
     retract_penalty_vec : array[0..(MAX_RETRACT)-1] of byte;
     retract_pos         : integer;

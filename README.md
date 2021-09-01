@@ -111,26 +111,6 @@ AI版本的慢速实现，不使用C++ std::map cache，ISO C90实现，非严�
 
 
 
-# Python
-
-* python/2048.py
-
-python实现，由于脚本语言初始化大数组较慢，因此不使用查表法。支持python2.4+，python3.0+，支持各种Posix变体和Win32。
-
-已测试python版本和平台
-```
-python 2.4-2.7 (linux, win32, freebsd, macos)
-python 3.0+ (linux, win32, freebsd, macos)
-```
-
-
-* python/2048-tab.py
-
-python实现，使用查表法，在低配置设备上启动较慢，但执行较快。支持python2.4+，python3.0+，支持各种Posix变体和Win32。
-
-python版本和平台支持同上
-
-
 # Pascal
 
 * pascal/2048.pas
@@ -139,7 +119,7 @@ python版本和平台支持同上
 
 已测试编译器和平台
 ```
-free pascal 2.6.4/3.0.4/3.2.2 (linux, win32, freebsd, macos)
+free pascal 2.2+ (linux, win32, freebsd, macos)
 ```
 
 
@@ -149,7 +129,7 @@ free pascal 2.6.4/3.0.4/3.2.2 (linux, win32, freebsd, macos)
 
 已测试编译器和平台
 ```
-free pascal 2.6.4/3.0.4/3.2.2 (linux, win32, freebsd, macos)
+free pascal 2.2+ (linux, win32, freebsd, macos)
 turbo pascal 7.1 (dos16)
 ```
 
@@ -218,6 +198,27 @@ g77-3.4.6 -O2 fortran/2048f.f f77deps.o -o 2048
 gcc -std=c90 -O2 -c fortran/f90deps.c -o f90deps.o
 gfortran -std=gnu -O2 fortran/2048f.f f90deps.o -o 2048
 ```
+
+
+# Python
+
+* python/2048.py
+
+python实现，由于脚本语言初始化大数组较慢，因此不使用查表法。支持python2.4+，python3.0+，支持各种Posix变体和Win32。
+
+已测试python版本和平台
+```
+python 2.4-2.7 (linux, win32, freebsd, macos)
+python 3.0+ (linux, win32, freebsd, macos)
+```
+
+
+* python/2048-tab.py
+
+python实现，使用查表法，在低配置设备上启动较慢，但执行较快。支持python2.4+，python3.0+，支持各种Posix变体和Win32。
+
+python版本和平台支持同上
+
 
 
 # Lua
