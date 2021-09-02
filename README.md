@@ -141,7 +141,7 @@ gnu pascal 2.1 (linux, mingw, djgpp)
 
 已测试编译器和平台
 ```
-free pascal 2.2+ (linux, win32, freebsd, macos)
+free pascal 2.2+ (linux, win32, freebsd, macos, dos32)
 turbo pascal 4.0/5.5/6.0/7.1 (dos16)
 gnu pascal 2.1 (linux, mingw, djgpp)
 ```
