@@ -95,7 +95,7 @@ AI版本，ISO C++98实现
 gcc 2.8+ (linux, freebsd, macos, mingw, mingw-w64, cygwin, djgpp)
 clang 3.0+ (linux, macos, freebsd, win32)
 msvc 5.0sp3+ (win32)
-openwatcom c++ 1.9 (win32, win386, dos32 pmode, dos4gw)
+openwatcom 1.9 (win32, win386, dos32 pmode, dos4gw)
 borland c++ 5.5+ (win32)
 lcc 4.0 (win32)
 ```
