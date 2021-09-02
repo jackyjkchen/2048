@@ -119,7 +119,7 @@ AI版本的慢速实现，不使用C++ std::map cache，ISO C90实现，非严�
 
 已测试编译器和平台
 ```
-free pascal 2.2+ (linux, win32, freebsd, macos)
+free pascal 2.2+ (linux, win32, freebsd, macos, dos32)
 ```
 
 
@@ -129,7 +129,7 @@ free pascal 2.2+ (linux, win32, freebsd, macos)
 
 已测试编译器和平台
 ```
-free pascal 2.2+ (linux, win32, freebsd, macos)
+free pascal 2.2+ (linux, win32, freebsd, macos, dos32)
 turbo pascal 7.1 (dos16)
 gnu pascal 2.1 (linux, mingw, djgpp)
 ```
