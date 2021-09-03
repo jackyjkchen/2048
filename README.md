@@ -255,18 +255,25 @@ gfortran -std=gnu -O2 fortran/2048f.f f90deps.o -o 2048
 
 * python/2048.py
 
-python实现，由于脚本语言初始化大数组较慢，因此不使用查表法。支持python2.4+，python3.0+，支持各种Posix变体和Win32。
+python实现，由于脚本语言初始化大数组较慢，因此不使用查表法。
 
 已测试python版本和平台
 ```
-python 2.4-2.7 (linux, win32, freebsd, macos)
+python 2.4+ (linux, win32, freebsd, macos)
 python 3.0+ (linux, win32, freebsd, macos)
+pypy/pypy3 all (linux, win32, macos)
 ```
-
 
 * python/2048-tab.py
 
-python实现，使用查表法，在低配置设备上启动较慢，但执行较快。支持python2.4+，python3.0+，支持各种Posix变体和Win32。
+python实现，使用查表法，在低配置设备上启动较慢，但执行较快。
+
+python版本和平台支持同上
+
+
+* python/2048-ai.py
+
+python ai实现，查表法 + dict做cache，建议使用pypy速度较快。
 
 python版本和平台支持同上
 

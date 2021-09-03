@@ -65,9 +65,8 @@ Public Module Class2048
 
     Private Sub print_board(ByVal board As ULong)
         Console.WriteLine("-----------------------------")
-        For i As Integer = 0 To 4 - 1
-
-            For j As Integer = 0 To 4 - 1
+        For i As Integer = 0 To 3
+            For j As Integer = 0 To 3
                 Dim power_val As Integer = board And &HFUL
                 If power_val = 0 Then
                     Console.Write(String.Format("|{0,6}", " "c))
@@ -77,7 +76,6 @@ Public Module Class2048
 
                 board >>= 4
             Next
-
             Console.WriteLine("|")
         Next
         Console.WriteLine("-----------------------------")
@@ -239,7 +237,6 @@ Public Module Class2048
 
     Private Function count_distinct_tiles(ByVal board As ULong) As Integer
         Dim bitset As ULong = 0
-
         While board <> 0
             bitset = bitset Or (CULng(1) << (board And &HFUL))
             board >>= 4
@@ -247,7 +244,6 @@ Public Module Class2048
 
         bitset >>= 1
         Dim count As Integer = 0
-
         While bitset <> 0
             bitset = bitset And (bitset - 1)
             count += 1
@@ -275,7 +271,6 @@ Public Module Class2048
         End If
 
         If state.curdepth < CACHE_DEPTH_LIMIT Then
-
             If state.trans_table.ContainsKey(board) Then
                 Dim entry As trans_table_entry_t = state.trans_table(board)
 
@@ -293,12 +288,10 @@ Public Module Class2048
         Dim tile_2 As ULong = 1
 
         While tile_2 <> 0
-
             If (tmp And &HFUL) = 0 Then
                 res += score_move_node(state, board Or tile_2, cprob * 0.9F) * 0.9F
                 res += score_move_node(state, board Or tile_2 << 1, cprob * 0.1F) * 0.1F
             End If
-
             tmp >>= 4
             tile_2 <<= 4
         End While
@@ -321,11 +314,9 @@ Public Module Class2048
         While move < 4
             Dim newboard As ULong = execute_move(move, board)
             state.moves_evaled += 1
-
             If board <> newboard Then
                 best = Math.Max(best, score_tilechoose_node(state, newboard, cprob))
             End If
-
             move += 1
         End While
 
@@ -354,9 +345,8 @@ Public Module Class2048
         print_board(board)
         Console.WriteLine("Current scores: heur {0}, actual {1}", CUInt(score_heur_board(board)), score_board(board))
 
-        For move As Integer = 0 To 4 - 1
+        For move As Integer = 0 To 3
             Dim res As Double = score_toplevel_move(board, move)
-
             If res > best Then
                 best = res
                 bestmove = move
@@ -368,7 +358,11 @@ Public Module Class2048
     End Function
 
     Private Function draw_tile() As ULong
-        Return If(unif_random(10) < 9, 1, 2)
+        If unif_random(10) < 9 Then
+            Return 1
+        Else
+            Return 2
+        End If
     End Function
 
     Private Function insert_tile_rand(ByVal board As ULong, ByVal tile As ULong) As ULong
@@ -376,7 +370,6 @@ Public Module Class2048
         Dim tmp As ULong = board
 
         While True
-
             While (tmp And &HFUL) <> 0
                 tmp >>= 4
                 tile <<= 4
@@ -407,7 +400,7 @@ Public Module Class2048
             Dim newboard As ULong
             clear_screen()
 
-            For move = 0 To 4 - 1
+            For move = 0 To 3
                 If execute_move(move, board) <> board Then Exit For
             Next
 

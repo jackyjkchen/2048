@@ -569,8 +569,8 @@ static uint32 score_board(board_t board) {
 static const double CPROB_THRESH_BASE = 0.0001f;
 static const uint16 CACHE_DEPTH_LIMIT = 15;
 
-static double score_move_node(eval_state & state, board_t board, double cprob);
-static double score_tilechoose_node(eval_state & state, board_t board, double cprob) {
+static double score_move_node(eval_state &state, board_t board, double cprob);
+static double score_tilechoose_node(eval_state &state, board_t board, double cprob) {
     if (cprob < CPROB_THRESH_BASE || state.curdepth >= state.depth_limit) {
         state.maxdepth = max(state.curdepth, state.maxdepth);
         return score_heur_board(board);
@@ -664,7 +664,7 @@ int find_best_move(board_t board) {
     int bestmove = -1;
 
     print_board(board);
-    printf("Current scores: heur %.0lf, actual %ld\n", score_heur_board(board), (long)score_board(board));
+    printf("Current scores: heur %ld, actual %ld\n", (long)score_heur_board(board), (long)score_board(board));
 
     for (move = 0; move < 4; move++) {
         double res = score_toplevel_move(board, move);

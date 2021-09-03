@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: UTF-8 -*-
 
 import os
 import sys
@@ -46,6 +47,7 @@ get_ch = _get_ch()
 
 ROW_MASK = 0xFFFF
 COL_MASK = 0x000F000F000F000F
+INT64_MASK = 0xFFFFFFFFFFFFFFFF
 
 UP = 0
 DOWN = 1
@@ -148,7 +150,7 @@ def execute_move(move, board):
     elif (move == LEFT) or (move == RIGHT):
         return execute_move_row(board, move)
     else:
-        return 0xFFFFFFFFFFFFFFFF
+        return INT64_MASK
 
 def score_helper(board):
     score = 0
@@ -201,7 +203,7 @@ def insert_tile_rand(board, tile):
         index -= 1
         tmp >>= 4
         tile <<= 4
-    return board | tile
+    return (board | tile) & INT64_MASK
 
 def initial_board():
     board = draw_tile() << (unif_random(16) << 2)

@@ -38,9 +38,8 @@ Public Module Class2048
 
     Private Sub print_board(ByVal board As ULong)
         Console.WriteLine("-----------------------------")
-        For i As Integer = 0 To 4 - 1
-
-            For j As Integer = 0 To 4 - 1
+        For i As Integer = 0 To 3
+            For j As Integer = 0 To 3
                 Dim power_val As Integer = board And &HFUL
                 If power_val = 0 Then
                     Console.Write(String.Format("|{0,6}", " "c))
@@ -50,7 +49,6 @@ Public Module Class2048
 
                 board >>= 4
             Next
-
             Console.WriteLine("|")
         Next
         Console.WriteLine("-----------------------------")
@@ -200,7 +198,11 @@ Public Module Class2048
     End Function
 
     Private Function draw_tile() As ULong
-        Return If(unif_random(10) < 9, 1, 2)
+        If unif_random(10) < 9 Then
+            Return 1
+        Else
+            Return 2
+        End If
     End Function
 
     Private Function insert_tile_rand(ByVal board As ULong, ByVal tile As ULong) As ULong
@@ -243,7 +245,7 @@ Public Module Class2048
             Dim newboard As ULong
             clear_screen()
 
-            For move = 0 To 4 - 1
+            For move = 0 To 3
                 If execute_move(move, board) <> board Then Exit For
             Next
 

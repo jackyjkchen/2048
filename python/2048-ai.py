@@ -4,6 +4,7 @@
 import os
 import sys
 import random
+import math
 
 random.seed()
 
@@ -15,35 +16,6 @@ def clear_screen():
         _ = os.system('clear')
     else:
         _ = os.system('cls')
-
-class _get_ch_win32:
-    def __call__(self):
-        import msvcrt
-        return msvcrt.getwch()
-
-class _get_ch_unix:
-    def __call__(self):
-        import tty, termios
-        fd = sys.stdin.fileno()
-        setting = termios.tcgetattr(fd)
-        try:
-            tty.setraw(sys.stdin.fileno())
-            ch = sys.stdin.read(1)
-        finally:
-            termios.tcsetattr(fd, termios.TCSADRAIN, setting)
-        return ch
-
-class _get_ch:
-    def __init__(self):
-        if os.name == 'posix':
-            self.impl = _get_ch_unix()
-        else:
-            self.impl = _get_ch_win32()
-
-    def __call__(self):
-        return self.impl()
-        
-get_ch = _get_ch()
 
 ROW_MASK = 0xFFFF
 COL_MASK = 0x000F000F000F000F
@@ -98,13 +70,38 @@ TABLESIZE = 65536
 row_left_table = [0] * TABLESIZE
 row_right_table = [0] * TABLESIZE
 score_table = [0] * TABLESIZE
+heur_score_table = [0] * TABLESIZE
+
+SCORE_LOST_PENALTY = 200000.0
+SCORE_MONOTONICITY_POWER = 4.0
+SCORE_MONOTONICITY_WEIGHT = 47.0
+SCORE_SUM_POWER = 3.5
+SCORE_SUM_WEIGHT = 11.0
+SCORE_MERGES_WEIGHT = 700.0
+SCORE_EMPTY_WEIGHT = 270.0
+CPROB_THRESH_BASE = 0.0001
+CACHE_DEPTH_LIMIT = 15
+
+class trans_table_entry_t:
+    def __init__(self, depth, heuristic):
+        self.depth = depth
+        self.heuristic = heuristic
+
+class eval_state:
+    def __init__(self):
+        self.trans_table = {}
+        self.maxdepth = 0
+        self.curdepth = 0
+        self.cachehits = 0
+        self.moves_evaled = 0
+        self.depth_limit = 0
 
 def init_tables():
     for row in range(0, 65536):
         rev_row = 0
         result = 0
         rev_result = 0
-        score = 0
+        score = 0.0
         line = [row & 0xf, (row >> 4) & 0xf, (row >> 8) & 0xf, (row >> 12) & 0xf]
 
         for i in range(0, 4):
@@ -112,6 +109,40 @@ def init_tables():
             if rank >= 2:
                 score += (rank - 1) * (1 << rank)
         score_table[row] = score
+
+        sum_ = 0.0
+        empty = 0
+        merges = 0
+        prev = 0
+        counter = 0
+        for i in range(0, 4):
+            rank = line[i]
+
+            sum_ += math.pow(rank, SCORE_SUM_POWER)
+            if rank == 0:
+                empty += 1
+            else:
+                if prev == rank:
+                    counter += 1
+                elif counter > 0:
+                    merges += 1 + counter
+                    counter = 0
+                prev = rank
+
+        if counter > 0:
+            merges += 1 + counter
+
+        monotonicity_left = 0.0
+        monotonicity_right = 0.0
+
+        for i in range(1, 4):
+            if line[i - 1] > line[i]:
+                monotonicity_left += math.pow(line[i - 1], SCORE_MONOTONICITY_POWER) - math.pow(line[i], SCORE_MONOTONICITY_POWER)
+            else:
+                monotonicity_right += math.pow(line[i], SCORE_MONOTONICITY_POWER) - math.pow(line[i - 1], SCORE_MONOTONICITY_POWER)
+
+        heur_score_table[row] = SCORE_LOST_PENALTY + SCORE_EMPTY_WEIGHT * empty + SCORE_MERGES_WEIGHT * merges - \
+            SCORE_MONOTONICITY_WEIGHT * min(monotonicity_left, monotonicity_right) - SCORE_SUM_WEIGHT * sum_
 
         i = 0
         while i < 3:
@@ -169,29 +200,118 @@ def execute_move(move, board):
     else:
         return INT64_MASK
 
+def count_distinct_tiles(board):
+    bitset = 0
+
+    while board != 0:
+        bitset |= 1 << (board & 0xf)
+        board >>= 4
+
+    bitset >>= 1
+
+    count = 0
+
+    while bitset !=0:
+        bitset &= bitset - 1
+        count += 1
+    return count
+
 def score_helper(board, table):
     return table[(board >>  0) & ROW_MASK] + table[(board >> 16) & ROW_MASK] + \
            table[(board >> 32) & ROW_MASK] + table[(board >> 48) & ROW_MASK]
 
+def score_heur_board(board):
+    return score_helper(board, heur_score_table) + score_helper(transpose(board), heur_score_table)
+
 def score_board(board):
     return score_helper(board, score_table)
 
-def ask_for_move(board):
+def score_tilechoose_node(state, board, cprob):
+    if (cprob < CPROB_THRESH_BASE) or (state.curdepth >= state.depth_limit):
+        state.maxdepth = max(state.curdepth, state.maxdepth)
+        return score_heur_board(board)
+
+    if state.curdepth < CACHE_DEPTH_LIMIT:
+        if board in state.trans_table:
+            entry = state.trans_table[board]
+
+            if entry.depth <= state.curdepth:
+                state.cachehits += 1
+                return entry.heuristic
+
+    num_open = count_empty(board)
+
+    cprob /= num_open
+
+    res = 0.0
+    tmp = board
+    tile_2 = 1
+
+    while tile_2 != 0:
+        if (tmp & 0xf) == 0:
+            res += score_move_node(state, board | tile_2, cprob * 0.9) * 0.9
+            res += score_move_node(state, board | ((tile_2 << 1) & INT64_MASK), cprob * 0.1) * 0.1
+        tmp >>= 4
+        tile_2 <<= 4
+        tile_2 &= INT64_MASK
+    res = res / num_open
+
+    if state.curdepth < CACHE_DEPTH_LIMIT:
+        state.trans_table[board] = trans_table_entry_t(state.curdepth, res)
+
+    return res
+
+def score_move_node(state, board, cprob):
+    best = 0.0
+
+    state.curdepth += 1
+    for move in range(0, 4):
+        newboard = execute_move(move, board)
+
+        state.moves_evaled += 1
+
+        if board != newboard:
+            best = max(best, score_tilechoose_node(state, newboard, cprob))
+
+    state.curdepth -= 1
+
+    return best
+
+def _score_toplevel_move(state, board, move):
+    newboard = execute_move(move, board)
+
+    if (board == newboard):
+        return 0.0
+
+    return score_tilechoose_node(state, newboard, 1.0) + 0.000001
+
+def score_toplevel_move(board, move):
+    res = 0.0
+    state = eval_state()
+
+    state.depth_limit = max(3, count_distinct_tiles(board) - 2)
+    res = _score_toplevel_move(state, board, move)
+
+    sys.stdout.write("Move %d: result %f: eval'd %d moves (%d cache hits, %d cache size) (maxdepth=%d)%s" % (move, res,
+           state.moves_evaled, state.cachehits, len(state.trans_table), state.maxdepth, os.linesep))
+
+    return res
+
+def find_best_move(board):
+    best = 0.0
+    bestmove = -1
+
     print_board(board)
+    sys.stdout.write("Current scores: heur %d, actual %d%s" % (score_heur_board(board), score_board(board), os.linesep))
 
-    while True:
-        allmoves = "wsadkjhl"
-        pos = 0
+    for move in range(0, 4):
+        res = score_toplevel_move(board, move)
+        if res > best:
+            best = res
+            bestmove = move
+    sys.stdout.write("Selected bestmove: %d, result: %f%s" % (bestmove, best, os.linesep))
 
-        movechar = get_ch()
-
-        if movechar == 'q':
-            return -1
-        if movechar == 'r':
-            return RETRACT
-        pos = allmoves.find(movechar)
-        if pos != -1:
-            return pos % 4
+    return bestmove
 
 def draw_tile():
     rd = unif_random(10)
@@ -291,4 +411,4 @@ def play_game(get_move):
 
 if __name__ == "__main__":
     init_tables()
-    play_game(ask_for_move)
+    play_game(find_best_move)
