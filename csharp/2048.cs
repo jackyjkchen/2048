@@ -96,16 +96,16 @@ class Class2048
     {
         UInt16 row = 0, rev_row = 0;
         UInt16 result = 0, rev_result = 0;
-        byte[] line = new byte[4];
+        UInt16[] line = new UInt16[4];
 
         do
         {
             int i = 0, j = 0;
             UInt32 score = 0;
-            line[0] = (byte)((row >> 0) & 0xf);
-            line[1] = (byte)((row >> 4) & 0xf);
-            line[2] = (byte)((row >> 8) & 0xf);
-            line[3] = (byte)((row >> 12) & 0xf);
+            line[0] = (UInt16)((row >> 0) & 0xf);
+            line[1] = (UInt16)((row >> 4) & 0xf);
+            line[2] = (UInt16)((row >> 8) & 0xf);
+            line[3] = (UInt16)((row >> 12) & 0xf);
 
             for (i = 0; i < 4; ++i)
             {
@@ -269,7 +269,7 @@ class Class2048
         int last_score = 0, current_score = 0, moveno = 0;
         const int MAX_RETRACT = 64;
         UInt64[] retract_vec = new UInt64[MAX_RETRACT];
-        byte[] retract_penalty_vec = new byte[MAX_RETRACT];
+        UInt16[] retract_penalty_vec = new UInt16[MAX_RETRACT];
         int retract_pos = 0, retract_num = 0;
 
         while (true)

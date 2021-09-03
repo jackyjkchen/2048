@@ -97,7 +97,6 @@ clang 3.0+ (linux, macos, freebsd, win32)
 msvc 5.0sp3+ (win32)
 openwatcom 1.9 (win32, win386, dos32 pmode, dos4gw)
 borland c++ 5.5+ (win32)
-lcc 4.0 (win32)
 ```
 
 注1：msvc 5.0必须应用SP3，否则优化选项会有问题
@@ -115,7 +114,7 @@ AI版本的慢速实现，不使用C++ std::map cache，ISO C90实现，非严�
 
 * csharp/2048.cs
 
-C#实现，使用uint64+查表法（相当于c/2048.c + FASTMODE）。需要.net framework 2.0以上。
+C#实现，使用uint64+查表法（相当于c/2048.c + FASTMODE）。需要.net framework 2.0+。
 
 已测试编译器和平台
 ```
@@ -126,12 +125,37 @@ mono 1.1+ (linux)
 
 * csharp/2048-ai.cs
 
-C# AI实现，算法类似cpp/2048-ai.cpp，使用Dictionary做cache。需要.net framework 2.0以上。
+C# AI实现，算法类似cpp/2048-ai.cpp，使用Dictionary做cache。需要.net framework 2.0+。
 
 已测试编译器和平台
 ```
 visual studio 2005+ (win32)
 mono 1.1+ (linux)
+```
+
+
+
+# VB.net
+
+* vbdotnet/2048.vb
+
+vb.net实现，使用uint64+查表法（相当于c/2048.c + FASTMODE）。需要.net framework 2.0以上。
+
+已测试编译器和平台
+```
+visual studio 2005+ (win32)
+mono 1.2.3+ (linux)
+```
+
+
+* vbdotnet/2048-ai.vb
+
+vb.net AI实现，算法类似cpp/2048-ai.cpp，使用Dictionary做cache。需要.net framework 2.0以上。
+
+已测试编译器和平台
+```
+visual studio 2005+ (win32)
+mono 1.2.3+ (linux)
 ```
 
 

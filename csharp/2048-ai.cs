@@ -20,9 +20,9 @@ public class Class2048
 
     struct trans_table_entry_t
     {
-        public byte depth;
+        public int depth;
         public double heuristic;
-        public trans_table_entry_t(byte depth, double heuristic)
+        public trans_table_entry_t(int depth, double heuristic)
         {
             this.depth = depth;
             this.heuristic = heuristic;
@@ -122,17 +122,17 @@ public class Class2048
     {
         UInt16 row = 0, rev_row = 0;
         UInt16 result = 0, rev_result = 0;
-        byte[] line = new byte[4];
+        UInt16[] line = new UInt16[4];
 
         do
         {
             int i = 0, j = 0;
             double score = 0.0f;
 
-            line[0] = (byte)((row >> 0) & 0xf);
-            line[1] = (byte)((row >> 4) & 0xf);
-            line[2] = (byte)((row >> 8) & 0xf);
-            line[3] = (byte)((row >> 12) & 0xf);
+            line[0] = (UInt16)((row >> 0) & 0xf);
+            line[1] = (UInt16)((row >> 4) & 0xf);
+            line[2] = (UInt16)((row >> 8) & 0xf);
+            line[3] = (UInt16)((row >> 12) & 0xf);
 
             for (i = 0; i < 4; ++i)
             {
@@ -355,7 +355,7 @@ public class Class2048
 
         if (state.curdepth < CACHE_DEPTH_LIMIT)
         {
-            trans_table_entry_t entry = new trans_table_entry_t((byte)(state.curdepth), res);
+            trans_table_entry_t entry = new trans_table_entry_t(state.curdepth, res);
             state.trans_table[board] = entry;
         }
 
@@ -468,10 +468,6 @@ public class Class2048
         UInt64 board = initial_board();
         int scorepenalty = 0;
         int last_score = 0, current_score = 0, moveno = 0;
-        const int MAX_RETRACT = 64;
-        UInt64[] retract_vec = new UInt64[MAX_RETRACT];
-        byte[] retract_penalty_vec = new byte[MAX_RETRACT];
-        int retract_pos = 0, retract_num = 0;
 
         while (true)
         {
@@ -496,22 +492,6 @@ public class Class2048
             if (move < 0)
                 break;
 
-            if (move == RETRACT)
-            {
-                if (moveno <= 1 || retract_num <= 0)
-                {
-                    moveno--;
-                    continue;
-                }
-                moveno -= 2;
-                if (retract_pos == 0 && retract_num > 0)
-                    retract_pos = MAX_RETRACT;
-                board = retract_vec[--retract_pos];
-                scorepenalty -= retract_penalty_vec[retract_pos];
-                retract_num--;
-                continue;
-            }
-
             newboard = execute_move(move, board);
             if (newboard == board)
             {
@@ -523,17 +503,7 @@ public class Class2048
             if (tile == 2)
             {
                 scorepenalty += 4;
-                retract_penalty_vec[retract_pos] = 4;
             }
-            else
-            {
-                retract_penalty_vec[retract_pos] = 0;
-            }
-            retract_vec[retract_pos++] = board;
-            if (retract_pos == MAX_RETRACT)
-                retract_pos = 0;
-            if (retract_num < MAX_RETRACT)
-                retract_num++;
 
             board = insert_tile_rand(newboard, tile);
         }
