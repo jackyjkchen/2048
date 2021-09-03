@@ -1,6 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 
-class Class2048
+public class Class2048
 {
     Random rand = new Random();
     const UInt64 ROW_MASK = 0xFFFF;
@@ -8,14 +9,44 @@ class Class2048
     const int TABLESIZE = 65536;
     UInt16[] row_left_table = new UInt16[TABLESIZE];
     UInt16[] row_right_table = new UInt16[TABLESIZE];
-    UInt32[] score_table = new UInt32[TABLESIZE];
+    double[] score_table = new double[TABLESIZE];
+    double[] heur_score_table = new double[TABLESIZE];
     delegate int get_move_func_t(UInt64 board);
-
     const int UP = 0;
     const int DOWN = 1;
     const int LEFT = 2;
     const int RIGHT = 3;
     const int RETRACT = 4;
+
+    struct trans_table_entry_t
+    {
+        public byte depth;
+        public double heuristic;
+        public trans_table_entry_t(byte depth, double heuristic)
+        {
+            this.depth = depth;
+            this.heuristic = heuristic;
+        }
+    }
+    class eval_state
+    {
+        public Dictionary<UInt64, trans_table_entry_t> trans_table = new Dictionary<UInt64, trans_table_entry_t>();
+        public int maxdepth;
+        public int curdepth;
+        public int cachehits;
+        public int moves_evaled;
+        public int depth_limit;
+    }
+
+    const double SCORE_LOST_PENALTY = 200000.0f;
+    const double SCORE_MONOTONICITY_POWER = 4.0f;
+    const double SCORE_MONOTONICITY_WEIGHT = 47.0f;
+    const double SCORE_SUM_POWER = 3.5f;
+    const double SCORE_SUM_WEIGHT = 11.0f;
+    const double SCORE_MERGES_WEIGHT = 700.0f;
+    const double SCORE_EMPTY_WEIGHT = 270.0f;
+    const double CPROB_THRESH_BASE = 0.0001f;
+    const UInt16 CACHE_DEPTH_LIMIT = 15;
 
     Int32 unif_random(Int32 n)
     {
@@ -25,11 +56,6 @@ class Class2048
     void clear_screen()
     {
         Console.Clear();
-    }
-
-    char get_ch()
-    {
-        return Console.ReadKey(true).KeyChar;
     }
 
     UInt64 unpack_col(UInt16 row)
@@ -101,7 +127,8 @@ class Class2048
         do
         {
             int i = 0, j = 0;
-            UInt32 score = 0;
+            double score = 0.0f;
+
             line[0] = (byte)((row >> 0) & 0xf);
             line[1] = (byte)((row >> 4) & 0xf);
             line[2] = (byte)((row >> 8) & 0xf);
@@ -110,12 +137,68 @@ class Class2048
             for (i = 0; i < 4; ++i)
             {
                 int rank = line[i];
+
                 if (rank >= 2)
                 {
-                    score += (UInt32)((rank - 1) * (1 << rank));
+                    score += (rank - 1) * (1 << rank);
                 }
             }
             score_table[row] = score;
+
+            double sum = 0.0f;
+            int empty = 0;
+            int merges = 0;
+
+            int prev = 0;
+            int counter = 0;
+
+            for (i = 0; i < 4; ++i)
+            {
+                int rank = line[i];
+
+                sum += (double)Math.Pow(rank, SCORE_SUM_POWER);
+                if (rank == 0)
+                {
+                    empty++;
+                }
+                else
+                {
+                    if (prev == rank)
+                    {
+                        counter++;
+                    }
+                    else if (counter > 0)
+                    {
+                        merges += 1 + counter;
+                        counter = 0;
+                    }
+                    prev = rank;
+                }
+            }
+            if (counter > 0)
+            {
+                merges += 1 + counter;
+            }
+
+            double monotonicity_left = 0.0f;
+            double monotonicity_right = 0.0f;
+
+            for (i = 1; i < 4; ++i)
+            {
+                if (line[i - 1] > line[i])
+                {
+                    monotonicity_left +=
+                        (double)(Math.Pow(line[i - 1], SCORE_MONOTONICITY_POWER) - Math.Pow(line[i], SCORE_MONOTONICITY_POWER));
+                }
+                else
+                {
+                    monotonicity_right +=
+                        (double)(Math.Pow(line[i], SCORE_MONOTONICITY_POWER) - Math.Pow(line[i - 1], SCORE_MONOTONICITY_POWER));
+                }
+            }
+
+            heur_score_table[row] = SCORE_LOST_PENALTY + SCORE_EMPTY_WEIGHT * empty + SCORE_MERGES_WEIGHT * merges -
+                SCORE_MONOTONICITY_WEIGHT * Math.Min(monotonicity_left, monotonicity_right) - SCORE_SUM_WEIGHT * sum;
 
             for (i = 0; i < 3; ++i)
             {
@@ -191,8 +274,29 @@ class Class2048
                 return 0xFFFFFFFFFFFFFFFF;
         }
     }
+    int count_distinct_tiles(UInt64 board)
+    {
+        UInt64 bitset = 0;
 
-    UInt32 score_helper(UInt64 board, ref UInt32[] table)
+        while (board != 0)
+        {
+            bitset |= (UInt64)(1) << (int)(board & 0xf);
+            board >>= 4;
+        }
+
+        bitset >>= 1;
+
+        int count = 0;
+
+        while (bitset != 0)
+        {
+            bitset &= bitset - 1;
+            count++;
+        }
+        return count;
+    }
+
+    double score_helper(UInt64 board, ref double[] table)
     {
         return table[(board >> 0) & ROW_MASK] + table[(board >> 16) & ROW_MASK] +
             table[(board >> 32) & ROW_MASK] + table[(board >> 48) & ROW_MASK];
@@ -200,35 +304,132 @@ class Class2048
 
     UInt32 score_board(UInt64 board)
     {
-        return score_helper(board, ref score_table);
+        return (UInt32)(score_helper(board, ref score_table));
     }
 
-    int ask_for_move(UInt64 board)
+    double score_heur_board(UInt64 board)
     {
-        print_board(board);
+        return score_helper(board, ref heur_score_table) + score_helper(transpose(board), ref heur_score_table);
+    }
 
-        while (true)
+    double score_tilechoose_node(ref eval_state state, UInt64 board, double cprob)
+    {
+        if (cprob < CPROB_THRESH_BASE || state.curdepth >= state.depth_limit)
         {
-            const string allmoves = "wsadkjhl";
-            int pos = 0;
-            char movechar = get_ch();
+            state.maxdepth = Math.Max(state.curdepth, state.maxdepth);
+            return score_heur_board(board);
+        }
+        if (state.curdepth < CACHE_DEPTH_LIMIT)
+        {
+            if (state.trans_table.ContainsKey(board))
+            {
+                trans_table_entry_t entry = state.trans_table[board];
 
-            if (movechar == 'q')
-            {
-                return -1;
-            }
-            if (movechar == 'r')
-            {
-                return RETRACT;
-            }
-            pos = allmoves.IndexOf(movechar);
-            if (pos != -1)
-            {
-                return pos % 4;
+                if (entry.depth <= state.curdepth)
+                {
+                    state.cachehits++;
+                    return entry.heuristic;
+                }
             }
         }
+
+        int num_open = count_empty(board);
+
+        cprob /= num_open;
+
+        double res = 0.0f;
+        UInt64 tmp = board;
+        UInt64 tile_2 = 1;
+
+        while (tile_2 != 0)
+        {
+            if ((tmp & 0xf) == 0)
+            {
+                res += score_move_node(ref state, board | tile_2, cprob * 0.9f) * 0.9f;
+                res += score_move_node(ref state, board | (tile_2 << 1), cprob * 0.1f) * 0.1f;
+            }
+            tmp >>= 4;
+            tile_2 <<= 4;
+        }
+        res = res / num_open;
+
+        if (state.curdepth < CACHE_DEPTH_LIMIT)
+        {
+            trans_table_entry_t entry = new trans_table_entry_t((byte)(state.curdepth), res);
+            state.trans_table[board] = entry;
+        }
+
+        return res;
     }
 
+    double score_move_node(ref eval_state state, UInt64 board, double cprob)
+    {
+        double best = 0.0f;
+
+        state.curdepth++;
+        for (int move = 0; move < 4; ++move)
+        {
+            UInt64 newboard = execute_move(move, board);
+
+            state.moves_evaled++;
+
+            if (board != newboard)
+            {
+                best = Math.Max(best, score_tilechoose_node(ref state, newboard, cprob));
+            }
+        }
+        state.curdepth--;
+
+        return best;
+    }
+
+    double _score_toplevel_move(ref eval_state state, UInt64 board, int move)
+    {
+        UInt64 newboard = execute_move(move, board);
+
+        if (board == newboard)
+            return 0.0f;
+
+        return score_tilechoose_node(ref state, newboard, 1.0f) + 1e-6f;
+    }
+
+    double score_toplevel_move(UInt64 board, int move)
+    {
+        double res = 0.0f;
+        eval_state state = new eval_state();
+
+        state.depth_limit = Math.Max(3, count_distinct_tiles(board) - 2);
+
+        res = _score_toplevel_move(ref state, board, move);
+
+        Console.WriteLine("Move {0}: result {1}: eval'd {2} moves ({3} cache hits, {4} cache size) (maxdepth={5})", move, res,
+               state.moves_evaled, state.cachehits, state.trans_table.Count, state.maxdepth);
+
+        return res;
+    }
+
+    int find_best_move(UInt64 board)
+    {
+        double best = 0.0f;
+        int bestmove = -1;
+
+        print_board(board);
+        Console.WriteLine("Current scores: heur {0}, actual {1}", (UInt32)score_heur_board(board), (UInt32)score_board(board));
+
+        for (int move = 0; move < 4; move++)
+        {
+            double res = score_toplevel_move(board, move);
+
+            if (res > best)
+            {
+                best = res;
+                bestmove = move;
+            }
+        }
+        Console.WriteLine("Selected bestmove: {0}, result: {1}", bestmove, best);
+
+        return bestmove;
+    }
     UInt64 draw_tile()
     {
         return (UInt64)((unif_random(10) < 9) ? 1 : 2);
@@ -345,6 +546,6 @@ class Class2048
     {
         Class2048 class_2048 = new Class2048();
         class_2048.init_tables();
-        class_2048.play_game(class_2048.ask_for_move);
+        class_2048.play_game(class_2048.find_best_move);
     }
 }

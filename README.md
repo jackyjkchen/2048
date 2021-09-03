@@ -74,9 +74,9 @@ turbo c 1.5/2.01 (dos16)
 
 * c/2048-kr.c
 
-在2048-16b.c基础上改用K&R格式，用于兼容一些老编译器，由于目标是老编译器，因此去掉了快速查表法部分的代码。
+在c/2048-16b.c基础上改用K&R格式，用于兼容一些老编译器，由于目标是老编译器，因此去掉了快速查表法部分的代码。
 
-因为大部分现代编译器仍然支持K&R格式，能编译2048-16b.c的编译器应该也能编译2048-kr.c，因此只列出新增编译器支持。
+因为大部分现代编译器仍然支持K&R格式，能编译c/2048-16b.c的编译器应该也能编译c/2048-kr.c，因此只列出新增编译器支持。
 
 已测试编译器和平台：
 ```
@@ -107,7 +107,7 @@ lcc 4.0 (win32)
 
 AI版本的慢速实现，不使用C++ std::map cache，ISO C90实现，非严格C90内容仅为64位整数
 
-编译器和平台支持与2048.c相同
+编译器和平台支持与c/2048.c相同
 
 
 
@@ -115,12 +115,23 @@ AI版本的慢速实现，不使用C++ std::map cache，ISO C90实现，非严�
 
 * csharp/2048.cs
 
-C#实现，使用uint64+查表法（相当于2048.c + FASTMODE）。
+C#实现，使用uint64+查表法（相当于c/2048.c + FASTMODE）。需要.net framework 2.0以上。
 
 已测试编译器和平台
 ```
 visual studio 2005+ (win32)
-mono 2.0+ (linux)
+mono 1.1+ (linux)
+```
+
+
+* csharp/2048-ai.cs
+
+C# AI实现，算法类似cpp/2048-ai.cpp，使用Dictionary做cache。需要.net framework 2.0以上。
+
+已测试编译器和平台
+```
+visual studio 2005+ (win32)
+mono 1.1+ (linux)
 ```
 
 
@@ -129,7 +140,7 @@ mono 2.0+ (linux)
 
 * pascal/2048.pas
 
-现代pascal实现，使用uint64+查表法（相当于2048.c + FASTMODE）。用于free pascal、delphi等现代化pascal编译器。
+现代pascal实现，使用uint64+查表法（相当于c/2048.c + FASTMODE）。用于free pascal、delphi等现代化pascal编译器。
 
 已测试编译器和平台
 ```
@@ -139,7 +150,7 @@ free pascal 2.2+ (linux, win32, freebsd, macos, dos32)
 
 * pascal/2048-16b.pas
 
-不使用uint64的pascal实现，且不使用查表法（相当于2048-16b.c且不使用FASTMODE）。用于turbo pascal 7.x。
+不使用uint64的pascal实现，且不使用查表法（相当于c/2048-16b.c且不使用FASTMODE）。用于turbo pascal 7.x。
 
 已测试编译器和平台
 ```
@@ -151,7 +162,7 @@ gnu pascal 2.1 (linux, mingw, djgpp)
 
 * pascal/2048-old.pas
 
-不使用uint64、break、continue、uses strings的pascal实现，且不使用查表法（相当于2048-16b.c且不使用FASTMODE）。用于turbo pascal 6以下等旧版pascal编译器。
+不使用uint64、break、continue、uses strings的pascal实现，且不使用查表法（相当于c/2048-16b.c且不使用FASTMODE）。用于turbo pascal 6以下等旧版pascal编译器。
 
 已测试编译器和平台
 ```
@@ -164,7 +175,7 @@ gnu pascal 2.1 (linux, mingw, djgpp)
 
 * fortran/2048.F03
 
-现代fortran2003实现，与2048.c一样使用FASTMODE预处理判定是否使用快速查表法。
+现代fortran2003实现，与c/2048.c一样使用FASTMODE预处理判定是否使用快速查表法。
 
 已测试编译器和平台
 ```
@@ -177,7 +188,7 @@ gcc 4.3+ (linux, mingw, mingw-w64, cygwin, freebsd, macos, djgpp)
 
 * fortran/2048.F90 + fortran/f90deps.c
 
-现代fortran90实现，与2048.c一样使用FSASTMODE预处理判定是否使用快速查表法。由于f90没有提供iso_c_binding，所以系统相关功能（无回显输入，清除屏幕），由f90deps.c提供
+现代fortran90实现，与c/2048.c一样使用FSASTMODE预处理判定是否使用快速查表法。由于f90没有提供iso_c_binding，所以系统相关功能（无回显输入，清除屏幕），由f90deps.c提供
 
 已测试编译器和平台
 ```

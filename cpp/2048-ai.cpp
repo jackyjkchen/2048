@@ -106,7 +106,7 @@ typedef uint16 row_t;
 
 typedef struct {
     uint8 depth;
-    float heuristic;
+    double heuristic;
 } trans_table_entry_t;
 
 static const board_t ROW_MASK = W64LIT(0xFFFF);
@@ -204,17 +204,17 @@ static int count_empty(board_t x) {
 #define TABLESIZE 65536
 static row_t row_left_table[TABLESIZE];
 static row_t row_right_table[TABLESIZE];
-static float score_table[TABLESIZE];
-static float heur_score_table[TABLESIZE];
+static double score_table[TABLESIZE];
+static double heur_score_table[TABLESIZE];
 #endif
 
-static const float SCORE_LOST_PENALTY = 200000.0f;
-static const float SCORE_MONOTONICITY_POWER = 4.0f;
-static const float SCORE_MONOTONICITY_WEIGHT = 47.0f;
-static const float SCORE_SUM_POWER = 3.5f;
-static const float SCORE_SUM_WEIGHT = 11.0f;
-static const float SCORE_MERGES_WEIGHT = 700.0f;
-static const float SCORE_EMPTY_WEIGHT = 270.0f;
+static const double SCORE_LOST_PENALTY = 200000.0f;
+static const double SCORE_MONOTONICITY_POWER = 4.0f;
+static const double SCORE_MONOTONICITY_WEIGHT = 47.0f;
+static const double SCORE_SUM_POWER = 3.5f;
+static const double SCORE_SUM_WEIGHT = 11.0f;
+static const double SCORE_MERGES_WEIGHT = 700.0f;
+static const double SCORE_EMPTY_WEIGHT = 270.0f;
 
 #ifdef FASTMODE
 static void init_tables(void) {
@@ -224,7 +224,7 @@ static void init_tables(void) {
     do {
         int i = 0, j = 0;
         uint8 line[4] = { 0 };
-        float score = 0.0f;
+        double score = 0.0f;
 
         line[0] = (row >> 0) & 0xf;
         line[1] = (row >> 4) & 0xf;
@@ -240,7 +240,7 @@ static void init_tables(void) {
         }
         score_table[row] = score;
 
-        float sum = 0.0f;
+        double sum = 0.0f;
         int empty = 0;
         int merges = 0;
 
@@ -250,7 +250,7 @@ static void init_tables(void) {
         for (i = 0; i < 4; ++i) {
             int rank = line[i];
 
-            sum += (float)pow(rank, SCORE_SUM_POWER);
+            sum += pow(rank, SCORE_SUM_POWER);
             if (rank == 0) {
                 empty++;
             } else {
@@ -267,16 +267,16 @@ static void init_tables(void) {
             merges += 1 + counter;
         }
 
-        float monotonicity_left = 0.0f;
-        float monotonicity_right = 0.0f;
+        double monotonicity_left = 0.0f;
+        double monotonicity_right = 0.0f;
 
         for (i = 1; i < 4; ++i) {
             if (line[i - 1] > line[i]) {
                 monotonicity_left +=
-                    (float)(pow(line[i - 1], SCORE_MONOTONICITY_POWER) - pow(line[i], SCORE_MONOTONICITY_POWER));
+                    pow(line[i - 1], SCORE_MONOTONICITY_POWER) - pow(line[i], SCORE_MONOTONICITY_POWER);
             } else {
                 monotonicity_right +=
-                    (float)(pow(line[i], SCORE_MONOTONICITY_POWER) - pow(line[i - 1], SCORE_MONOTONICITY_POWER));
+                    pow(line[i], SCORE_MONOTONICITY_POWER) - pow(line[i - 1], SCORE_MONOTONICITY_POWER);
             }
         }
 
@@ -463,15 +463,15 @@ struct eval_state {
 };
 
 #ifdef FASTMODE
-static float score_helper(board_t board, const float *table) {
+static double score_helper(board_t board, const double *table) {
     return table[(board >> 0) & ROW_MASK] + table[(board >> 16) & ROW_MASK] +
         table[(board >> 32) & ROW_MASK] + table[(board >> 48) & ROW_MASK];
 }
 #else
-static float score_helper(board_t board) {
+static double score_helper(board_t board) {
     int i = 0, j = 0;
     uint8 line[4] = { 0 };
-    float score = 0.0f;
+    double score = 0.0f;
 
     for (j = 0; j < 4; ++j) {
         row_t row = (row_t)((board >> (j << 4)) & ROW_MASK);
@@ -491,10 +491,10 @@ static float score_helper(board_t board) {
     return score;
 }
 
-static float score_heur_helper(board_t board) {
+static double score_heur_helper(board_t board) {
     int i = 0, j = 0;
     uint8 line[4] = { 0 };
-    float heur_score = 0.0f;
+    double heur_score = 0.0f;
 
     for (j = 0; j < 4; ++j) {
         row_t row = (row_t)((board >> (j << 4)) & ROW_MASK);
@@ -504,7 +504,7 @@ static float score_heur_helper(board_t board) {
         line[2] = (row >> 8) & 0xf;
         line[3] = (row >> 12) & 0xf;
 
-        float sum = 0.0f;
+        double sum = 0.0f;
         int empty = 0;
         int merges = 0;
 
@@ -514,7 +514,7 @@ static float score_heur_helper(board_t board) {
         for (i = 0; i < 4; ++i) {
             int rank = line[i];
 
-            sum += (float)pow(rank, SCORE_SUM_POWER);
+            sum += pow(rank, SCORE_SUM_POWER);
             if (rank == 0) {
                 empty++;
             } else {
@@ -531,16 +531,16 @@ static float score_heur_helper(board_t board) {
             merges += 1 + counter;
         }
 
-        float monotonicity_left = 0.0f;
-        float monotonicity_right = 0.0f;
+        double monotonicity_left = 0.0f;
+        double monotonicity_right = 0.0f;
 
         for (i = 1; i < 4; ++i) {
             if (line[i - 1] > line[i]) {
-                monotonicity_left += (float)(pow(line[i - 1], SCORE_MONOTONICITY_POWER) -
-                    pow(line[i], SCORE_MONOTONICITY_POWER));
+                monotonicity_left += pow(line[i - 1], SCORE_MONOTONICITY_POWER) -
+                    pow(line[i], SCORE_MONOTONICITY_POWER);
             } else {
-                monotonicity_right += (float)(pow(line[i], SCORE_MONOTONICITY_POWER) -
-                    pow(line[i - 1], SCORE_MONOTONICITY_POWER));
+                monotonicity_right += pow(line[i], SCORE_MONOTONICITY_POWER) -
+                    pow(line[i - 1], SCORE_MONOTONICITY_POWER);
             }
         }
         heur_score += SCORE_LOST_PENALTY + SCORE_EMPTY_WEIGHT * empty + SCORE_MERGES_WEIGHT * merges -
@@ -550,7 +550,7 @@ static float score_heur_helper(board_t board) {
 }
 #endif
 
-static float score_heur_board(board_t board) {
+static double score_heur_board(board_t board) {
 #ifdef FASTMODE
     return score_helper(board, heur_score_table) + score_helper(transpose(board), heur_score_table);
 #else
@@ -566,11 +566,11 @@ static uint32 score_board(board_t board) {
 #endif
 }
 
-static const float CPROB_THRESH_BASE = 0.0001f;
+static const double CPROB_THRESH_BASE = 0.0001f;
 static const uint16 CACHE_DEPTH_LIMIT = 15;
 
-static float score_move_node(eval_state & state, board_t board, float cprob);
-static float score_tilechoose_node(eval_state & state, board_t board, float cprob) {
+static double score_move_node(eval_state & state, board_t board, double cprob);
+static double score_tilechoose_node(eval_state & state, board_t board, double cprob) {
     if (cprob < CPROB_THRESH_BASE || state.curdepth >= state.depth_limit) {
         state.maxdepth = max(state.curdepth, state.maxdepth);
         return score_heur_board(board);
@@ -595,7 +595,7 @@ static float score_tilechoose_node(eval_state & state, board_t board, float cpro
 
     cprob /= num_open;
 
-    float res = 0.0f;
+    double res = 0.0f;
     board_t tmp = board;
     board_t tile_2 = 1;
 
@@ -617,8 +617,8 @@ static float score_tilechoose_node(eval_state & state, board_t board, float cpro
     return res;
 }
 
-static float score_move_node(eval_state &state, board_t board, float cprob) {
-    float best = 0.0f;
+static double score_move_node(eval_state &state, board_t board, double cprob) {
+    double best = 0.0f;
 
     state.curdepth++;
     for (int move = 0; move < 4; ++move) {
@@ -635,7 +635,7 @@ static float score_move_node(eval_state &state, board_t board, float cprob) {
     return best;
 }
 
-static float _score_toplevel_move(eval_state &state, board_t board, int move) {
+static double _score_toplevel_move(eval_state &state, board_t board, int move) {
     board_t newboard = execute_move(move, board);
 
     if (board == newboard)
@@ -644,15 +644,15 @@ static float _score_toplevel_move(eval_state &state, board_t board, int move) {
     return score_tilechoose_node(state, newboard, 1.0f) + 1e-6f;
 }
 
-float score_toplevel_move(board_t board, int move) {
-    float res = 0.0f;
+double score_toplevel_move(board_t board, int move) {
+    double res = 0.0f;
     eval_state state;
 
     state.depth_limit = max(3, count_distinct_tiles(board) - 2);
 
     res = _score_toplevel_move(state, board, move);
 
-    printf("Move %d: result %f: eval'd %ld moves (%ld cache hits, %ld cache size) (maxdepth=%d)\n", move, res,
+    printf("Move %d: result %lf: eval'd %ld moves (%ld cache hits, %ld cache size) (maxdepth=%d)\n", move, res,
            state.moves_evaled, state.cachehits, (long)state.trans_table.size(), state.maxdepth);
 
     return res;
@@ -660,21 +660,21 @@ float score_toplevel_move(board_t board, int move) {
 
 int find_best_move(board_t board) {
     int move = 0;
-    float best = 0.0f;
+    double best = 0.0f;
     int bestmove = -1;
 
     print_board(board);
-    printf("Current scores: heur %.0f, actual %ld\n", score_heur_board(board), (long)score_board(board));
+    printf("Current scores: heur %.0lf, actual %ld\n", score_heur_board(board), (long)score_board(board));
 
     for (move = 0; move < 4; move++) {
-        float res = score_toplevel_move(board, move);
+        double res = score_toplevel_move(board, move);
 
         if (res > best) {
             best = res;
             bestmove = move;
         }
     }
-    printf("Selected bestmove: %d, result: %f\n", bestmove, best);
+    printf("Selected bestmove: %d, result: %lf\n", bestmove, best);
 
     return bestmove;
 }
