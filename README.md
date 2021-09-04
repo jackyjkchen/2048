@@ -273,7 +273,7 @@ Python版本和平台支持同上
 
 * python/2048-ai.py
 
-Python AI实现，查表法 + dict做cache，建议使用pypy速度较快。
+Python AI实现，查表法 + 原生dict做cache，建议使用pypy速度较快。
 
 Python版本和平台支持同上
 
@@ -283,7 +283,7 @@ Python版本和平台支持同上
 
 * lua/2048.lua + lua/luadeps.c
 
-Lua 5.3+实现，依赖Lua 5.3或以上版本提供的原生64位整数运算支持，由于原生lua对操作系统判定和无回显输入不支持，相关功能由luadeps.c提供。由于脚本语言初始化大数组较慢，因此不使用查表法。
+Lua 5.3+实现，依赖Lua 5.3或以上版本提供的原生64位整数运算支持，由于原生Lua对操作系统判定和无回显输入不支持，相关功能由luadeps.c提供。由于脚本语言初始化大数组较慢，因此不使用查表法。
 
 已测试Lua版本和平台
 ```
@@ -300,14 +300,14 @@ gcc -std=c99 -I/usr/include/lua5.4 -shared -fPIC -O2 lua/luadeps.c  -o luadeps.s
 
 * lua/2048-tab.lua + lua/luadeps.c
 
-Lua 5.3+实现，依赖Lua 5.3或以上版本提供的原生64位整数运算支持，由于原生lua对操作系统判定和无回显输入不支持，相关功能由luadeps.c提供。使用查表法，低配置设备上启动较慢，但执行较快。
+Lua 5.3+实现，依赖Lua 5.3或以上版本提供的原生64位整数运算支持，由于原生Lua对操作系统判定和无回显输入不支持，相关功能由luadeps.c提供。使用查表法，低配置设备上启动较慢，但执行较快。
 
 Lua版本和平台支持同上
 
 
 * lua/2048-ai.lua + lua/luadeps.c
 
-AI实现。查表法+原生table cache，依赖Lua 5.3或以上版本提供的原生64位整数运算支持，由于原生lua对操作系统判定和无回显输入不支持，相关功能由luadeps.c提供。
+AI实现。查表法 + 原生table cache，依赖Lua 5.3或以上版本提供的原生64位整数运算支持，由于原生Lua对操作系统判定和无回显输入不支持，相关功能由luadeps.c提供。
 
 Lua版本和平台支持同上
 
@@ -329,7 +329,7 @@ perl 5.8+ (linux, win32, freebsd, macos)
 
 * shell/2048.sh
 
-Bash实现，仅能用于posix兼容系统（依赖tty设备），由于bash数组性能很差，因此使用非查表实现。
+Bash实现，仅能用于Posix兼容系统（依赖tty设备），由于bash数组性能很差，因此使用非查表实现。
 
 测试Shell和平台
 ```

@@ -329,7 +329,7 @@ function score_toplevel_move(board, move)
 
     res = _score_toplevel_move(state, board, move)
 
-    print(string.format("Move %d: result %f: eval'd %d moves (%d cache hits, %d cache size) (maxdepth=%d)\n", move, res,
+    print(string.format("Move %d: result %f: eval'd %d moves (%d cache hits, %d cache size) (maxdepth=%d)", move, res,
            state.moves_evaled, state.cachehits, state.tablesize, state.maxdepth))
 
     return res
@@ -341,7 +341,7 @@ function find_best_move(board)
     local bestmove = -1
 
     print_board(board)
-    print(string.format("Current scores: heur %d, actual %d\n", math.floor(score_heur_board(board)), score_board(board)))
+    print(string.format("Current scores: heur %d, actual %d", math.floor(score_heur_board(board)), score_board(board)))
 
     for move = 0, 3, 1 do
         local res = score_toplevel_move(board, move)
@@ -351,7 +351,7 @@ function find_best_move(board)
             bestmove = move
         end
     end
-    print(string.format("Selected bestmove: %d, result: %f\n", bestmove, best))
+    print(string.format("Selected bestmove: %d, result: %f", bestmove, best))
 
     return bestmove
 end
