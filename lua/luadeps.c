@@ -102,6 +102,8 @@ int c_getch(lua_State *L) {
 #else
     ret = getchar();
 #endif
+    if (ret < 97 || ret > 122)
+        ret = 0;
     lua_pushnumber(L, ret);
     return 1;
 }

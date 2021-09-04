@@ -15,7 +15,7 @@ luadeps = require 'luadeps'
 math.randomseed(os.time())
 
 function unif_random(n)
-    return math.random(0, n)
+    return math.random(0, n - 1)
 end
 
 function unpack_col(row)
@@ -65,69 +65,18 @@ function count_empty(x)
     return x & 0xf
 end
 
-function cindex(i)
-    return i + 1
-end
-
-function init_tables()
-    for row = 0, 65535, 1 do
-        local rev_row = 0
-        local result = 0
-        local rev_result = 0
-        local score = 0
-        local line = {row & 0xf, (row >> 4) & 0xf, (row >> 8) & 0xf, (row >> 12) & 0xf}
-
-        for i = 0, 3, 1 do
-            local rank = line[cindex(i)]
-            if (rank >= 2) then
-                score = score + (rank - 1) * (1 << rank)
-            end
-        end
-        score_table[cindex(row)] = score
-
-        i = 0
-        while (i < 3) do
-            j = i + 1
-            while (j < 4) do
-                if (line[cindex(j)] ~= 0) then
-                    break
-                end
-                j = j + 1
-            end
-            if (j == 4) then
-                break
-            end
-
-            if (line[cindex(i)] == 0) then
-                line[cindex(i)] = line[cindex(j)]
-                line[cindex(j)] = 0
-                i = i - 1
-            elseif (line[cindex(i)] == line[cindex(j)]) then
-                if (line[cindex(i)] ~= 0xf) then
-                    line[cindex(i)] = line[cindex(i)] + 1
-                end
-                line[cindex(j)] = 0
-            end
-            i = i + 1
-        end
-
-        result = line[cindex(0)] | (line[cindex(1)] << 4) | (line[cindex(2)] << 8) | (line[cindex(3)] << 12)
-        rev_result = reverse_row(result)
-        rev_row = reverse_row(row)
-
-        row_left_table [cindex(    row)] =     row ~     result
-        row_right_table[cindex(rev_row)] = rev_row ~ rev_result
-    end
-end
-
 function execute_move_helper(row)
-    local line = {row & 0xf, (row >> 4) & 0xf, (row >> 8) & 0xf, (row >> 12) & 0xf}
+    local line = {}
+    line[0] = row & 0xf
+    line[1] = (row >> 4) & 0xf
+    line[2] = (row >> 8) & 0xf
+    line[3] = (row >> 12) & 0xf
 
     local i = 0
     while (i < 3) do
         j = i + 1
         while (j < 4) do
-            if (line[cindex(j)] ~= 0) then
+            if (line[j] ~= 0) then
                 break
             end
             j = j + 1
@@ -136,20 +85,20 @@ function execute_move_helper(row)
             break
         end
 
-        if (line[cindex(i)] == 0) then
-            line[cindex(i)] = line[cindex(j)]
-            line[cindex(j)] = 0
+        if (line[i] == 0) then
+            line[i] = line[j]
+            line[j] = 0
             i = i - 1
-        elseif (line[cindex(i)] == line[cindex(j)]) then
-            if (line[cindex(i)] ~= 0xf) then
-                line[cindex(i)] = line[cindex(i)] + 1
+        elseif (line[i] == line[j]) then
+            if (line[i] ~= 0xf) then
+                line[i] = line[i] + 1
             end
-            line[cindex(j)] = 0
+            line[j] = 0
         end
         i = i + 1
     end
 
-    return line[cindex(0)] | (line[cindex(1)] << 4) | (line[cindex(2)] << 8) | (line[cindex(3)] << 12)
+    return line[0] | (line[1] << 4) | (line[2] << 8) | (line[3] << 12)
 end
 
 function execute_move_col(board, move)
@@ -198,9 +147,13 @@ function score_helper(board)
 
     for j = 0, 3, 1 do
         row = (board >> (j << 4)) & ROW_MASK
-        local line = {row & 0xf, (row >> 4) & 0xf, (row >> 8) & 0xf, (row >> 12) & 0xf}
+        local line = {}
+        line[0] = row & 0xf
+        line[1] = (row >> 4) & 0xf
+        line[2] = (row >> 8) & 0xf
+        line[3] = (row >> 12) & 0xf
         for i = 0, 3, 1 do
-            local rank = line[cindex(i)]
+            local rank = line[i]
             if (rank >= 2) then
                 score = score + (rank - 1) * (1 << rank)
             end
@@ -314,8 +267,8 @@ function play_game(get_move)
                     retract_pos = MAX_RETRACT
                 end
                 retract_pos = retract_pos - 1
-                board = retract_vec[cindex(retract_pos)]
-                scorepenalty = scorepenalty - retract_penalty_vec[cindex(retract_pos)]
+                board = retract_vec[retract_pos]
+                scorepenalty = scorepenalty - retract_penalty_vec[retract_pos]
                 retract_num = retract_num - 1
                 break
             end
@@ -329,11 +282,11 @@ function play_game(get_move)
             tile = draw_tile()
             if (tile == 2) then
                 scorepenalty = scorepenalty + 4
-                retract_penalty_vec[cindex(retract_pos)] = 4
+                retract_penalty_vec[retract_pos] = 4
             else
-                retract_penalty_vec[cindex(retract_pos)] = 0
+                retract_penalty_vec[retract_pos] = 0
             end
-            retract_vec[cindex(retract_pos)] = board
+            retract_vec[retract_pos] = board
             retract_pos = retract_pos + 1
             if (retract_pos == MAX_RETRACT) then
                 retract_pos = 0

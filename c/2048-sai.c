@@ -107,6 +107,16 @@ typedef uint16 row_t;
 static const board_t ROW_MASK = W64LIT(0xFFFF);
 static const board_t COL_MASK = W64LIT(0x000F000F000F000F);
 
+enum {
+    UP = 0,
+    DOWN,
+    LEFT,
+    RIGHT,
+    RETRACT
+};
+
+typedef int (*get_move_func_t)(board_t);
+
 /* MSVC compatibility: undefine max and min macros */
 #if defined(max)
 #undef max
@@ -118,17 +128,6 @@ static const board_t COL_MASK = W64LIT(0x000F000F000F000F);
 
 #define max(a,b) ( ((a)>(b)) ? (a):(b) )
 #define min(a,b) ( ((a)>(b)) ? (b):(a) )
-
-
-enum {
-    UP = 0,
-    DOWN,
-    LEFT,
-    RIGHT,
-    RETRACT
-};
-
-typedef int (*get_move_func_t)(board_t);
 
 static board_t unpack_col(row_t row) {
     board_t tmp = row;
@@ -624,7 +623,7 @@ int find_best_move(board_t board) {
     int bestmove = -1;
 
     print_board(board);
-    printf("Current scores: heur %.0f, actual %ld\n", score_heur_board(board), (long)score_board(board));
+    printf("Current scores: heur %ld, actual %ld\n", (long)score_heur_board(board), (long)score_board(board));
 
     for (move = 0; move < 4; move++) {
         float res = score_toplevel_move(board, move);

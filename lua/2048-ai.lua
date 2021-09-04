@@ -69,13 +69,24 @@ TABLESIZE = 65536
 row_left_table = {}
 row_right_table = {}
 score_table = {}
+heur_score_table ={}
+
+SCORE_LOST_PENALTY = 200000.0
+SCORE_MONOTONICITY_POWER = 4.0
+SCORE_MONOTONICITY_WEIGHT = 47.0
+SCORE_SUM_POWER = 3.5
+SCORE_SUM_WEIGHT = 11.0
+SCORE_MERGES_WEIGHT = 700.0
+SCORE_EMPTY_WEIGHT = 270.0
+CPROB_THRESH_BASE = 0.0001
+CACHE_DEPTH_LIMIT = 15
 
 function init_tables()
     for row = 0, 65535, 1 do
         local rev_row = 0
         local result = 0
         local rev_result = 0
-        local score = 0
+        local score = 0.0
         local line = {}
         line[0] = row & 0xf
         line[1] = (row >> 4) & 0xf
@@ -89,6 +100,48 @@ function init_tables()
             end
         end
         score_table[row] = score
+
+        local sum = 0.0
+        local empty = 0
+        local merges = 0
+        local prev = 0
+        local counter = 0
+
+        for i = 0, 3, 1 do
+            local rank = line[i]
+
+            sum = sum + rank ^ SCORE_SUM_POWER
+            if (rank == 0) then
+                empty = empty + 1
+            else
+                if (prev == rank) then
+                    counter = counter + 1
+                elseif (counter > 0) then
+                    merges = merges + 1 + counter
+                    counter = 0
+                end
+                prev = rank
+            end
+        end
+        if (counter > 0) then
+            merges = merges + 1 + counter
+        end
+
+        local monotonicity_left = 0.0
+        local monotonicity_right = 0.0
+
+        for i = 1, 3, 1 do
+            if (line[i - 1] > line[i]) then
+                monotonicity_left = monotonicity_left +
+                    (line[i - 1] ^ SCORE_MONOTONICITY_POWER) - (line[i] ^ SCORE_MONOTONICITY_POWER)
+            else
+                monotonicity_right = monotonicity_right +
+                    (line[i] ^ SCORE_MONOTONICITY_POWER) - (line[i - 1] ^ SCORE_MONOTONICITY_POWER)
+            end
+        end
+
+        heur_score_table[row] = SCORE_LOST_PENALTY + SCORE_EMPTY_WEIGHT * empty + SCORE_MERGES_WEIGHT * merges -
+            SCORE_MONOTONICITY_WEIGHT * math.min(monotonicity_left, monotonicity_right) - SCORE_SUM_WEIGHT * sum
 
         i = 0
         while (i < 3) do
@@ -158,35 +211,149 @@ function execute_move(move, board)
     end
 end
 
+function count_distinct_tiles(board)
+    bitset = 0
+
+    while (board ~= 0) do
+        bitset = bitset | (1 << (board & 0xf))
+        board = board >> 4
+    end
+
+    bitset = bitset >> 1
+    count = 0
+
+    while (bitset ~= 0) do
+        bitset = bitset & (bitset - 1)
+        count = count + 1
+    end
+    return count
+end
+
 function score_helper(board, table)
     return table[(board >>  0) & ROW_MASK] + table[(board >> 16) & ROW_MASK] +
            table[(board >> 32) & ROW_MASK] + table[(board >> 48) & ROW_MASK]
 end
 
-function score_board(board)
-    return score_helper(board, score_table)
+function score_heur_board(board)
+    return score_helper(board, heur_score_table) + score_helper(transpose(board), heur_score_table)
 end
 
-function ask_for_move(board)
-    print_board(board)
+function score_board(board)
+    return math.floor(score_helper(board, score_table))
+end
 
-    while true do
-        local allmoves = "wsadkjhl"
-        local pos = 0
+function score_tilechoose_node(state, board, cprob)
+    if (cprob < CPROB_THRESH_BASE or state.curdepth >= state.depth_limit) then
+        state.maxdepth = math.max(state.curdepth, state.maxdepth)
+        return score_heur_board(board)
+    end
+    if (state.curdepth < CACHE_DEPTH_LIMIT) then
+        if (state.trans_table[board] ~= nil) then
+            local entry = state.trans_table[board]
 
-        local movechar = string.char(luadeps.c_getch())
-
-        if (movechar == 'q') then
-            return -1
-        end
-        if (movechar == 'r') then
-            return RETRACT
-        end
-        pos = string.find(allmoves, movechar)
-        if (pos ~= nil) then
-            return (pos - 1) % 4
+            if (entry.depth <= state.curdepth) then
+                state.cachehits = state.cachehits + 1
+                return entry.heuristic
+            end
         end
     end
+
+    local num_open = count_empty(board)
+    cprob = cprob / num_open
+    local res = 0.0
+    local tmp = board
+    local tile_2 = 1
+
+    while (tile_2 ~= 0) do
+        if ((tmp & 0xf) == 0) then
+            res = res + score_move_node(state, board | tile_2, cprob * 0.9) * 0.9
+            res = res + score_move_node(state, board | (tile_2 << 1), cprob * 0.1) * 0.1
+        end
+        tmp = tmp >> 4
+        tile_2 = tile_2 << 4
+    end
+    res = res / num_open
+
+    if (state.curdepth < CACHE_DEPTH_LIMIT) then
+        local entry = {
+            depth = state.curdepth,
+            heuristic = res
+        }
+        state.trans_table[board] = entry
+        state.tablesize = state.tablesize + 1
+    end
+
+    return res
+end
+
+function score_move_node(state, board, cprob)
+    local best = 0.0
+
+    state.curdepth = state.curdepth + 1
+    for move = 0, 3, 1 do
+        newboard = execute_move(move, board)
+
+        state.moves_evaled = state.moves_evaled + 1
+        if (board ~= newboard) then
+            best = math.max(best, score_tilechoose_node(state, newboard, cprob))
+        end
+    end
+    state.curdepth = state.curdepth - 1
+
+    return best
+end
+
+function _score_toplevel_move(state, board, move)
+    local newboard = execute_move(move, board)
+
+    if (board == newboard) then
+        return 0.0
+    end
+
+    return score_tilechoose_node(state, newboard, 1.0) + 0.000001
+end
+
+function score_toplevel_move(board, move)
+    local res = 0.0
+    local state = {
+        trans_table = {},
+        tablesize = 0;
+        maxdepth = 0,
+        curdepth = 0,
+        cachehits = 0,
+        moves_evaled = 0,
+        depth_limit = 0,
+    }
+
+    state.depth_limit = math.max(3, count_distinct_tiles(board) - 2)
+
+    res = _score_toplevel_move(state, board, move)
+
+    print(string.format("Move %d: result %f: eval'd %d moves (%d cache hits, %d cache size) (maxdepth=%d)\n", move, res,
+           state.moves_evaled, state.cachehits, state.tablesize, state.maxdepth))
+
+    return res
+end
+
+function find_best_move(board)
+    local move = 0
+    local best = 0.0
+    local bestmove = -1
+
+    print_board(board)
+    print(string.format("Current scores: heur %d, actual %d\n", math.floor(score_heur_board(board)), score_board(board)))
+
+    for move = 0, 3, 1 do
+        local res = score_toplevel_move(board, move)
+
+        if (res > best) then
+            best = res
+            bestmove = move
+        end
+    end
+    print(string.format("Selected bestmove: %d, result: %f\n", bestmove, best))
+
+    return bestmove
 end
 
 function draw_tile()
@@ -228,12 +395,6 @@ function play_game(get_move)
     local current_score = 0
     local moveno = 0
 
-    local MAX_RETRACT = 64
-    local retract_vec = {}
-    local retract_penalty_vec = {}
-    local retract_pos = 0
-    local retract_num = 0
-
     while true do
         luadeps.c_clear_screen()
         local move = 0
@@ -258,22 +419,6 @@ function play_game(get_move)
         end
 
         repeat
-            if (move == RETRACT) then
-                if ((moveno <= 1) or (retract_num <= 0)) then
-                    moveno = moveno - 1
-                    break
-                end
-                moveno = moveno - 2
-                if ((retract_pos == 0) and (retract_num > 0)) then
-                    retract_pos = MAX_RETRACT
-                end
-                retract_pos = retract_pos - 1
-                board = retract_vec[retract_pos]
-                scorepenalty = scorepenalty - retract_penalty_vec[retract_pos]
-                retract_num = retract_num - 1
-                break
-            end
-
             local newboard = execute_move(move, board)
             if (newboard == board) then
                 moveno = moveno - 1
@@ -283,17 +428,6 @@ function play_game(get_move)
             tile = draw_tile()
             if (tile == 2) then
                 scorepenalty = scorepenalty + 4
-                retract_penalty_vec[retract_pos] = 4
-            else
-                retract_penalty_vec[retract_pos] = 0
-            end
-            retract_vec[retract_pos] = board
-            retract_pos = retract_pos + 1
-            if (retract_pos == MAX_RETRACT) then
-                retract_pos = 0
-            end
-            if (retract_num < MAX_RETRACT) then
-                retract_num = retract_num + 1
             end
 
             board = insert_tile_rand(newboard, tile)
@@ -306,5 +440,5 @@ end
 
 luadeps.c_term_init()
 init_tables()
-play_game(ask_for_move)
+play_game(find_best_move)
 luadeps.c_term_clear()

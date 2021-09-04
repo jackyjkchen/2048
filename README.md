@@ -164,7 +164,7 @@ mono 1.2.3+ (linux)
 
 * pascal/2048.pas
 
-现代pascal实现，使用uint64+查表法（相当于c/2048.c + FASTMODE）。用于free pascal、delphi等现代化pascal编译器。
+现代Pascal实现，使用uint64+查表法（相当于c/2048.c + FASTMODE）。用于free pascal、delphi等现代化pascal编译器。
 
 已测试编译器和平台
 ```
@@ -174,7 +174,7 @@ free pascal 2.2+ (linux, win32, freebsd, macos, dos32)
 
 * pascal/2048-16b.pas
 
-不使用uint64的pascal实现，且不使用查表法（相当于c/2048-16b.c且不使用FASTMODE）。用于turbo pascal 7.x。
+不使用uint64的Pascal实现，且不使用查表法（相当于c/2048-16b.c且不使用FASTMODE）。用于turbo pascal 7.x。
 
 已测试编译器和平台
 ```
@@ -186,7 +186,7 @@ gnu pascal 2.1 (linux, mingw, djgpp)
 
 * pascal/2048-old.pas
 
-不使用uint64、break、continue、uses strings的pascal实现，且不使用查表法（相当于c/2048-16b.c且不使用FASTMODE）。用于turbo pascal 6以下等旧版pascal编译器。
+不使用uint64、break、continue、uses strings的Pascal实现，且不使用查表法（相当于c/2048-16b.c且不使用FASTMODE）。用于turbo pascal 6以下等旧版pascal编译器。
 
 已测试编译器和平台
 ```
@@ -199,7 +199,7 @@ gnu pascal 2.1 (linux, mingw, djgpp)
 
 * fortran/2048.F03
 
-现代fortran2003实现，与c/2048.c一样使用FASTMODE预处理判定是否使用快速查表法。
+现代Fortran2003实现，与c/2048.c一样使用FASTMODE预处理判定是否使用快速查表法。
 
 已测试编译器和平台
 ```
@@ -212,7 +212,7 @@ gcc 4.3+ (linux, mingw, mingw-w64, cygwin, freebsd, macos, djgpp)
 
 * fortran/2048.F90 + fortran/f90deps.c
 
-现代fortran90实现，与c/2048.c一样使用FSASTMODE预处理判定是否使用快速查表法。由于f90没有提供iso_c_binding，所以系统相关功能（无回显输入，清除屏幕），由f90deps.c提供
+现代Fortran90实现，与c/2048.c一样使用FSASTMODE预处理判定是否使用快速查表法。由于f90没有提供iso_c_binding，所以系统相关功能（无回显输入，清除屏幕），由f90deps.c提供
 
 已测试编译器和平台
 ```
@@ -228,7 +228,7 @@ gfortran -DFASTMODE -std=f95 -O2 fortran/2048.F90 f90deps.o -o 2048
 
 * (fortran/2048f.f or fortran/2048s.f) + fortran/f77deps.c
 
-传统fortran77实现，固定模式源码格式，2048f.f使用快速查表法，2048s.f不使用，由于f77没有提供iso_c_binding，所以系统相关功能（无回显输入，清除屏幕），由f77deps.c提供
+传统Fortran77实现，固定模式源码格式，2048f.f使用快速查表法，2048s.f不使用，由于f77没有提供iso_c_binding，所以系统相关功能（无回显输入，清除屏幕），由f77deps.c提供
 
 已测试编译器和平台
 ```
@@ -255,9 +255,9 @@ gfortran -std=gnu -O2 fortran/2048f.f f90deps.o -o 2048
 
 * python/2048.py
 
-python实现，由于脚本语言初始化大数组较慢，因此不使用查表法。
+Python实现，由于脚本语言初始化大数组较慢，因此不使用查表法。
 
-已测试python版本和平台
+已测试Python版本和平台
 ```
 python 2.4+ (linux, win32, freebsd, macos)
 python 3.0+ (linux, win32, freebsd, macos)
@@ -266,16 +266,16 @@ pypy/pypy3 all (linux, win32, macos)
 
 * python/2048-tab.py
 
-python实现，使用查表法，在低配置设备上启动较慢，但执行较快。
+Python实现，使用查表法，在低配置设备上启动较慢，但执行较快。
 
-python版本和平台支持同上
+Python版本和平台支持同上
 
 
 * python/2048-ai.py
 
-python ai实现，查表法 + dict做cache，建议使用pypy速度较快。
+Python AI实现，查表法 + dict做cache，建议使用pypy速度较快。
 
-python版本和平台支持同上
+Python版本和平台支持同上
 
 
 
@@ -283,9 +283,9 @@ python版本和平台支持同上
 
 * lua/2048.lua + lua/luadeps.c
 
-lua 5.3+实现，依赖lua 5.3或以上版本提供的原生64位整数运算支持，由于原生lua对操作系统判定和无回显输入不支持，相关功能由luadeps.c提供。由于脚本语言初始化大数组较慢，因此不使用查表法。
+Lua 5.3+实现，依赖Lua 5.3或以上版本提供的原生64位整数运算支持，由于原生lua对操作系统判定和无回显输入不支持，相关功能由luadeps.c提供。由于脚本语言初始化大数组较慢，因此不使用查表法。
 
-已测试lua版本和平台
+已测试Lua版本和平台
 ```
 lua-5.3+ (linux, win32, freebsd, macos)
 ```
@@ -300,9 +300,16 @@ gcc -std=c99 -I/usr/include/lua5.4 -shared -fPIC -O2 lua/luadeps.c  -o luadeps.s
 
 * lua/2048-tab.lua + lua/luadeps.c
 
-lua 5.3+实现，依赖lua 5.3或以上版本提供的原生64位整数运算支持，由于原生lua对操作系统判定和无回显输入不支持，相关功能由luadeps.c提供。使用查表法，低配置设备上启动较慢，但执行较快。
+Lua 5.3+实现，依赖Lua 5.3或以上版本提供的原生64位整数运算支持，由于原生lua对操作系统判定和无回显输入不支持，相关功能由luadeps.c提供。使用查表法，低配置设备上启动较慢，但执行较快。
 
-lua版本和平台支持同上
+Lua版本和平台支持同上
+
+
+* lua/2048-ai.lua + lua/luadeps.c
+
+AI实现。查表法+原生table cache，依赖Lua 5.3或以上版本提供的原生64位整数运算支持，由于原生lua对操作系统判定和无回显输入不支持，相关功能由luadeps.c提供。
+
+Lua版本和平台支持同上
 
 
 
@@ -310,9 +317,9 @@ lua版本和平台支持同上
 
 * perl/2048.pl
 
-perl实现，由于脚本语言初始化大数组较慢，因此不使用查表法。依赖Term::ReadKey和Term::ANSIScreen两个CPAN模块。
+Perl实现，由于脚本语言初始化大数组较慢，因此不使用查表法。依赖Term::ReadKey和Term::ANSIScreen两个CPAN模块。
 
-已测试perl版本和平台
+已测试Perl版本和平台
 ```
 perl 5.8+ (linux, win32, freebsd, macos)
 ```
@@ -322,9 +329,9 @@ perl 5.8+ (linux, win32, freebsd, macos)
 
 * shell/2048.sh
 
-bash实现，仅能用于posix兼容系统（依赖tty设备），由于bash数组性能很差，因此使用非查表实现。
+Bash实现，仅能用于posix兼容系统（依赖tty设备），由于bash数组性能很差，因此使用非查表实现。
 
-测试shell和平台
+测试Shell和平台
 ```
 bash 3.1+ (linux, freebsd, macos)
 ```
