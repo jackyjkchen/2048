@@ -11,9 +11,9 @@ import "C"
 
 import (
 	"fmt"
-	"time"
 	"math/rand"
 	"strings"
+	"time"
 )
 
 type board_t uint64
@@ -225,7 +225,7 @@ func ask_for_move(board board_t) int {
 func draw_tile() board_t {
 	if unif_random(10) < 9 {
 		return 1
-    }
+	}
 	return 2
 }
 

@@ -8,9 +8,9 @@ import "C"
 
 import (
 	"fmt"
-	"time"
-	"math/rand"
 	"math"
+	"math/rand"
+	"time"
 )
 
 type board_t uint64
@@ -37,17 +37,17 @@ var score_table [TABLESIZE]float64
 var heur_score_table [TABLESIZE]float64
 
 type trans_table_entry_t struct {
-    depth int
-    heuristic float64
+	depth     int
+	heuristic float64
 }
 
 type eval_state struct {
-    trans_table map[board_t]trans_table_entry_t
-    maxdepth int
-    curdepth int
-    cachehits int
-    moves_evaled int
-    depth_limit int
+	trans_table  map[board_t]trans_table_entry_t
+	maxdepth     int
+	curdepth     int
+	cachehits    int
+	moves_evaled int
+	depth_limit  int
 }
 
 const SCORE_LOST_PENALTY = 200000.0
@@ -141,47 +141,47 @@ func init_tables() {
 		}
 		score_table[row] = float64(score)
 
-        sum := 0.0
-        empty := 0
-        merges := 0
-        prev := 0
-        counter := 0
+		sum := 0.0
+		empty := 0
+		merges := 0
+		prev := 0
+		counter := 0
 
-        for i = 0; i < 4; i++ {
+		for i = 0; i < 4; i++ {
 			var rank int = int(line[i])
 
-            sum += math.Pow(float64(rank), SCORE_SUM_POWER)
-            if rank == 0 {
-                empty++
-            } else {
-                if prev == rank {
-                    counter++
-                } else if counter > 0 {
-                    merges += 1 + counter
-                    counter = 0
-                }
-                prev = rank
-            }
-        }
-        if counter > 0 {
-            merges += 1 + counter
-        }
+			sum += math.Pow(float64(rank), SCORE_SUM_POWER)
+			if rank == 0 {
+				empty++
+			} else {
+				if prev == rank {
+					counter++
+				} else if counter > 0 {
+					merges += 1 + counter
+					counter = 0
+				}
+				prev = rank
+			}
+		}
+		if counter > 0 {
+			merges += 1 + counter
+		}
 
-        monotonicity_left := 0.0
-        monotonicity_right := 0.0
+		monotonicity_left := 0.0
+		monotonicity_right := 0.0
 
-        for i = 1; i < 4; i++ {
-            if line[i - 1] > line[i] {
-                monotonicity_left +=
-                    math.Pow(float64(line[i - 1]), SCORE_MONOTONICITY_POWER) - math.Pow(float64(line[i]), SCORE_MONOTONICITY_POWER)
-            } else {
-                monotonicity_right +=
-                    math.Pow(float64(line[i]), SCORE_MONOTONICITY_POWER) - math.Pow(float64(line[i - 1]), SCORE_MONOTONICITY_POWER)
-            }
-        }
+		for i = 1; i < 4; i++ {
+			if line[i-1] > line[i] {
+				monotonicity_left +=
+					math.Pow(float64(line[i-1]), SCORE_MONOTONICITY_POWER) - math.Pow(float64(line[i]), SCORE_MONOTONICITY_POWER)
+			} else {
+				monotonicity_right +=
+					math.Pow(float64(line[i]), SCORE_MONOTONICITY_POWER) - math.Pow(float64(line[i-1]), SCORE_MONOTONICITY_POWER)
+			}
+		}
 
-        heur_score_table[row] = SCORE_LOST_PENALTY + SCORE_EMPTY_WEIGHT * float64(empty) + SCORE_MERGES_WEIGHT * float64(merges) -
-            SCORE_MONOTONICITY_WEIGHT * math.Min(monotonicity_left, monotonicity_right) - SCORE_SUM_WEIGHT * sum
+		heur_score_table[row] = SCORE_LOST_PENALTY + SCORE_EMPTY_WEIGHT*float64(empty) + SCORE_MERGES_WEIGHT*float64(merges) -
+			SCORE_MONOTONICITY_WEIGHT*math.Min(monotonicity_left, monotonicity_right) - SCORE_SUM_WEIGHT*sum
 
 		for i = 0; i < 3; i++ {
 			for j = i + 1; j < 4; j++ {
@@ -256,20 +256,20 @@ func execute_move(move int, board board_t) board_t {
 }
 
 func count_distinct_tiles(board board_t) int {
-    var bitset uint16 = 0
+	var bitset uint16 = 0
 
-    for board != 0 {
-        bitset |= 1 << (board & 0xf)
-        board >>= 4
-    }
+	for board != 0 {
+		bitset |= 1 << (board & 0xf)
+		board >>= 4
+	}
 
-    bitset >>= 1
-    count := 0
-    for bitset != 0 {
-        bitset &= bitset - 1
-        count++
-    }
-    return count
+	bitset >>= 1
+	count := 0
+	for bitset != 0 {
+		bitset &= bitset - 1
+		count++
+	}
+	return count
 }
 
 func score_helper(board board_t, table *[TABLESIZE]float64) float64 {
@@ -278,7 +278,7 @@ func score_helper(board board_t, table *[TABLESIZE]float64) float64 {
 }
 
 func score_heur_board(board board_t) float64 {
-    return score_helper(board, &heur_score_table) + score_helper(transpose(board), &heur_score_table);
+	return score_helper(board, &heur_score_table) + score_helper(transpose(board), &heur_score_table)
 }
 
 func score_board(board board_t) uint32 {
@@ -286,117 +286,117 @@ func score_board(board board_t) uint32 {
 }
 
 func score_tilechoose_node(state *eval_state, board board_t, cprob float64) float64 {
-    if cprob < CPROB_THRESH_BASE || state.curdepth >= state.depth_limit {
-        if state.curdepth > state.maxdepth {
-            state.maxdepth = state.curdepth
-        }
-        return score_heur_board(board)
-    }
-    if state.curdepth < CACHE_DEPTH_LIMIT {
-        entry, exist := state.trans_table[board]
-        if exist {
-            if entry.depth <= state.curdepth {
-                state.cachehits++
-                return entry.heuristic
-            }
-        }
-    }
+	if cprob < CPROB_THRESH_BASE || state.curdepth >= state.depth_limit {
+		if state.curdepth > state.maxdepth {
+			state.maxdepth = state.curdepth
+		}
+		return score_heur_board(board)
+	}
+	if state.curdepth < CACHE_DEPTH_LIMIT {
+		entry, exist := state.trans_table[board]
+		if exist {
+			if entry.depth <= state.curdepth {
+				state.cachehits++
+				return entry.heuristic
+			}
+		}
+	}
 
-    num_open := float64(count_empty(board))
+	num_open := float64(count_empty(board))
 
-    cprob /= num_open
+	cprob /= num_open
 
-    res := 0.0
-    var tmp board_t = board
-    var tile_2 board_t = 1
+	res := 0.0
+	var tmp board_t = board
+	var tile_2 board_t = 1
 
-    for tile_2 != 0 {
-        if (tmp & 0xf) == 0 {
-            res += score_move_node(state, board | tile_2, cprob * 0.9) * 0.9
-            res += score_move_node(state, board | (tile_2 << 1), cprob * 0.1) * 0.1
-        }
-        tmp >>= 4
-        tile_2 <<= 4
-    }
-    res = res / num_open
+	for tile_2 != 0 {
+		if (tmp & 0xf) == 0 {
+			res += score_move_node(state, board|tile_2, cprob*0.9) * 0.9
+			res += score_move_node(state, board|(tile_2<<1), cprob*0.1) * 0.1
+		}
+		tmp >>= 4
+		tile_2 <<= 4
+	}
+	res = res / num_open
 
-    if state.curdepth < CACHE_DEPTH_LIMIT {
-        entry := trans_table_entry_t { state.curdepth, res }
-        state.trans_table[board] = entry
-    }
+	if state.curdepth < CACHE_DEPTH_LIMIT {
+		entry := trans_table_entry_t{state.curdepth, res}
+		state.trans_table[board] = entry
+	}
 
-    return res
+	return res
 }
 
 func score_move_node(state *eval_state, board board_t, cprob float64) float64 {
-    var best float64 = 0.0
+	var best float64 = 0.0
 
-    state.curdepth++
-    for move := 0; move < 4; move++ {
-        var newboard board_t = execute_move(move, board)
+	state.curdepth++
+	for move := 0; move < 4; move++ {
+		var newboard board_t = execute_move(move, board)
 
-        state.moves_evaled++
+		state.moves_evaled++
 
-        if board != newboard {
-            best = math.Max(best, score_tilechoose_node(state, newboard, cprob))
-        }
-    }
-    state.curdepth--
+		if board != newboard {
+			best = math.Max(best, score_tilechoose_node(state, newboard, cprob))
+		}
+	}
+	state.curdepth--
 
-    return best
+	return best
 }
 
 func _score_toplevel_move(state *eval_state, board board_t, move int) float64 {
-    var newboard board_t = execute_move(move, board)
+	var newboard board_t = execute_move(move, board)
 
-    if board == newboard {
-        return 0.0
-    }
+	if board == newboard {
+		return 0.0
+	}
 
-    return score_tilechoose_node(state, newboard, 1.0) + 0.000001
+	return score_tilechoose_node(state, newboard, 1.0) + 0.000001
 }
 
 func score_toplevel_move(board board_t, move int) float64 {
-    var state eval_state
+	var state eval_state
 
-    state.trans_table = make(map[board_t]trans_table_entry_t)
-    state.depth_limit = count_distinct_tiles(board) - 2
-    if state.depth_limit < 3 {
-        state.depth_limit = 3
-    }
+	state.trans_table = make(map[board_t]trans_table_entry_t)
+	state.depth_limit = count_distinct_tiles(board) - 2
+	if state.depth_limit < 3 {
+		state.depth_limit = 3
+	}
 
-    res := _score_toplevel_move(&state, board, move)
+	res := _score_toplevel_move(&state, board, move)
 
-    fmt.Printf("Move %d: result %f: eval'd %d moves (%d cache hits, %d cache size) (maxdepth=%d)\n", move, res,
-           state.moves_evaled, state.cachehits, len(state.trans_table), state.maxdepth)
+	fmt.Printf("Move %d: result %f: eval'd %d moves (%d cache hits, %d cache size) (maxdepth=%d)\n", move, res,
+		state.moves_evaled, state.cachehits, len(state.trans_table), state.maxdepth)
 
-    return res
+	return res
 }
 
 func find_best_move(board board_t) int {
-    best := 0.0
-    bestmove := -1
+	best := 0.0
+	bestmove := -1
 
-    print_board(board)
-    fmt.Printf("Current scores: heur %d, actual %d\n", uint32(score_heur_board(board)), uint32(score_board(board)))
+	print_board(board)
+	fmt.Printf("Current scores: heur %d, actual %d\n", uint32(score_heur_board(board)), uint32(score_board(board)))
 
-    for move := 0; move < 4; move++ {
-        res := score_toplevel_move(board, move)
+	for move := 0; move < 4; move++ {
+		res := score_toplevel_move(board, move)
 
-        if res > best {
-            best = res
-            bestmove = move
-        }
-    }
-    fmt.Printf("Selected bestmove: %d, result: %f\n", bestmove, best)
+		if res > best {
+			best = res
+			bestmove = move
+		}
+	}
+	fmt.Printf("Selected bestmove: %d, result: %f\n", bestmove, best)
 
-    return bestmove;
+	return bestmove
 }
 
 func draw_tile() board_t {
 	if unif_random(10) < 9 {
 		return 1
-    }
+	}
 	return 2
 }
 
