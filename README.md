@@ -114,7 +114,7 @@ AI版本的慢速实现，不使用C++ std::map cache，ISO C90实现，非严�
 
 * csharp/2048.cs
 
-C#实现，使用uint64+查表法（相当于c/2048.c + FASTMODE）。需要.net framework 2.0+。
+C#实现，使用uint64+查表法（。需要.net framework 2.0+。
 
 已测试编译器和平台
 ```
@@ -125,7 +125,7 @@ mono 1.1+ (linux)
 
 * csharp/2048-ai.cs
 
-C# AI实现，算法类似cpp/2048-ai.cpp，使用Dictionary做cache。需要.net framework 2.0+。
+C# AI实现，使用Dictionary做cache。需要.net framework 2.0+。
 
 已测试编译器和平台
 ```
@@ -139,7 +139,7 @@ mono 1.1+ (linux)
 
 * vbdotnet/2048.vb
 
-vb.net实现，使用uint64+查表法（相当于c/2048.c + FASTMODE）。需要.net framework 2.0以上。
+vb.net实现，使用uint64+查表法。需要.net framework 2.0以上。
 
 已测试编译器和平台
 ```
@@ -150,7 +150,7 @@ mono 1.2.3+ (linux)
 
 * vbdotnet/2048-ai.vb
 
-vb.net AI实现，算法类似cpp/2048-ai.cpp，使用Dictionary做cache。需要.net framework 2.0以上。
+vb.net AI实现，使用Dictionary做cache。需要.net framework 2.0以上。
 
 已测试编译器和平台
 ```
@@ -193,7 +193,7 @@ Go AI实现，查表法 + 原生map cache，由于Go标准库不支持清除屏�
 
 * pascal/2048.pas
 
-现代Pascal实现，使用uint64+查表法（相当于c/2048.c + FASTMODE）。用于free pascal、delphi等现代化pascal编译器。
+现代Pascal实现，使用uint64+查表法。
 
 已测试编译器和平台
 ```
@@ -203,7 +203,7 @@ free pascal 2.2+ (linux, win32, freebsd, macos, dos32)
 
 * pascal/2048-16b.pas
 
-不使用uint64的Pascal实现，且不使用查表法（相当于c/2048-16b.c且不使用FASTMODE）。用于turbo pascal 7.x。
+不使用uint64的Pascal实现，且不使用查表法。
 
 已测试编译器和平台
 ```
@@ -215,7 +215,7 @@ gnu pascal 2.1 (linux, mingw, djgpp)
 
 * pascal/2048-old.pas
 
-不使用uint64、break、continue、uses strings的Pascal实现，且不使用查表法（相当于c/2048-16b.c且不使用FASTMODE）。用于turbo pascal 6以下等旧版pascal编译器。
+不使用uint64、break、continue、uses strings的Pascal实现，且不使用查表法。
 
 已测试编译器和平台
 ```
@@ -228,7 +228,7 @@ gnu pascal 2.1 (linux, mingw, djgpp)
 
 * fortran/2048.F03
 
-现代Fortran2003实现，与c/2048.c一样使用FASTMODE预处理判定是否使用快速查表法。
+现代Fortran2003实现，使用FASTMODE预处理判定是否使用快速查表法。
 
 已测试编译器和平台
 ```
@@ -241,7 +241,7 @@ gcc 4.3+ (linux, mingw, mingw-w64, cygwin, freebsd, macos, djgpp)
 
 * fortran/2048.F90 + fortran/f90deps.c
 
-现代Fortran90实现，与c/2048.c一样使用FSASTMODE预处理判定是否使用快速查表法。由于f90没有提供iso_c_binding，所以系统相关功能（无回显输入，清除屏幕），由fortran/f90deps.c提供
+现代Fortran90实现，使用FSASTMODE预处理判定是否使用快速查表法。由于f90没有提供iso_c_binding，所以系统相关功能（无回显输入，清除屏幕），由fortran/f90deps.c提供
 
 已测试编译器和平台
 ```
