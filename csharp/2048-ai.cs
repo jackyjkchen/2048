@@ -79,13 +79,9 @@ public class Class2048
                 int power_val = (int)(board & 0xf);
 
                 if (power_val == 0)
-                {
-                    Console.Write(String.Format("|{0,6}", ' '));
-                }
+                    Console.Write("|{0,6}", ' ');
                 else
-                {
-                    Console.Write(String.Format("|{0,6}", 1 << power_val));
-                }
+                    Console.Write("|{0,6}", 1 << power_val);
                 board >>= 4;
             }
             Console.WriteLine("|");
@@ -139,16 +135,13 @@ public class Class2048
                 int rank = line[i];
 
                 if (rank >= 2)
-                {
                     score += (rank - 1) * (1 << rank);
-                }
             }
             score_table[row] = score;
 
             double sum = 0.0f;
             int empty = 0;
             int merges = 0;
-
             int prev = 0;
             int counter = 0;
 
@@ -156,7 +149,7 @@ public class Class2048
             {
                 int rank = line[i];
 
-                sum += (double)Math.Pow(rank, SCORE_SUM_POWER);
+                sum += Math.Pow(rank, SCORE_SUM_POWER);
                 if (rank == 0)
                 {
                     empty++;
@@ -176,9 +169,7 @@ public class Class2048
                 }
             }
             if (counter > 0)
-            {
                 merges += 1 + counter;
-            }
 
             double monotonicity_left = 0.0f;
             double monotonicity_right = 0.0f;
@@ -188,12 +179,12 @@ public class Class2048
                 if (line[i - 1] > line[i])
                 {
                     monotonicity_left +=
-                        (double)(Math.Pow(line[i - 1], SCORE_MONOTONICITY_POWER) - Math.Pow(line[i], SCORE_MONOTONICITY_POWER));
+                        Math.Pow(line[i - 1], SCORE_MONOTONICITY_POWER) - Math.Pow(line[i], SCORE_MONOTONICITY_POWER);
                 }
                 else
                 {
                     monotonicity_right +=
-                        (double)(Math.Pow(line[i], SCORE_MONOTONICITY_POWER) - Math.Pow(line[i - 1], SCORE_MONOTONICITY_POWER));
+                        Math.Pow(line[i], SCORE_MONOTONICITY_POWER) - Math.Pow(line[i - 1], SCORE_MONOTONICITY_POWER);
                 }
             }
 
@@ -219,9 +210,7 @@ public class Class2048
                 else if (line[i] == line[j])
                 {
                     if (line[i] != 0xf)
-                    {
                         line[i]++;
-                    }
                     line[j] = 0;
                 }
             }
@@ -274,6 +263,7 @@ public class Class2048
                 return 0xFFFFFFFFFFFFFFFF;
         }
     }
+
     int count_distinct_tiles(UInt64 board)
     {
         UInt64 bitset = 0;
@@ -374,9 +364,7 @@ public class Class2048
             state.moves_evaled++;
 
             if (board != newboard)
-            {
                 best = Math.Max(best, score_tilechoose_node(ref state, newboard, cprob));
-            }
         }
         state.curdepth--;
 
@@ -430,6 +418,7 @@ public class Class2048
 
         return bestmove;
     }
+
     UInt64 draw_tile()
     {
         return (UInt64)((unif_random(10) < 9) ? 1 : 2);
@@ -501,9 +490,7 @@ public class Class2048
 
             tile = draw_tile();
             if (tile == 2)
-            {
                 scorepenalty += 4;
-            }
 
             board = insert_tile_rand(newboard, tile);
         }

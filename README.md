@@ -8,7 +8,7 @@
 
 本项目中所有实现的手工版本2048，其输出的格式完全一致（精确到字节），其输入游戏体验完全一致。
 
-本项目中所有实现的AI版本2048，其输出格式完全一致。
+本项目中所有实现的AI版本2048，其输出格式完全一致。不同编译器和平台浮点精度科能有差异。
 
 # C&C++
 
@@ -251,6 +251,35 @@ gfortran -std=gnu -O2 fortran/2048f.f f90deps.o -o 2048
 ```
 
 
+
+# Java
+
+* java/2048.java + java/javadeps.c
+
+Java实现，查表法，由于Java标准库不支持无回显输入和清除屏幕两个系统相关功能，由JNI方式——javadeps.c实现。
+
+已测试Java版本和平台
+```
+jdk 1.5+ (linux, win32, freebsd, macos)
+```
+
+注1：编译运行命令行示例
+```
+cd java
+gcc -I/opt/openjdk-bin-8.292_p10/include/ -I/opt/openjdk-bin-8.292_p10/include/linux/ -std=c90 -fPIC -O2 -shared javadeps.c -o libjavadeps.so 
+javac 2048.java
+java -Djava.library.path=. Class2048
+```
+
+
+* java/2048-ai.java + java/javadeps.c
+
+Java AI实现，查表法 + HashMap cache，由于Java标准库不支持清除屏幕，由JNI方式——javadeps.c实现。
+
+Java版本和平台支持同上
+
+
+
 # Python
 
 * python/2048.py
@@ -273,7 +302,7 @@ Python版本和平台支持同上
 
 * python/2048-ai.py
 
-Python AI实现，查表法 + 原生dict做cache，建议使用pypy速度较快。
+Python AI实现，查表法 + 原生dict cache，建议使用pypy速度较快。
 
 Python版本和平台支持同上
 

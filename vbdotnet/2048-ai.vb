@@ -69,9 +69,9 @@ Public Module Class2048
             For j As Integer = 0 To 3
                 Dim power_val As Integer = board And &HFUL
                 If power_val = 0 Then
-                    Console.Write(String.Format("|{0,6}", " "c))
+                    Console.Write("|{0,6}", " "c)
                 Else
-                    Console.Write(String.Format("|{0,6}", 1 << power_val))
+                    Console.Write("|{0,6}", 1 << power_val)
                 End If
 
                 board >>= 4

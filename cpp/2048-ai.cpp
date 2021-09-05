@@ -240,7 +240,7 @@ static void init_tables(void) {
         }
         score_table[row] = score;
 
-        float sum = 0.0f;
+        double sum = 0.0f;
         int empty = 0;
         int merges = 0;
         int prev = 0;
@@ -249,7 +249,7 @@ static void init_tables(void) {
         for (i = 0; i < 4; ++i) {
             int rank = line[i];
 
-            sum += (float)pow(rank, SCORE_SUM_POWER);
+            sum += pow(rank, SCORE_SUM_POWER);
             if (rank == 0) {
                 empty++;
             } else {
@@ -266,16 +266,16 @@ static void init_tables(void) {
             merges += 1 + counter;
         }
 
-        float monotonicity_left = 0.0f;
-        float monotonicity_right = 0.0f;
+        double monotonicity_left = 0.0f;
+        double monotonicity_right = 0.0f;
 
         for (i = 1; i < 4; ++i) {
             if (line[i - 1] > line[i]) {
                 monotonicity_left +=
-                    (float)(pow(line[i - 1], SCORE_MONOTONICITY_POWER) - pow(line[i], SCORE_MONOTONICITY_POWER));
+                    pow(line[i - 1], SCORE_MONOTONICITY_POWER) - pow(line[i], SCORE_MONOTONICITY_POWER);
             } else {
                 monotonicity_right +=
-                    (float)(pow(line[i], SCORE_MONOTONICITY_POWER) - pow(line[i - 1], SCORE_MONOTONICITY_POWER));
+                    pow(line[i], SCORE_MONOTONICITY_POWER) - pow(line[i - 1], SCORE_MONOTONICITY_POWER);
             }
         }
 

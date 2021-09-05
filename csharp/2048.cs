@@ -53,13 +53,9 @@ class Class2048
                 int power_val = (int)(board & 0xf);
 
                 if (power_val == 0)
-                {
-                    Console.Write(String.Format("|{0,6}", ' '));
-                }
+                    Console.Write("|{0,6}", ' ');
                 else
-                {
-                    Console.Write(String.Format("|{0,6}", 1 << power_val));
-                }
+                    Console.Write("|{0,6}", 1 << power_val);
                 board >>= 4;
             }
             Console.WriteLine("|");
@@ -111,9 +107,7 @@ class Class2048
             {
                 int rank = line[i];
                 if (rank >= 2)
-                {
                     score += (UInt32)((rank - 1) * (1 << rank));
-                }
             }
             score_table[row] = score;
 
@@ -136,9 +130,7 @@ class Class2048
                 else if (line[i] == line[j])
                 {
                     if (line[i] != 0xf)
-                    {
                         line[i]++;
-                    }
                     line[j] = 0;
                 }
             }
@@ -214,18 +206,12 @@ class Class2048
             char movechar = get_ch();
 
             if (movechar == 'q')
-            {
                 return -1;
-            }
             if (movechar == 'r')
-            {
                 return RETRACT;
-            }
             pos = allmoves.IndexOf(movechar);
             if (pos != -1)
-            {
                 return pos % 4;
-            }
         }
     }
 
