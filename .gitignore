@@ -1,7 +1,7 @@
-*/*.exe
-*/*.out
-*/*.dll
-*/*.so
-*/*.a
-*/*.o
-*/*.class
+*.a
+*.class
+*.dll
+*.exe
+*.o
+*.out
+*.so
