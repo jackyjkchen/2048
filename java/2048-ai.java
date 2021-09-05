@@ -242,8 +242,8 @@ class Class2048
         long bitset = 0;
 
         while (board != 0) {
-            bitset |= (long)(1) << (board & 0xf);
-            board = board >> 4;
+            bitset |= 1 << (board & 0xf);
+            board /= 16;
         }
 
         bitset >>= 1;

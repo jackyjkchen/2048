@@ -160,6 +160,20 @@ mono 1.2.3+ (linux)
 
 
 
+# Go
+
+* go/2048.go + go/godeps.c
+
+Go实现，查表法，由于Go标准库不支持无回显输入和清除屏幕两个系统相关功能，由godeps.c提供。
+
+已测试编译器和平台
+```
+go 1.4+ (linux, win32, freebsd, macos)
+gccgo 5+ (linux, mingw-w64, cygwin, freebsd, macos)
+```
+
+
+
 # Pascal
 
 * pascal/2048.pas
