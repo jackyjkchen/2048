@@ -239,8 +239,7 @@ class Class2048
     
     int count_distinct_tiles(long board)
     {
-        long bitset = 0;
-
+        int bitset = 0;
         while (board != 0) {
             bitset |= 1 << (board & 0xf);
             board /= 16;
@@ -248,7 +247,6 @@ class Class2048
 
         bitset >>= 1;
         int count = 0;
-
         while (bitset != 0) {
             bitset &= bitset - 1;
             count++;

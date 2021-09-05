@@ -123,7 +123,7 @@ public class Class2048
         do
         {
             int i = 0, j = 0;
-            double score = 0.0f;
+            UInt32 score = 0;
 
             line[0] = (UInt16)((row >> 0) & 0xf);
             line[1] = (UInt16)((row >> 4) & 0xf);
@@ -135,9 +135,9 @@ public class Class2048
                 int rank = line[i];
 
                 if (rank >= 2)
-                    score += (rank - 1) * (1 << rank);
+                    score += (UInt32)((rank - 1) * (1 << rank));
             }
-            score_table[row] = score;
+            score_table[row] = (double)score;
 
             double sum = 0.0f;
             int empty = 0;
@@ -266,21 +266,18 @@ public class Class2048
 
     int count_distinct_tiles(UInt64 board)
     {
-        UInt64 bitset = 0;
-
+        UInt16 bitset = 0;
         while (board != 0)
         {
-            bitset |= (UInt64)(1) << (int)(board & 0xf);
+            bitset |= (UInt16)(1 << (int)(board & 0xf));
             board >>= 4;
         }
 
         bitset >>= 1;
-
         int count = 0;
-
         while (bitset != 0)
         {
-            bitset &= bitset - 1;
+            bitset &= (UInt16)(bitset - 1);
             count++;
         }
         return count;

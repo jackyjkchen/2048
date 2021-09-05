@@ -2,9 +2,6 @@ package main
 
 /*
 extern void clear_screen(void);
-extern void term_init(void);
-extern void term_clear(void);
-extern int get_ch(void);
 #cgo LDFLAGS: -L. -lgodeps
 */
 import "C"
@@ -13,7 +10,7 @@ import (
 	"fmt"
 	"time"
 	"math/rand"
-	"strings"
+	"math"
 )
 
 type board_t uint64
@@ -36,7 +33,32 @@ const TABLESIZE = 65536
 
 var row_left_table [TABLESIZE]row_t
 var row_right_table [TABLESIZE]row_t
-var score_table [TABLESIZE]uint32
+var score_table [TABLESIZE]float64
+var heur_score_table [TABLESIZE]float64
+
+type trans_table_entry_t struct {
+    depth int
+    heuristic float64
+}
+
+type eval_state struct {
+    trans_table map[board_t]trans_table_entry_t
+    maxdepth int
+    curdepth int
+    cachehits int
+    moves_evaled int
+    depth_limit int
+}
+
+const SCORE_LOST_PENALTY = 200000.0
+const SCORE_MONOTONICITY_POWER = 4.0
+const SCORE_MONOTONICITY_WEIGHT = 47.0
+const SCORE_SUM_POWER = 3.5
+const SCORE_SUM_WEIGHT = 11.0
+const SCORE_MERGES_WEIGHT = 700.0
+const SCORE_EMPTY_WEIGHT = 270.0
+const CPROB_THRESH_BASE = 0.0001
+const CACHE_DEPTH_LIMIT = 15
 
 var rd = rand.New(rand.NewSource(time.Now().UnixNano()))
 
@@ -103,7 +125,7 @@ func init_tables() {
 		i := 0
 		j := 0
 		var line [4]row_t
-		var score uint32 = 0
+		var score uint32 = 0.0
 
 		line[0] = (row >> 0) & 0xf
 		line[1] = (row >> 4) & 0xf
@@ -117,7 +139,49 @@ func init_tables() {
 				score += (rank - 1) * (1 << rank)
 			}
 		}
-		score_table[row] = score
+		score_table[row] = float64(score)
+
+        sum := 0.0
+        empty := 0
+        merges := 0
+        prev := 0
+        counter := 0
+
+        for i = 0; i < 4; i++ {
+			var rank int = int(line[i])
+
+            sum += math.Pow(float64(rank), SCORE_SUM_POWER)
+            if rank == 0 {
+                empty++
+            } else {
+                if prev == rank {
+                    counter++
+                } else if counter > 0 {
+                    merges += 1 + counter
+                    counter = 0
+                }
+                prev = rank
+            }
+        }
+        if counter > 0 {
+            merges += 1 + counter
+        }
+
+        monotonicity_left := 0.0
+        monotonicity_right := 0.0
+
+        for i = 1; i < 4; i++ {
+            if line[i - 1] > line[i] {
+                monotonicity_left +=
+                    math.Pow(float64(line[i - 1]), SCORE_MONOTONICITY_POWER) - math.Pow(float64(line[i]), SCORE_MONOTONICITY_POWER)
+            } else {
+                monotonicity_right +=
+                    math.Pow(float64(line[i]), SCORE_MONOTONICITY_POWER) - math.Pow(float64(line[i - 1]), SCORE_MONOTONICITY_POWER)
+            }
+        }
+
+        heur_score_table[row] = SCORE_LOST_PENALTY + SCORE_EMPTY_WEIGHT * float64(empty) + SCORE_MERGES_WEIGHT * float64(merges) -
+            SCORE_MONOTONICITY_WEIGHT * math.Min(monotonicity_left, monotonicity_right) - SCORE_SUM_WEIGHT * sum
 
 		for i = 0; i < 3; i++ {
 			for j = i + 1; j < 4; j++ {
@@ -191,35 +255,142 @@ func execute_move(move int, board board_t) board_t {
 	}
 }
 
-func score_helper(board board_t, table *[TABLESIZE]uint32) uint32 {
+func count_distinct_tiles(board board_t) int {
+    var bitset uint16 = 0
+
+    for board != 0 {
+        bitset |= 1 << (board & 0xf)
+        board >>= 4
+    }
+
+    bitset >>= 1
+    count := 0
+    for bitset != 0 {
+        bitset &= bitset - 1
+        count++
+    }
+    return count
+}
+
+func score_helper(board board_t, table *[TABLESIZE]float64) float64 {
 	return table[(board>>0)&ROW_MASK] + table[(board>>16)&ROW_MASK] +
 		table[(board>>32)&ROW_MASK] + table[(board>>48)&ROW_MASK]
 }
 
-func score_board(board board_t) uint32 {
-	return score_helper(board, &score_table)
+func score_heur_board(board board_t) float64 {
+    return score_helper(board, &heur_score_table) + score_helper(transpose(board), &heur_score_table);
 }
 
-func ask_for_move(board board_t) int {
-	print_board(board)
+func score_board(board board_t) uint32 {
+	return uint32(score_helper(board, &score_table))
+}
 
-	for true {
-		allmoves := "wsadkjhl"
-		pos := 0
-		var movechar rune = rune(C.get_ch())
+func score_tilechoose_node(state *eval_state, board board_t, cprob float64) float64 {
+    if cprob < CPROB_THRESH_BASE || state.curdepth >= state.depth_limit {
+        if state.curdepth > state.maxdepth {
+            state.maxdepth = state.curdepth
+        }
+        return score_heur_board(board)
+    }
+    if state.curdepth < CACHE_DEPTH_LIMIT {
+        entry, exist := state.trans_table[board]
+        if exist {
+            if entry.depth <= state.curdepth {
+                state.cachehits++
+                return entry.heuristic
+            }
+        }
+    }
 
-		if movechar == 'q' {
-			return -1
-		}
-		if movechar == 'r' {
-			return RETRACT
-		}
-		pos = strings.IndexRune(allmoves, movechar)
-		if pos != -1 {
-			return pos % 4
-		}
-	}
-	return -1
+    num_open := float64(count_empty(board))
+
+    cprob /= num_open
+
+    res := 0.0
+    var tmp board_t = board
+    var tile_2 board_t = 1
+
+    for tile_2 != 0 {
+        if (tmp & 0xf) == 0 {
+            res += score_move_node(state, board | tile_2, cprob * 0.9) * 0.9
+            res += score_move_node(state, board | (tile_2 << 1), cprob * 0.1) * 0.1
+        }
+        tmp >>= 4
+        tile_2 <<= 4
+    }
+    res = res / num_open
+
+    if state.curdepth < CACHE_DEPTH_LIMIT {
+        entry := trans_table_entry_t { state.curdepth, res }
+        state.trans_table[board] = entry
+    }
+
+    return res
+}
+
+func score_move_node(state *eval_state, board board_t, cprob float64) float64 {
+    var best float64 = 0.0
+
+    state.curdepth++
+    for move := 0; move < 4; move++ {
+        var newboard board_t = execute_move(move, board)
+
+        state.moves_evaled++
+
+        if board != newboard {
+            best = math.Max(best, score_tilechoose_node(state, newboard, cprob))
+        }
+    }
+    state.curdepth--
+
+    return best
+}
+
+func _score_toplevel_move(state *eval_state, board board_t, move int) float64 {
+    var newboard board_t = execute_move(move, board)
+
+    if board == newboard {
+        return 0.0
+    }
+
+    return score_tilechoose_node(state, newboard, 1.0) + 0.000001
+}
+
+func score_toplevel_move(board board_t, move int) float64 {
+    var state eval_state
+
+    state.trans_table = make(map[board_t]trans_table_entry_t)
+    state.depth_limit = count_distinct_tiles(board) - 2
+    if state.depth_limit < 3 {
+        state.depth_limit = 3
+    }
+
+    res := _score_toplevel_move(&state, board, move)
+
+    fmt.Printf("Move %d: result %f: eval'd %d moves (%d cache hits, %d cache size) (maxdepth=%d)\n", move, res,
+           state.moves_evaled, state.cachehits, len(state.trans_table), state.maxdepth)
+
+    return res
+}
+
+func find_best_move(board board_t) int {
+    best := 0.0
+    bestmove := -1
+
+    print_board(board)
+    fmt.Printf("Current scores: heur %d, actual %d\n", uint32(score_heur_board(board)), uint32(score_board(board)))
+
+    for move := 0; move < 4; move++ {
+        res := score_toplevel_move(board, move)
+
+        if res > best {
+            best = res
+            bestmove = move
+        }
+    }
+    fmt.Printf("Selected bestmove: %d, result: %f\n", bestmove, best)
+
+    return bestmove;
 }
 
 func draw_tile() board_t {
@@ -338,8 +509,6 @@ func play_game(get_move get_move_func_t) {
 }
 
 func main() {
-	C.term_init()
 	init_tables()
-	play_game(ask_for_move)
-	C.term_clear()
+	play_game(find_best_move)
 }

@@ -212,7 +212,7 @@ static void init_tables(void) {
     do {
         int i = 0, j = 0;
         uint8 line[4] = { 0 };
-        float score = 0.0f;
+        uint32 score = 0;
 
         double sum = 0.0f;
         int empty = 0;
@@ -234,7 +234,7 @@ static void init_tables(void) {
                 score += (rank - 1) * (1 << rank);
             }
         }
-        score_table[row] = score;
+        score_table[row] = (float)score;
 
         for (i = 0; i < 4; ++i) {
             int rank = line[i];

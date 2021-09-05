@@ -172,6 +172,21 @@ go 1.4+ (linux, win32, freebsd, macos)
 gccgo 5+ (linux, mingw-w64, cygwin, freebsd, macos)
 ```
 
+编译命令行示例
+```
+cd go
+gcc -std=c90 -O2 -c godeps.c -o godeps.o
+ar rc libgodeps.a godeps.o
+go build 2048.go
+```
+
+
+* go/2048-ai.go + go/godeps.c
+
+Go AI实现，查表法 + 原生map cache，由于Go标准库不支持清除屏幕，由godeps.c提供。
+
+编译器和平台支持同上
+
 
 
 # Pascal
@@ -233,7 +248,7 @@ gcc 4.3+ (linux, mingw, mingw-w64, cygwin, freebsd, macos, djgpp)
 gcc 4.0+ (linux, mingw, mingw-w64, cygwin, freebsd, macos, djgpp)
 ```
 
-注1：编译命令行示例
+编译命令行示例
 ```
 gcc -std=c90 -O2 -c fortran/f90deps.c -o f90deps.o
 gfortran -DFASTMODE -std=f95 -O2 fortran/2048.F90 f90deps.o -o 2048
@@ -250,7 +265,7 @@ g77 2.9-3.4 (linux, mingw, cygwin, freebsd, djgpp)
 gfortran 4.0+ (linux, mingw, mingw-w64, cygwin, freebsd, djgpp)
 ```
 
-注1：编译命令行示例
+编译命令行示例
 
 ```
 gcc-3.4.6 -O2 -c fortran/f77deps.c -o f77deps.o
@@ -277,7 +292,7 @@ Java实现，查表法，由于Java标准库不支持无回显输入和清除屏
 jdk 1.5+ (linux, win32, freebsd, macos)
 ```
 
-注1：编译运行命令行示例
+编译运行命令行示例
 ```
 cd java
 gcc -I/opt/openjdk-bin-8.292_p10/include/ -I/opt/openjdk-bin-8.292_p10/include/linux/ -std=c90 -fPIC -O2 -shared javadeps.c -o libjavadeps.so 
@@ -333,7 +348,7 @@ Lua 5.3+实现，依赖Lua 5.3或以上版本提供的原生64位整数运算支
 lua-5.3+ (linux, win32, freebsd, macos)
 ```
 
-注1：编译运行命令行示例
+编译运行命令行示例
 
 ```
 gcc -std=c99 -I/usr/include/lua5.4 -shared -fPIC -O2 lua/luadeps.c  -o luadeps.so

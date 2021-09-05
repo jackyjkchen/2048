@@ -110,7 +110,7 @@ Public Module Class2048
 
         Do
             Dim i As Integer = 0, j As Integer = 0
-            Dim score As Double = 0.0F
+            Dim score As UInteger = 0
             line(0) = (row >> 0) And &HF
             line(1) = (row >> 4) And &HF
             line(2) = (row >> 8) And &HF
@@ -236,9 +236,9 @@ Public Module Class2048
     End Function
 
     Private Function count_distinct_tiles(ByVal board As ULong) As Integer
-        Dim bitset As ULong = 0
+        Dim bitset As UShort = 0
         While board <> 0
-            bitset = bitset Or (CULng(1) << (board And &HFUL))
+            bitset = bitset Or (CUShort(1) << (board And &HFUL))
             board >>= 4
         End While
 
