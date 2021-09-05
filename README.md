@@ -8,7 +8,7 @@
 
 本项目中所有实现的手工版本2048，其输出的格式完全一致（精确到字节），其输入游戏体验完全一致。
 
-本项目中所有实现的AI版本2048，其输出格式完全一致。不同编译器和平台浮点精度科能有差异。
+本项目中所有实现的AI版本2048，其输出格式完全一致。不同编译器和平台浮点精度可能有差异。
 
 # C&C++
 
@@ -164,7 +164,7 @@ mono 1.2.3+ (linux)
 
 * go/2048.go + go/godeps.c
 
-Go实现，查表法，由于Go标准库不支持无回显输入和清除屏幕两个系统相关功能，由godeps.c提供。
+Go实现，查表法，由于Go标准库不支持无回显输入和清除屏幕两个系统相关功能，由go/godeps.c提供。
 
 已测试编译器和平台
 ```
@@ -183,7 +183,7 @@ go build 2048.go
 
 * go/2048-ai.go + go/godeps.c
 
-Go AI实现，查表法 + 原生map cache，由于Go标准库不支持清除屏幕，由godeps.c提供。
+Go AI实现，查表法 + 原生map cache，由于Go标准库不支持清除屏幕，由go/godeps.c提供。
 
 编译器和平台支持同上
 
@@ -241,7 +241,7 @@ gcc 4.3+ (linux, mingw, mingw-w64, cygwin, freebsd, macos, djgpp)
 
 * fortran/2048.F90 + fortran/f90deps.c
 
-现代Fortran90实现，与c/2048.c一样使用FSASTMODE预处理判定是否使用快速查表法。由于f90没有提供iso_c_binding，所以系统相关功能（无回显输入，清除屏幕），由f90deps.c提供
+现代Fortran90实现，与c/2048.c一样使用FSASTMODE预处理判定是否使用快速查表法。由于f90没有提供iso_c_binding，所以系统相关功能（无回显输入，清除屏幕），由fortran/f90deps.c提供
 
 已测试编译器和平台
 ```
@@ -257,7 +257,7 @@ gfortran -DFASTMODE -std=f95 -O2 fortran/2048.F90 f90deps.o -o 2048
 
 * (fortran/2048f.f or fortran/2048s.f) + fortran/f77deps.c
 
-传统Fortran77实现，固定模式源码格式，2048f.f使用快速查表法，2048s.f不使用，由于f77没有提供iso_c_binding，所以系统相关功能（无回显输入，清除屏幕），由f77deps.c提供
+传统Fortran77实现，固定模式源码格式，2048f.f使用快速查表法，2048s.f不使用，由于f77没有提供iso_c_binding，所以系统相关功能（无回显输入，清除屏幕），由fortran/f77deps.c提供
 
 已测试编译器和平台
 ```
@@ -285,7 +285,7 @@ gfortran -std=gnu -O2 fortran/2048f.f f90deps.o -o 2048
 
 * java/2048.java + java/javadeps.c
 
-Java实现，查表法，由于Java标准库不支持无回显输入和清除屏幕两个系统相关功能，由JNI方式——javadeps.c实现。
+Java实现，查表法，由于Java标准库不支持无回显输入和清除屏幕两个系统相关功能，由JNI方式——java/javadeps.c实现。
 
 已测试Java版本和平台
 ```
@@ -303,7 +303,7 @@ java -Djava.library.path=. Class2048
 
 * java/2048-ai.java + java/javadeps.c
 
-Java AI实现，查表法 + HashMap cache，由于Java标准库不支持清除屏幕，由JNI方式——javadeps.c实现。
+Java AI实现，查表法 + HashMap cache，由于Java标准库不支持清除屏幕，由JNI方式——java/javadeps.c实现。
 
 Java版本和平台支持同上
 
@@ -341,7 +341,7 @@ Python版本和平台支持同上
 
 * lua/2048.lua + lua/luadeps.c
 
-Lua 5.3+实现，依赖Lua 5.3或以上版本提供的原生64位整数运算支持，由于原生Lua对操作系统判定和无回显输入不支持，相关功能由luadeps.c提供。由于脚本语言初始化大数组较慢，因此不使用查表法。
+Lua 5.3+实现，依赖Lua 5.3或以上版本提供的原生64位整数运算支持，由于原生Lua对操作系统判定和无回显输入不支持，相关功能由lua/luadeps.c提供。由于脚本语言初始化大数组较慢，因此不使用查表法。
 
 已测试Lua版本和平台
 ```
@@ -358,14 +358,14 @@ gcc -std=c99 -I/usr/include/lua5.4 -shared -fPIC -O2 lua/luadeps.c  -o luadeps.s
 
 * lua/2048-tab.lua + lua/luadeps.c
 
-Lua 5.3+实现，依赖Lua 5.3或以上版本提供的原生64位整数运算支持，由于原生Lua对操作系统判定和无回显输入不支持，相关功能由luadeps.c提供。使用查表法，低配置设备上启动较慢，但执行较快。
+Lua 5.3+实现，依赖Lua 5.3或以上版本提供的原生64位整数运算支持，由于原生Lua对操作系统判定和无回显输入不支持，相关功能由lua/luadeps.c提供。使用查表法，低配置设备上启动较慢，但执行较快。
 
 Lua版本和平台支持同上
 
 
 * lua/2048-ai.lua + lua/luadeps.c
 
-AI实现。查表法 + 原生table cache，依赖Lua 5.3或以上版本提供的原生64位整数运算支持，由于原生Lua对操作系统判定和无回显输入不支持，相关功能由luadeps.c提供。
+AI实现。查表法 + 原生table cache，依赖Lua 5.3或以上版本提供的原生64位整数运算支持，由于原生Lua对操作系统判定和无回显输入不支持，相关功能由lua/luadeps.c提供。
 
 Lua版本和平台支持同上
 
