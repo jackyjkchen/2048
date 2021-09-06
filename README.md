@@ -126,7 +126,7 @@ mono 1.1+ (linux)
 
 * csharp/2048-ai.cs
 
-C# AI实现，使用原生Dictionary做cache。需要.net framework 2.0+。
+C# AI实现，使用原生Dictionary做cache，默认多线程。需要.net framework 2.0+。
 
 已测试编译器和平台：
 ```
@@ -151,7 +151,7 @@ mono 1.2.3+ (linux)
 
 * vbdotnet/2048-ai.vb
 
-vb.net AI实现，使用原生Dictionary做cache。需要.net framework 2.0+。
+vb.net AI实现，使用原生Dictionary做cache，默认多线程。需要.net framework 2.0+。
 
 已测试编译器和平台：
 ```

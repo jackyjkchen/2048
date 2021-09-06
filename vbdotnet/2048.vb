@@ -8,14 +8,14 @@ Public Module Class2048
     Private row_left_table As UShort() = New UShort(TABLESIZE - 1) {}
     Private row_right_table As UShort() = New UShort(TABLESIZE - 1) {}
     Private score_table As UInteger() = New UInteger(TABLESIZE - 1) {}
-    Delegate Function get_move_func_t(ByVal board As ULong) As Integer
+    Delegate Function get_move_func_t(board As ULong) As Integer
     Const UP As Integer = 0
     Const DOWN As Integer = 1
     Const LEFT As Integer = 2
     Const RIGHT As Integer = 3
     Const RETRACT As Integer = 4
 
-    Private Function unif_random(ByVal n As Integer) As Integer
+    Private Function unif_random(n As Integer) As Integer
         Return rand.Next(n)
     End Function
 
@@ -27,16 +27,16 @@ Public Module Class2048
         Return Console.ReadKey(True).KeyChar
     End Function
 
-    Private Function unpack_col(ByVal row As UShort) As ULong
+    Private Function unpack_col(row As UShort) As ULong
         Dim tmp As ULong = row
         Return (tmp Or (tmp << 12) Or (tmp << 24) Or (tmp << 36)) And COL_MASK
     End Function
 
-    Private Function reverse_row(ByVal row As UShort) As UShort
+    Private Function reverse_row(row As UShort) As UShort
         Return (row >> 12) Or ((row >> 4) And &HF0) Or ((row << 4) And &HF00) Or (row << 12)
     End Function
 
-    Private Sub print_board(ByVal board As ULong)
+    Private Sub print_board(board As ULong)
         Console.WriteLine("-----------------------------")
         For i As Integer = 0 To 3
             For j As Integer = 0 To 3
@@ -54,7 +54,7 @@ Public Module Class2048
         Console.WriteLine("-----------------------------")
     End Sub
 
-    Private Function transpose(ByVal x As ULong) As ULong
+    Private Function transpose(x As ULong) As ULong
         Dim a1 As ULong = x And &HF0F00F0FF0F00F0FUL
         Dim a2 As ULong = x And &HF0F00000F0F0UL
         Dim a3 As ULong = x And &HF0F00000F0F0000UL
@@ -65,7 +65,7 @@ Public Module Class2048
         Return (b1 Or (b2 >> 24) Or (b3 << 24))
     End Function
 
-    Private Function count_empty(ByVal x As ULong) As Integer
+    Private Function count_empty(x As ULong) As Integer
         x = x Or ((x >> 2) And &H3333333333333333UL)
         x = x Or (x >> 1)
         x = (Not x) And &H1111111111111111UL
@@ -130,7 +130,7 @@ Public Module Class2048
         Loop While row <> (TABLESIZE - 1)
     End Sub
 
-    Private Function execute_move_col(ByVal board As ULong, ByRef table As UShort()) As ULong
+    Private Function execute_move_col(board As ULong, ByRef table As UShort()) As ULong
         Dim ret As ULong = board
         Dim t As ULong = transpose(board)
         ret = ret Xor (unpack_col(table((t >> 0) And ROW_MASK)) << 0)
@@ -140,7 +140,7 @@ Public Module Class2048
         Return ret
     End Function
 
-    Private Function execute_move_row(ByVal board As ULong, ByRef table As UShort()) As ULong
+    Private Function execute_move_row(board As ULong, ByRef table As UShort()) As ULong
         Dim ret As ULong = board
         ret = ret Xor (CULng(table((board >> 0) And ROW_MASK)) << 0)
         ret = ret Xor (CULng(table((board >> 16) And ROW_MASK)) << 16)
@@ -149,7 +149,7 @@ Public Module Class2048
         Return ret
     End Function
 
-    Private Function execute_move(ByVal move As Integer, ByVal board As ULong) As ULong
+    Private Function execute_move(move As Integer, board As ULong) As ULong
         Select Case move
             Case UP
                 Return execute_move_col(board, row_left_table)
@@ -164,15 +164,15 @@ Public Module Class2048
         End Select
     End Function
 
-    Private Function score_helper(ByVal board As ULong, ByRef table As UInteger()) As UInteger
+    Private Function score_helper(board As ULong, ByRef table As UInteger()) As UInteger
         Return table(board >> 0 And ROW_MASK) + table(board >> 16 And ROW_MASK) + table(board >> 32 And ROW_MASK) + table(board >> 48 And ROW_MASK)
     End Function
 
-    Private Function score_board(ByVal board As ULong) As UInteger
+    Private Function score_board(board As ULong) As UInteger
         Return score_helper(board, score_table)
     End Function
 
-    Private Function ask_for_move(ByVal board As ULong) As Integer
+    Private Function ask_for_move(board As ULong) As Integer
         print_board(board)
 
         While True
@@ -205,7 +205,7 @@ Public Module Class2048
         End If
     End Function
 
-    Private Function insert_tile_rand(ByVal board As ULong, ByVal tile As ULong) As ULong
+    Private Function insert_tile_rand(board As ULong, tile As ULong) As ULong
         Dim index As Integer = unif_random(count_empty(board))
         Dim tmp As ULong = board
 
@@ -230,7 +230,7 @@ Public Module Class2048
         Return insert_tile_rand(board, draw_tile())
     End Function
 
-    Private Sub play_game(ByVal get_move As get_move_func_t)
+    Private Sub play_game(get_move As get_move_func_t)
         Dim board As ULong = initial_board()
         Dim scorepenalty As Integer = 0
         Dim last_score As Integer = 0, current_score As Integer = 0, moveno As Integer = 0
@@ -300,7 +300,7 @@ Public Module Class2048
         Console.WriteLine("Game over. Your score is {0}.", current_score)
     End Sub
 
-    Sub Main(ByVal args As String())
+    Sub Main(args As String())
         init_tables()
         play_game(New get_move_func_t(AddressOf ask_for_move))
     End Sub

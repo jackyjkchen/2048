@@ -1,5 +1,6 @@
 ﻿Imports System
 Imports System.Collections.Generic
+Imports System.Threading
 
 Public Module Class2048
     Private rand As Random = New Random()
@@ -10,7 +11,7 @@ Public Module Class2048
     Private row_right_table As UShort() = New UShort(TABLESIZE - 1) {}
     Private score_table As Double() = New Double(TABLESIZE - 1) {}
     Private heur_score_table As Double() = New Double(TABLESIZE - 1) {}
-    Delegate Function get_move_func_t(ByVal board As ULong) As Integer
+    Delegate Function get_move_func_t(board As ULong) As Integer
     Const UP As Integer = 0
     Const DOWN As Integer = 1
     Const LEFT As Integer = 2
@@ -21,7 +22,7 @@ Public Module Class2048
         Public depth As Integer
         Public heuristic As Double
 
-        Public Sub New(ByVal depth As Byte, ByVal heuristic As Double)
+        Public Sub New(depth As Byte, heuristic As Double)
             Me.depth = depth
             Me.heuristic = heuristic
         End Sub
@@ -46,7 +47,7 @@ Public Module Class2048
     Const CPROB_THRESH_BASE As Double = 0.0001F
     Const CACHE_DEPTH_LIMIT As UShort = 15
 
-    Private Function unif_random(ByVal n As Integer) As Integer
+    Private Function unif_random(n As Integer) As Integer
         Return rand.Next(n)
     End Function
 
@@ -54,16 +55,16 @@ Public Module Class2048
         Console.Clear()
     End Sub
 
-    Private Function unpack_col(ByVal row As UShort) As ULong
+    Private Function unpack_col(row As UShort) As ULong
         Dim tmp As ULong = row
         Return (tmp Or (tmp << 12) Or (tmp << 24) Or (tmp << 36)) And COL_MASK
     End Function
 
-    Private Function reverse_row(ByVal row As UShort) As UShort
+    Private Function reverse_row(row As UShort) As UShort
         Return (row >> 12) Or ((row >> 4) And &HF0) Or ((row << 4) And &HF00) Or (row << 12)
     End Function
 
-    Private Sub print_board(ByVal board As ULong)
+    Private Sub print_board(board As ULong)
         Console.WriteLine("-----------------------------")
         For i As Integer = 0 To 3
             For j As Integer = 0 To 3
@@ -81,7 +82,7 @@ Public Module Class2048
         Console.WriteLine("-----------------------------")
     End Sub
 
-    Private Function transpose(ByVal x As ULong) As ULong
+    Private Function transpose(x As ULong) As ULong
         Dim a1 As ULong = x And &HF0F00F0FF0F00F0FUL
         Dim a2 As ULong = x And &HF0F00000F0F0UL
         Dim a3 As ULong = x And &HF0F00000F0F0000UL
@@ -92,7 +93,7 @@ Public Module Class2048
         Return (b1 Or (b2 >> 24) Or (b3 << 24))
     End Function
 
-    Private Function count_empty(ByVal x As ULong) As Integer
+    Private Function count_empty(x As ULong) As Integer
         x = x Or ((x >> 2) And &H3333333333333333UL)
         x = x Or (x >> 1)
         x = (Not x) And &H1111111111111111UL
@@ -201,7 +202,7 @@ Public Module Class2048
         Loop While row <> (TABLESIZE - 1)
     End Sub
 
-    Private Function execute_move_col(ByVal board As ULong, ByRef table As UShort()) As ULong
+    Private Function execute_move_col(board As ULong, ByRef table As UShort()) As ULong
         Dim ret As ULong = board
         Dim t As ULong = transpose(board)
         ret = ret Xor (unpack_col(table((t >> 0) And ROW_MASK)) << 0)
@@ -211,7 +212,7 @@ Public Module Class2048
         Return ret
     End Function
 
-    Private Function execute_move_row(ByVal board As ULong, ByRef table As UShort()) As ULong
+    Private Function execute_move_row(board As ULong, ByRef table As UShort()) As ULong
         Dim ret As ULong = board
         ret = ret Xor (CULng(table((board >> 0) And ROW_MASK)) << 0)
         ret = ret Xor (CULng(table((board >> 16) And ROW_MASK)) << 16)
@@ -220,7 +221,7 @@ Public Module Class2048
         Return ret
     End Function
 
-    Private Function execute_move(ByVal move As Integer, ByVal board As ULong) As ULong
+    Private Function execute_move(move As Integer, board As ULong) As ULong
         Select Case move
             Case UP
                 Return execute_move_col(board, row_left_table)
@@ -235,7 +236,7 @@ Public Module Class2048
         End Select
     End Function
 
-    Private Function count_distinct_tiles(ByVal board As ULong) As Integer
+    Private Function count_distinct_tiles(board As ULong) As Integer
         Dim bitset As UShort = 0
         While board <> 0
             bitset = bitset Or (CUShort(1) << (board And &HFUL))
@@ -252,19 +253,19 @@ Public Module Class2048
         Return count
     End Function
 
-    Private Function score_helper(ByVal board As ULong, ByRef table As Double()) As Double
+    Private Function score_helper(board As ULong, ByRef table As Double()) As Double
         Return table(board >> 0 And ROW_MASK) + table(board >> 16 And ROW_MASK) + table(board >> 32 And ROW_MASK) + table(board >> 48 And ROW_MASK)
     End Function
 
-    Private Function score_board(ByVal board As ULong) As UInteger
+    Private Function score_board(board As ULong) As UInteger
         Return score_helper(board, score_table)
     End Function
 
-    Private Function score_heur_board(ByVal board As ULong) As Double
+    Private Function score_heur_board(board As ULong) As Double
         Return score_helper(board, heur_score_table) + score_helper(transpose(board), heur_score_table)
     End Function
 
-    Private Function score_tilechoose_node(ByRef state As eval_state, ByVal board As ULong, ByVal cprob As Double) As Double
+    Private Function score_tilechoose_node(ByRef state As eval_state, board As ULong, cprob As Double) As Double
         If cprob < CPROB_THRESH_BASE OrElse state.curdepth >= state.depth_limit Then
             state.maxdepth = Math.Max(state.curdepth, state.maxdepth)
             Return score_heur_board(board)
@@ -306,7 +307,7 @@ Public Module Class2048
         Return res
     End Function
 
-    Private Function score_move_node(ByRef state As eval_state, ByVal board As ULong, ByVal cprob As Double) As Double
+    Private Function score_move_node(ByRef state As eval_state, board As ULong, cprob As Double) As Double
         Dim best As Double = 0.0F
         state.curdepth += 1
         Dim move As Integer = 0
@@ -324,13 +325,13 @@ Public Module Class2048
         Return best
     End Function
 
-    Private Function _score_toplevel_move(ByRef state As eval_state, ByVal board As ULong, ByVal move As Integer) As Double
+    Private Function _score_toplevel_move(ByRef state As eval_state, board As ULong, move As Integer) As Double
         Dim newboard As ULong = execute_move(move, board)
         If board = newboard Then Return 0.0F
         Return score_tilechoose_node(state, newboard, 1.0F) + 0.000001F
     End Function
 
-    Private Function score_toplevel_move(ByVal board As ULong, ByVal move As Integer) As Double
+    Private Function score_toplevel_move(board As ULong, move As Integer) As Double
         Dim res As Double = 0.0F
         Dim state As eval_state = New eval_state()
         state.depth_limit = Math.Max(3, count_distinct_tiles(board) - 2)
@@ -339,16 +340,38 @@ Public Module Class2048
         Return res
     End Function
 
-    Private Function find_best_move(ByVal board As ULong) As Integer
+    Friend Class thrd_context
+        Public board As UInt64
+        Public move As Integer
+        Public res As Double
+        Public ev As AutoResetEvent = New AutoResetEvent(False)
+    End Class
+
+    Private Sub thrd_worker(state As Object)
+        Dim context As thrd_context = state
+        context.res = score_toplevel_move(context.board, context.move)
+        context.ev.Set()
+    End Sub
+
+    Private Function find_best_move(board As ULong) As Integer
         Dim best As Double = 0.0F
         Dim bestmove As Integer = -1
         print_board(board)
         Console.WriteLine("Current scores: heur {0}, actual {1}", CUInt(score_heur_board(board)), score_board(board))
 
+        Dim context As thrd_context() = New thrd_context(3) {}
         For move As Integer = 0 To 3
-            Dim res As Double = score_toplevel_move(board, move)
-            If res > best Then
-                best = res
+            context(move) = New thrd_context()
+            context(move).board = board
+            context(move).move = move
+            context(move).res = 0.0F
+            ThreadPool.QueueUserWorkItem(AddressOf thrd_worker, context(move))
+
+        Next
+        For move As Integer = 0 To 3
+            context(move).ev.WaitOne()
+            If context(move).res > best Then
+                best = context(move).res
                 bestmove = move
             End If
         Next
@@ -365,7 +388,7 @@ Public Module Class2048
         End If
     End Function
 
-    Private Function insert_tile_rand(ByVal board As ULong, ByVal tile As ULong) As ULong
+    Private Function insert_tile_rand(board As ULong, tile As ULong) As ULong
         Dim index As Integer = unif_random(count_empty(board))
         Dim tmp As ULong = board
 
@@ -389,7 +412,7 @@ Public Module Class2048
         Return insert_tile_rand(board, draw_tile())
     End Function
 
-    Private Sub play_game(ByVal get_move As get_move_func_t)
+    Private Sub play_game(get_move As get_move_func_t)
         Dim board As ULong = initial_board()
         Dim scorepenalty As Integer = 0
         Dim last_score As Integer = 0, current_score As Integer = 0, moveno As Integer = 0
@@ -432,7 +455,7 @@ Public Module Class2048
         Console.WriteLine("Game over. Your score is {0}.", current_score)
     End Sub
 
-    Sub Main(ByVal args As String())
+    Sub Main(args As String())
         init_tables()
         play_game(New get_move_func_t(AddressOf find_best_move))
     End Sub

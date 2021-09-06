@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
 
 public class Class2048
 {
@@ -393,6 +394,21 @@ public class Class2048
         return res;
     }
 
+    class thrd_context
+    {
+        public UInt64 board;
+        public int move;
+        public double res;
+        public AutoResetEvent ev = new AutoResetEvent(false);
+    }
+
+    void thrd_worker(Object state)
+    {
+        thrd_context context = (thrd_context)state;
+        context.res = score_toplevel_move(context.board, context.move);
+        context.ev.Set();
+    }
+
     int find_best_move(UInt64 board)
     {
         double best = 0.0f;
@@ -401,13 +417,21 @@ public class Class2048
         print_board(board);
         Console.WriteLine("Current scores: heur {0}, actual {1}", (UInt32)score_heur_board(board), (UInt32)score_board(board));
 
+        thrd_context[] context = new thrd_context[4];
         for (int move = 0; move < 4; move++)
         {
-            double res = score_toplevel_move(board, move);
-
-            if (res > best)
+            context[move] = new thrd_context();
+            context[move].board = board;
+            context[move].move = move;
+            context[move].res = 0.0f;
+            ThreadPool.QueueUserWorkItem(thrd_worker, context[move]);
+        }
+        for (int move = 0; move < 4; move++)
+        {
+            context[move].ev.WaitOne();
+            if (context[move].res > best)
             {
-                best = res;
+                best = context[move].res;
                 bestmove = move;
             }
         }
