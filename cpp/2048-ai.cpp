@@ -122,12 +122,8 @@ typedef struct {
     float heuristic;
 } trans_table_entry_t;
 
-#if defined(max)
-#undef max
-#endif
-
-#if defined(min)
-#undef min
+#if defined(MULTI_THREAD)
+#include "thread_pool.h"
 #endif
 
 #include <algorithm>
@@ -139,6 +135,12 @@ typedef std::unordered_map<board_t, trans_table_entry_t> trans_table_t;
 typedef std::map<board_t, trans_table_entry_t> trans_table_t;
 #endif
 
+#if defined(max)
+#undef max
+#endif
+#if defined(min)
+#undef min
+#endif
 #if __cplusplus >= 199711L
 #define max std::max
 #define min std::min
@@ -642,18 +644,38 @@ static float _score_toplevel_move(eval_state &state, board_t board, int move) {
 }
 
 float score_toplevel_move(board_t board, int move) {
-    float res = 0.0f;
     eval_state state;
 
-    state.depth_limit = max(3, count_distinct_tiles(board) - 2);
+    state.depth_limit = count_distinct_tiles(board) - 2;
+    if (state.depth_limit < 3) {
+        state.depth_limit = 3;
+    }
 
-    res = _score_toplevel_move(state, board, move);
+    float res = _score_toplevel_move(state, board, move);
 
     printf("Move %d: result %f: eval'd %ld moves (%ld cache hits, %ld cache size) (maxdepth=%d)\n", move, res,
            state.moves_evaled, state.cachehits, (long)state.trans_table.size(), state.maxdepth);
 
     return res;
 }
+
+#if defined(MULTI_THREAD)
+typedef struct {
+    board_t board;
+    int move;
+    float res;
+} thrd_context;
+
+void thrd_worker(void *param) {
+    thrd_context *pcontext = (thrd_context *)param;
+    pcontext->res = score_toplevel_move(pcontext->board, pcontext->move);
+}
+
+ThreadPool &get_thrd_pool() {
+    static ThreadPool thrd_pool(ThreadPool::get_logical_cpu_count() >= 4 ? 4 : 0);
+    return thrd_pool;
+}
+#endif
 
 int find_best_move(board_t board) {
     int move = 0;
@@ -663,6 +685,23 @@ int find_best_move(board_t board) {
     print_board(board);
     printf("Current scores: heur %ld, actual %ld\n", (long)score_heur_board(board), (long)score_board(board));
 
+#if defined(MULTI_THREAD)
+    ThreadPool &thrd_pool = get_thrd_pool();
+    thrd_context context[4];
+    for (move = 0; move < 4; move++) {
+        context[move].board = board;
+        context[move].move = move;
+        context[move].res = 0.0f;
+        thrd_pool.add_task(thrd_worker, &context[move]);
+    }
+    thrd_pool.wait_all_task();
+    for (move = 0; move < 4; move++) {
+        if (context[move].res > best) {
+            best = context[move].res;
+            bestmove = move;
+        }
+    }
+#else
     for (move = 0; move < 4; move++) {
         float res = score_toplevel_move(board, move);
 
@@ -671,6 +710,7 @@ int find_best_move(board_t board) {
             bestmove = move;
         }
     }
+#endif
     printf("Selected bestmove: %d, result: %f\n", bestmove, best);
 
     return bestmove;
@@ -747,6 +787,10 @@ void play_game(get_move_func_t get_move) {
 }
 
 int main() {
+#if defined(MULTI_THREAD)
+    ThreadPool &thrd_pool = get_thrd_pool();
+    thrd_pool.init();
+#endif
 #ifdef FASTMODE
     init_tables();
 #endif

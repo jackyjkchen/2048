@@ -85,7 +85,7 @@ msc 3.0 (dos16)
 
 * cpp/2048-ai.cpp
 
-AI版本，ISO C++98实现
+AI版本，ISO C++98实现，可选支持多线程（预处理MULTI_THREAD）。
 
 由于使用std::map且动态增长内存（可能超过1MiB），因此不支持dos16/win16，无论是否启用FASTMODE预处理（FASTMODE增加768KiB内存占用），编译器和平台支持均一致。
 
@@ -100,12 +100,14 @@ borland c++ 5.5+ (win32)
 
 注1：msvc 5.0必须应用SP3，否则优化选项会有生成错误代码或者编译失败。
 
+注2：本实现支持多线程，由预处理MULTI_THREAD控制，编译示例如下，以gcc为例：
+```
+g++ -DFASTMODE -DMULTI_THREAD -O2 cpp/2048-ai.cpp cpp/thread_pool.cpp -pthread -o 2048
+```
 
-* c/2048-sai.c
+多线程版本依赖操作系统原生线程，因此djgpp，win386，dos32等都不支持。
 
-AI版本的慢速实现，不使用C++ std::map cache，ISO C90实现，非严格C90内容仅为64位整数。
-
-编译器和平台支持与c/2048.c相同。
+若不使用预处理MULTI_THREAD则无须依赖thread_pool.cpp。
 
 
 
@@ -168,7 +170,7 @@ Go实现，查表法，由于Go标准库不支持无回显输入和清除屏幕�
 已测试编译器和平台：
 ```
 go 1.4+ (linux, win32, freebsd, macos)
-gccgo 5+ (linux, mingw-w64, cygwin, freebsd, macos)
+gccgo 5+ (linux, freebsd, macos)
 ```
 
 编译命令行示例：
