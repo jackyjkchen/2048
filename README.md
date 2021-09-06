@@ -12,7 +12,7 @@
 
 # C&C++
 
-* c/2048.c
+## c/2048.c
 
 通常的ISO C90跨平台实现，非严格C90内容仅为64位整数。
 
@@ -29,20 +29,20 @@ tcc 0.9.27 (linux, win32)
 lcc 4.0 (win32)
 ```
 
-注1：msvc 2.0不能使用优化。
+* msvc 2.0不能使用优化。
 
-注2：gcc低版本需要大量补丁用于支持现代化系统，[参见](https://github.com/jackyjkchen/legacy-gcc)。
+* gcc低版本需要大量补丁用于支持现代化系统，[参见](https://github.com/jackyjkchen/legacy-gcc)。
 
-注3：win64、windows for arm等均为win32的不同硬件架构，不单独说明，类似的linux、bsd等也不针对特定硬件架构。
+* win64、windows for arm等均为win32的不同硬件架构，不单独说明，类似的linux、bsd等也不针对特定硬件架构。
 
 不使用FASTMODE预处理，代码和数据段可控制在64KiB以内，额外支持：
 ```
 openwatcom c++ 1.9 (dos16, win16)
 ```
 
-* c/2048-16b.c
+## c/2048-16b.c
 
-不使用64位整数的严格ISO C90实现
+不使用64位整数的严格ISO C90实现。
 
 使用FASTMODE预处理，可启用快速查表法，会增加512KiB的常驻内存开销（意味着dos平台下必须使用dos扩展）。
 
@@ -68,10 +68,10 @@ turbo c++ 1.01/3.0 (dos16)
 turbo c 1.5/2.01 (dos16)
 ```
 
-注1：msc 5.1不能使用优化
+* msc 5.1不能使用优化
 
 
-* c/2048-kr.c
+## c/2048-kr.c
 
 在c/2048-16b.c基础上改用K&R格式，用于兼容一些老编译器，由于目标是老编译器，因此去掉了快速查表法部分的代码。
 
@@ -83,7 +83,7 @@ msc 3.0 (dos16)
 ```
 
 
-* cpp/2048-ai.cpp + cpp/thread_pool.cpp + cpp/thread_pool.h
+## cpp/2048-ai.cpp + cpp/thread_pool.cpp + cpp/thread_pool.h
 
 AI版本，ISO C++98实现，可选支持多线程（预处理MULTI_THREAD/MULTI_THREAD_OPENMP）。
 
@@ -98,7 +98,7 @@ openwatcom 1.9 (win32, win386, dos32 pmode, dos4gw)
 borland c++ 5.5+ (win32)
 ```
 
-注1：msvc 5.0必须应用SP3，否则优化选项会生成错误代码或者编译失败。
+* msvc 5.0必须应用SP3，否则优化选项会生成错误代码或者编译失败。
 
 
 本实现支持多线程，由预处理MULTI_THREAD控制，编译示例如下，以gcc为例：
@@ -115,7 +115,7 @@ openwatcom 1.9 (win32)
 borland c++ 5.5+ (win32)
 ```
 
-注2：msvc 5.0sp3能够编译成功，但生成的多线程代码错误。
+* msvc 5.0sp3能够编译成功，但生成的多线程代码错误。
 
 
 本实现亦支持openmp多线程，由预处理MULTI_THREAD_OPENMP控制，编译示例如下，以gcc为例：
@@ -135,9 +135,9 @@ msvc 8.0+ (win32)
 
 # C#
 
-* csharp/2048.cs
+## csharp/2048.cs
 
-C#实现，使用uint64+查表法。需要.net framework 2.0+。
+C#实现，使用查表法。需要.net framework 2.0+。
 
 已测试编译器和平台：
 ```
@@ -146,7 +146,7 @@ mono 1.1+ (linux)
 ```
 
 
-* csharp/2048-ai.cs
+## csharp/2048-ai.cs
 
 C# AI实现，使用原生Dictionary做cache，默认多线程。需要.net framework 2.0+。
 
@@ -160,9 +160,9 @@ mono 1.1+ (linux)
 
 # VB.net
 
-* vbdotnet/2048.vb
+## vbdotnet/2048.vb
 
-vb.net实现，使用uint64+查表法。需要.net framework 2.0+。
+vb.net实现，使用查表法。需要.net framework 2.0+。
 
 已测试编译器和平台：
 ```
@@ -171,7 +171,7 @@ mono 1.2.3+ (linux)
 ```
 
 
-* vbdotnet/2048-ai.vb
+## vbdotnet/2048-ai.vb
 
 vb.net AI实现，使用原生Dictionary做cache，默认多线程。需要.net framework 2.0+。
 
@@ -185,7 +185,7 @@ mono 1.2.3+ (linux)
 
 # Go
 
-* go/2048.go + go/godeps.c
+## go/2048.go + go/godeps.c
 
 Go实现，查表法，由于Go标准库不支持无回显输入和清除屏幕两个系统相关功能，由go/godeps.c提供。
 
@@ -204,7 +204,7 @@ go build 2048.go
 ```
 
 
-* go/2048-ai.go + go/godeps.c
+## go/2048-ai.go + go/godeps.c
 
 Go AI实现，查表法 + 原生map cache，默认goroutine并发，由于Go标准库不支持清除屏幕，由go/godeps.c提供。
 
@@ -214,7 +214,7 @@ Go AI实现，查表法 + 原生map cache，默认goroutine并发，由于Go标�
 
 # Pascal
 
-* pascal/2048.pas
+## pascal/2048.pas
 
 现代Pascal实现，使用uint64+查表法。
 
@@ -224,7 +224,7 @@ free pascal 2.2+ (linux, win32, freebsd, macos, dos32)
 ```
 
 
-* pascal/2048-16b.pas
+## pascal/2048-16b.pas
 
 不使用uint64的Pascal实现，且不使用查表法。
 
@@ -236,7 +236,7 @@ gnu pascal 2.1 (linux, mingw, djgpp)
 ```
 
 
-* pascal/2048-old.pas
+## pascal/2048-old.pas
 
 不使用uint64、break、continue、uses strings的Pascal实现，且不使用查表法。
 
@@ -247,9 +247,11 @@ turbo pascal 4.0/5.5/6.0/7.1 (dos16)
 gnu pascal 2.1 (linux, mingw, djgpp)
 ```
 
+
+
 # Fortran
 
-* fortran/2048.F03
+## fortran/2048.F03
 
 现代Fortran2003实现，使用FASTMODE预处理判定是否使用快速查表法。
 
@@ -258,11 +260,11 @@ gnu pascal 2.1 (linux, mingw, djgpp)
 gcc 4.3+ (linux, mingw, mingw-w64, cygwin, freebsd, macos, djgpp)
 ```
 
-注1：gfortran不感知_WIN32等C语言预处理器，WIN32平台要在命令行显式指定-D_WIN32。
+* gfortran不感知_WIN32等C语言预处理器，WIN32平台要在命令行显式指定-D_WIN32。
 
 
 
-* fortran/2048.F90 + fortran/f90deps.c
+## fortran/2048.F90 + fortran/f90deps.c
 
 现代Fortran90实现，使用FSASTMODE预处理判定是否使用快速查表法。由于f90没有提供iso_c_binding，所以系统相关功能（无回显输入，清除屏幕），由fortran/f90deps.c提供。
 
@@ -278,7 +280,7 @@ gfortran -DFASTMODE -std=f95 -O2 fortran/2048.F90 f90deps.o -o 2048
 ```
 
 
-* (fortran/2048f.f or fortran/2048s.f) + fortran/f77deps.c
+## (fortran/2048f.f or fortran/2048s.f) + fortran/f77deps.c
 
 传统Fortran77实现，固定模式源码格式，2048f.f使用快速查表法，2048s.f不使用，由于f77没有提供iso_c_binding，所以系统相关功能（无回显输入，清除屏幕），由fortran/f77deps.c提供。
 
@@ -306,7 +308,7 @@ gfortran -std=gnu -O2 fortran/2048f.f f90deps.o -o 2048
 
 # Java
 
-* java/2048.java + java/javadeps.c
+## java/2048.java + java/javadeps.c
 
 Java实现，查表法，由于Java标准库不支持无回显输入和清除屏幕两个系统相关功能，由JNI方式——java/javadeps.c实现。
 
@@ -324,7 +326,7 @@ java -Djava.library.path=. Class2048
 ```
 
 
-* java/2048-ai.java + java/javadeps.c
+## java/2048-ai.java + java/javadeps.c
 
 Java AI实现，查表法 + HashMap cache，由于Java标准库不支持清除屏幕，由JNI方式——java/javadeps.c实现。
 
@@ -334,7 +336,7 @@ Java版本和平台支持同上。
 
 # Python
 
-* python/2048.py
+## python/2048.py
 
 Python实现，由于脚本语言初始化大数组较慢，因此不使用查表法。
 
@@ -345,14 +347,14 @@ python 3.0+ (linux, win32, freebsd, macos)
 pypy/pypy3 all (linux, win32, macos)
 ```
 
-* python/2048-tab.py
+## python/2048-tab.py
 
 Python实现，使用查表法，在低配置设备上启动较慢，但执行较快。
 
 Python版本和平台支持同上。
 
 
-* python/2048-ai.py
+## python/2048-ai.py
 
 Python AI实现，查表法 + 原生dict cache，建议使用pypy速度较快。
 
@@ -362,7 +364,7 @@ Python版本和平台支持同上。
 
 # Lua
 
-* lua/2048.lua + lua/luadeps.c
+## lua/2048.lua + lua/luadeps.c
 
 Lua 5.3+实现，依赖Lua 5.3或以上版本提供的原生64位整数运算支持，由于原生Lua对操作系统判定和无回显输入不支持，相关功能由lua/luadeps.c提供。由于脚本语言初始化大数组较慢，因此不使用查表法。
 
@@ -379,14 +381,14 @@ gcc -std=c99 -I/usr/include/lua5.4 -shared -fPIC -O2 lua/luadeps.c  -o luadeps.s
 ```
 
 
-* lua/2048-tab.lua + lua/luadeps.c
+## lua/2048-tab.lua + lua/luadeps.c
 
 Lua 5.3+实现，依赖Lua 5.3或以上版本提供的原生64位整数运算支持，由于原生Lua对操作系统判定和无回显输入不支持，相关功能由lua/luadeps.c提供。使用查表法，低配置设备上启动较慢，但执行较快。
 
 Lua版本和平台支持同上。
 
 
-* lua/2048-ai.lua + lua/luadeps.c
+## lua/2048-ai.lua + lua/luadeps.c
 
 AI实现。查表法 + 原生table cache，依赖Lua 5.3或以上版本提供的原生64位整数运算支持，由于原生Lua对操作系统判定和无回显输入不支持，相关功能由lua/luadeps.c提供。
 
@@ -396,7 +398,7 @@ Lua版本和平台支持同上。
 
 # Perl
 
-* perl/2048.pl
+## perl/2048.pl
 
 Perl实现，由于脚本语言初始化大数组较慢，因此不使用查表法。依赖Term::ReadKey和Term::ANSIScreen两个CPAN模块。
 
@@ -408,7 +410,7 @@ perl 5.8+ (linux, win32, freebsd, macos)
 
 # Shell
 
-* shell/2048.sh
+## shell/2048.sh
 
 Bash实现，仅能用于Posix兼容系统（依赖tty设备），由于bash数组性能很差，因此使用非查表实现。
 
@@ -417,4 +419,4 @@ Bash实现，仅能用于Posix兼容系统（依赖tty设备），由于bash数�
 bash 3.1+ (linux, freebsd, macos)
 ```
 
-注1：声称兼容bash语法的zsh不支持64位无符号整数，因此无法运行。
+* 声称兼容bash语法的zsh不支持64位无符号整数，因此无法运行。
