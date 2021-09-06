@@ -7,18 +7,14 @@ extern "C" {
 
 #if defined(_WIN32)
 #define WIN32_LEAN_AND_MEAN
-#include <Windows.h>
+#include <windows.h>
 #include <process.h>
+#include <limits.h>
+#include <assert.h>
 #else
 #include <unistd.h>
 #include <pthread.h>
 #include <sys/time.h>
-#endif
-
-#if defined(_MSC_VER) || (defined(__GNUC__) && (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 7)))
-#define HAS_ATOMIC 1
-#elif (defined(__x86_64__) || defined(__i386__)) && (__GNUC__ == 4 && __GNUC_MINOR__ >= 1)
-#define HAS_ATOMIC 1
 #endif
 
 #ifdef _M_I86
@@ -26,15 +22,18 @@ typedef long int32;
 #else
 typedef int int32;
 #endif
-#if defined(_MSC_VER) || defined(__BORLANDC__)
-typedef __int64 int64;
-#else
-typedef long long int64;
-#endif
-
 
 #ifdef __cplusplus
 }
+#endif
+
+#if defined(__WATCOMC__)
+#if defined(max)
+#undef max
+#endif
+#if defined(min)
+#undef min
+#endif
 #endif
 
 #include <deque>
@@ -53,7 +52,7 @@ class ConditionVariable
 public:
     ConditionVariable(LOCK &lock) : m_lock(lock), m_semphore(NULL), m_wait_num(0)
     {
-        assert(m_semphore = CreateSemaphore(NULL, 0, INT32_MAX, NULL));
+        assert(m_semphore = CreateSemaphore(NULL, 0, INT_MAX, NULL));
     }
 
     ~ConditionVariable()
@@ -72,7 +71,7 @@ public:
         DWORD ret = WaitForSingleObject(m_semphore, timeout);
         m_lock.lock();
         m_wait_num--;
-        return (res == WAIT_OBJECT_0) ? true : false;
+        return (ret == WAIT_OBJECT_0) ? true : false;
     }
 
     void signal()
@@ -104,23 +103,15 @@ public:
 
     void lock();
     void unlock();
-    bool trylock();
 
     bool wait(int32 timeout_ms = -1);
     void signal();
     void broadcast();
 
-#ifdef HAS_ATOMIC
-    static int32 atom_inc(volatile int32 &dest);
-    static int32 atom_dec(volatile int32 &dest);
-    static int64 atom_inc(volatile int64 &dest);
-    static int64 atom_dec(volatile int64 &dest);
-#endif
-
 private:
 #ifdef _WIN32
     CRITICAL_SECTION m_mutex;
-#if WINVER >= 0x600
+#if defined(WINVER) && WINVER >= 0x0600
     CONDITION_VARIABLE m_cond;
 #else
     ConditionVariable<ThreadLock> m_cond;
@@ -166,17 +157,19 @@ public:
 private:
     static void thread_instance(void *param);
     ThrdCallback m_thrd;
-    ThreadLock m_task_lock;
     ThreadLock m_pool_lock;
     ThreadLock m_ctrl_lock;
+    volatile bool m_pool_signaled;
     volatile bool m_stop;
     volatile int32 m_max_thrd_num;
     volatile int32 m_thrd_num;
     volatile int32 m_active_thrd_num;
 #ifdef _WIN32
     HANDLE *m_thread_handle;
-    static DWORD _count_set_bits(ULONG_PTR bitMask);
     static unsigned int WINAPI _threadstart(void *param);
+#if (defined(WINVER) && WINVER >= 0x0502) || (defined(NTDDI_VERSION) && NTDDI_VERSION >= 0x05010300)
+    static DWORD _count_set_bits(ULONG_PTR bitMask);
+#endif
 #else
     pthread_t *m_thread_handle;
     static void* _threadstart(void *param);

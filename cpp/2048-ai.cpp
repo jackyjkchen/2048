@@ -126,6 +126,13 @@ typedef struct {
 #include "thread_pool.h"
 #endif
 
+#if defined(max)
+#undef max
+#endif
+#if defined(min)
+#undef min
+#endif
+
 #include <algorithm>
 #if __cplusplus >= 201103L
 #include <unordered_map>
@@ -135,12 +142,6 @@ typedef std::unordered_map<board_t, trans_table_entry_t> trans_table_t;
 typedef std::map<board_t, trans_table_entry_t> trans_table_t;
 #endif
 
-#if defined(max)
-#undef max
-#endif
-#if defined(min)
-#undef min
-#endif
 #if __cplusplus >= 199711L
 #define max std::max
 #define min std::min
@@ -251,7 +252,7 @@ static void init_tables(void) {
         for (i = 0; i < 4; ++i) {
             int rank = line[i];
 
-            sum += pow(rank, SCORE_SUM_POWER);
+            sum += pow((float)rank, SCORE_SUM_POWER);
             if (rank == 0) {
                 empty++;
             } else {
@@ -281,8 +282,8 @@ static void init_tables(void) {
             }
         }
 
-        heur_score_table[row] = SCORE_LOST_PENALTY + SCORE_EMPTY_WEIGHT * empty + SCORE_MERGES_WEIGHT * merges -
-            SCORE_MONOTONICITY_WEIGHT * min(monotonicity_left, monotonicity_right) - SCORE_SUM_WEIGHT * sum;
+        heur_score_table[row] = (float)(SCORE_LOST_PENALTY + SCORE_EMPTY_WEIGHT * empty + SCORE_MERGES_WEIGHT * merges -
+            SCORE_MONOTONICITY_WEIGHT * min(monotonicity_left, monotonicity_right) - SCORE_SUM_WEIGHT * sum);
 
         for (i = 0; i < 3; ++i) {
             for (j = i + 1; j < 4; ++j) {
@@ -315,7 +316,7 @@ static void init_tables(void) {
 #endif
 
 #ifdef FASTMODE
-static board_t execute_move_col(board_t board, row_t *table) {
+static board_t execute_move_col(board_t board, const row_t *table) {
     board_t ret = board;
     board_t t = transpose(board);
 
@@ -326,7 +327,7 @@ static board_t execute_move_col(board_t board, row_t *table) {
     return ret;
 }
 
-static board_t execute_move_row(board_t board, row_t *table) {
+static board_t execute_move_row(board_t board, const row_t *table) {
     board_t ret = board;
 
     ret ^= (board_t)(table[(board >> 0) & ROW_MASK]) << 0;

@@ -45,15 +45,6 @@ void ThreadLock::unlock()
 #endif
 }
 
-bool ThreadLock::trylock()
-{
-#ifdef _WIN32
-    return (TRUE == TryEnterCriticalSection(&m_mutex));
-#else
-    return (0 == pthread_mutex_trylock(&m_mutex));
-#endif
-}
-
 bool ThreadLock::wait(int32 timeout_ms/* = -1*/)
 {
 #ifdef _WIN32
@@ -106,45 +97,8 @@ void ThreadLock::broadcast()
 #endif
 }
 
-#ifdef HAS_ATOMIC
-int32 ThreadLock::atom_inc(volatile int32 &dest)
-{
 #ifdef _WIN32
-    return InterlockedIncrement((LONG *)&dest);
-#else
-    return __sync_add_and_fetch(&dest, 1);
-#endif
-}
-
-int32 ThreadLock::atom_dec(volatile int32 &dest)
-{
-#ifdef _WIN32
-    return InterlockedDecrement((LONG *)&dest);
-#else
-    return __sync_sub_and_fetch(&dest, 1);
-#endif
-}
-
-int64 ThreadLock::atom_inc(volatile int64 &dest)
-{
-#ifdef _WIN32
-    return InterlockedIncrement64(&dest);
-#else
-    return __sync_add_and_fetch(&dest, 1);
-#endif
-}
-
-int64 ThreadLock::atom_dec(volatile int64 &dest)
-{
-#ifdef _WIN32
-    return InterlockedDecrement64(&dest);
-#else
-    return __sync_sub_and_fetch(&dest, 1);
-#endif
-}
-#endif
-
-#ifdef _WIN32
+#if (defined(WINVER) && WINVER >= 0x0502) || (defined(NTDDI_VERSION) && NTDDI_VERSION >= 0x05010300)
 DWORD ThreadPool::_count_set_bits(ULONG_PTR bitMask)
 {
     DWORD LSHIFT = sizeof(ULONG_PTR) * 8 - 1;
@@ -159,6 +113,7 @@ DWORD ThreadPool::_count_set_bits(ULONG_PTR bitMask)
 
     return bitSetCount;
 }
+#endif
 
 unsigned int WINAPI ThreadPool::_threadstart(void *param)
 {
@@ -179,6 +134,7 @@ int32 ThreadPool::get_logical_cpu_count()
 {
     int32 logical_cpu_count = 0;
 #ifdef _WIN32
+#if (defined(WINVER) && WINVER >= 0x0502) || (defined(NTDDI_VERSION) && NTDDI_VERSION >= 0x05010300)
     DWORD length = 0;
     PSYSTEM_LOGICAL_PROCESSOR_INFORMATION buf = NULL, ptr = NULL;
     BOOL ret = FALSE;
@@ -195,7 +151,7 @@ int32 ThreadPool::get_logical_cpu_count()
         }
     }
     ptr = buf;
-    while ((uint8_t *)ptr - (uint8_t *)buf + sizeof(SYSTEM_LOGICAL_PROCESSOR_INFORMATION) <= length) {
+    while ((BYTE *)ptr - (BYTE *)buf + sizeof(SYSTEM_LOGICAL_PROCESSOR_INFORMATION) <= length) {
         if (ptr && ptr->Relationship == RelationProcessorCore) {
             logical_cpu_count += _count_set_bits(ptr->ProcessorMask);
         }
@@ -203,12 +159,17 @@ int32 ThreadPool::get_logical_cpu_count()
     }
     free(buf);
 #else
+    SYSTEM_INFO sysinfo;
+    GetSystemInfo(&sysinfo);
+    logical_cpu_count = sysinfo.dwNumberOfProcessors;
+#endif
+#else
     logical_cpu_count = (int32)sysconf(_SC_NPROCESSORS_CONF);
 #endif
     return logical_cpu_count;
 }
 
-ThreadPool::ThreadPool(int32 max_thrd_num/* = 0*/) : m_stop(false), m_max_thrd_num(max_thrd_num), m_thrd_num(0), m_active_thrd_num(0), m_thread_handle(NULL)
+ThreadPool::ThreadPool(int32 max_thrd_num/* = 0*/) : m_pool_signaled(false), m_stop(false), m_max_thrd_num(max_thrd_num), m_thrd_num(0), m_active_thrd_num(0), m_thread_handle(NULL)
 {
     m_thrd.func = ThreadPool::thread_instance;
     m_thrd.param = this;
@@ -266,11 +227,10 @@ void ThreadPool::add_task(thrd_callback func, void *param)
     ThrdCallback clbk;
     clbk.func = func;
     clbk.param = param;
-    m_task_lock.lock();
-    m_queue.push_back(clbk);
-    m_task_lock.unlock();
     m_pool_lock.lock();
+    m_queue.push_back(clbk);
     m_pool_lock.broadcast();
+    m_pool_signaled = true;
     m_pool_lock.unlock();
 }
 
@@ -280,13 +240,16 @@ void ThreadPool::wait_all_task()
     if (m_thrd_num == 0) {
         return;
     }
-    m_task_lock.lock();
-    if (m_queue.empty() && m_active_thrd_num == 0) {
-        m_task_lock.unlock();
-        return;
+    while (true) {
+        m_pool_lock.lock();
+        if (m_queue.empty() && m_active_thrd_num == 0) {
+            m_pool_signaled = false;
+            m_pool_lock.unlock();
+            return;
+        }
+        m_pool_lock.wait();
+        m_pool_lock.unlock();
     }
-    m_task_lock.wait();
-    m_task_lock.unlock();
 }
 
 void ThreadPool::wait_all_thrd()
@@ -298,6 +261,7 @@ void ThreadPool::wait_all_thrd()
     m_pool_lock.lock();
     m_stop = true;
     m_pool_lock.broadcast();
+    m_pool_signaled = true;
     m_pool_lock.unlock();
     for (int32 i = 0; i < m_max_thrd_num; ++i) {
         if (m_thread_handle[i] > 0) {
@@ -322,18 +286,18 @@ int ThreadPool::get_max_thrd_num()
 void ThreadPool::thread_instance(void *param) {
     ThreadPool *pthis = (ThreadPool *)param;
     while (true) {
-        pthis->m_task_lock.lock();
+        pthis->m_pool_lock.lock();
         if (pthis->m_queue.empty()) {
+            pthis->m_pool_signaled = false;
             if (pthis->m_stop) {
-                pthis->m_task_lock.unlock();
+                pthis->m_pool_lock.unlock();
                 break;
             }
             if (pthis->m_active_thrd_num == 0) {
-                pthis->m_task_lock.broadcast();
+                pthis->m_pool_lock.broadcast();
+                pthis->m_pool_signaled = true;
             }
-            pthis->m_task_lock.unlock();
-            pthis->m_pool_lock.lock();
-            if (!pthis->m_stop) {
+            while (!pthis->m_pool_signaled) {
                 pthis->m_pool_lock.wait();
             }
             pthis->m_pool_lock.unlock();
@@ -341,20 +305,12 @@ void ThreadPool::thread_instance(void *param) {
         }
         ThrdCallback clbk = pthis->m_queue.front();
         pthis->m_queue.pop_front();
-#if HAS_ATOMIC
-        ThreadLock::atom_inc(pthis->m_active_thrd_num);
-#else
         pthis->m_active_thrd_num++;
-#endif
-        pthis->m_task_lock.unlock();
+        pthis->m_pool_lock.unlock();
         clbk.func(clbk.param);
-#if HAS_ATOMIC
-        ThreadLock::atom_dec(pthis->m_active_thrd_num);
-#else
-        pthis->m_task_lock.lock();
+        pthis->m_pool_lock.lock();
         pthis->m_active_thrd_num--;
-        pthis->m_task_lock.unlock();
-#endif
+        pthis->m_pool_lock.unlock();
     }
 }
 
