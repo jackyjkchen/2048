@@ -122,8 +122,14 @@ typedef struct {
     float heuristic;
 } trans_table_entry_t;
 
+#if defined(MULTI_THREAD) && defined(MULTI_THREAD_OPENMP)
+#error "MULTI_THREAD and MULTI_THREAD_OPENMP cannot define at the same time."
+#endif
+
 #if defined(MULTI_THREAD)
 #include "thread_pool.h"
+#elif defined(MULTI_THREAD_OPENMP)
+#include <omp.h>
 #endif
 
 #if defined(max)
@@ -703,11 +709,17 @@ int find_best_move(board_t board) {
         }
     }
 #else
+    float res[4] = { 0.0f };
+#if defined(MULTI_THREAD_OPENMP)
+#pragma omp parallel for
+#endif
     for (move = 0; move < 4; move++) {
-        float res = score_toplevel_move(board, move);
+        res[move] = score_toplevel_move(board, move);
+    }
 
-        if (res > best) {
-            best = res;
+    for (move = 0; move < 4; move++) {
+        if (res[move] > best) {
+            best = res[move];
             bestmove = move;
         }
     }

@@ -85,7 +85,7 @@ msc 3.0 (dos16)
 
 * cpp/2048-ai.cpp + cpp/thread_pool.cpp + cpp/thread_pool.h
 
-AI版本，ISO C++98实现，可选支持多线程（预处理MULTI_THREAD）。
+AI版本，ISO C++98实现，可选支持多线程（预处理MULTI_THREAD/MULTI_THREAD_OPENMP）。
 
 由于使用std::map且动态增长内存（可能超过1MiB），因此不支持dos16/win16，无论是否启用FASTMODE预处理（FASTMODE增加768KiB内存占用），编译器和平台支持均一致。
 
@@ -116,6 +116,20 @@ borland c++ 5.5+ (win32)
 ```
 
 注2：msvc 5.0sp3能够编译成功，但生成的多线程代码错误。
+
+
+本实现亦支持openmp多线程，由预处理MULTI_THREAD_OPENMP控制，编译示例如下，以gcc为例：
+```
+g++ -DFASTMODE -DMULTI_THREAD_OPENMP -O2 -fopenmp cpp/2048-ai.cpp -o 2048
+```
+
+openmp多线程不依赖thread_pool.cpp，但编译器和平台更为受限，已测试编译器和平台：
+
+```
+gcc 4.2+ (linux, freebsd, macos)
+clang 3.5+ (linux, freebsd，macos)
+msvc 8.0+ (win32)
+```
 
 
 
