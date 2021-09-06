@@ -98,7 +98,7 @@ openwatcom 1.9 (win32, win386, dos32 pmode, dos4gw)
 borland c++ 5.5+ (win32)
 ```
 
-注1：msvc 5.0必须应用SP3，否则优化选项会有生成错误代码或者编译失败。
+注1：msvc 5.0必须应用SP3，否则优化选项会生成错误代码或者编译失败。
 
 
 本实现支持多线程，由预处理MULTI_THREAD控制，编译示例如下，以gcc为例：
@@ -206,7 +206,7 @@ go build 2048.go
 
 * go/2048-ai.go + go/godeps.c
 
-Go AI实现，查表法 + 原生map cache，由于Go标准库不支持清除屏幕，由go/godeps.c提供。
+Go AI实现，查表法 + 原生map cache，默认goroutine并发，由于Go标准库不支持清除屏幕，由go/godeps.c提供。
 
 编译器和平台支持同上。
 

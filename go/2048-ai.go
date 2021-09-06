@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"math"
 	"math/rand"
+	"sync"
 	"time"
 )
 
@@ -356,7 +357,8 @@ func _score_toplevel_move(state *eval_state, board board_t, move int) float64 {
 	return score_tilechoose_node(state, newboard, 1.0) + 0.000001
 }
 
-func score_toplevel_move(board board_t, move int) float64 {
+func score_toplevel_move(board board_t, move int, res *float64, wg *sync.WaitGroup) {
+	defer wg.Done()
 	var state eval_state
 
 	state.trans_table = make(map[board_t]trans_table_entry_t)
@@ -365,12 +367,10 @@ func score_toplevel_move(board board_t, move int) float64 {
 		state.depth_limit = 3
 	}
 
-	res := _score_toplevel_move(&state, board, move)
+	*res = _score_toplevel_move(&state, board, move)
 
-	fmt.Printf("Move %d: result %f: eval'd %d moves (%d cache hits, %d cache size) (maxdepth=%d)\n", move, res,
+	fmt.Printf("Move %d: result %f: eval'd %d moves (%d cache hits, %d cache size) (maxdepth=%d)\n", move, *res,
 		state.moves_evaled, state.cachehits, len(state.trans_table), state.maxdepth)
-
-	return res
 }
 
 func find_best_move(board board_t) int {
@@ -380,11 +380,17 @@ func find_best_move(board board_t) int {
 	print_board(board)
 	fmt.Printf("Current scores: heur %d, actual %d\n", uint32(score_heur_board(board)), uint32(score_board(board)))
 
+	var wg sync.WaitGroup
+	wg.Add(4)
+	res := [4]float64{}
 	for move := 0; move < 4; move++ {
-		res := score_toplevel_move(board, move)
+		go score_toplevel_move(board, move, &res[move], &wg)
+	}
+	wg.Wait()
 
-		if res > best {
-			best = res
+	for move := 0; move < 4; move++ {
+		if res[move] > best {
+			best = res[move]
 			bestmove = move
 		}
 	}
