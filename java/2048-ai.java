@@ -1,5 +1,10 @@
 import java.util.Random;
 import java.util.HashMap;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ExecutorService;
 
 class Class2048
 {
@@ -48,6 +53,9 @@ class Class2048
     final double CPROB_THRESH_BASE = 0.0001f;
     final int CACHE_DEPTH_LIMIT = 15;
     
+    final int cpu_num = Runtime.getRuntime().availableProcessors();
+    ExecutorService thrd_pool = Executors.newFixedThreadPool(cpu_num >= 4 ? 4 : cpu_num);
+
     int unif_random(int n) {
         return rand.nextInt(n);
     }
@@ -348,6 +356,21 @@ class Class2048
         return res;
     }
 
+    class callback implements Callable<Double> {
+        long board;
+        int move;
+
+        public callback(long board, int move) {
+            this.board = board;
+            this.move = move;
+        }
+
+        @Override
+        public Double call() throws Exception {
+            return score_toplevel_move(this.board, this.move);
+        }
+    }
+
     int find_best_move(long board) {
         double best = 0.0f;
         int bestmove = -1;
@@ -355,14 +378,23 @@ class Class2048
         print_board(board);
         System.out.printf("Current scores: heur %d, actual %d\n", (int)score_heur_board(board), (int)score_board(board));
 
+        HashMap<Integer, Future<Double>> futures = new HashMap<>();
         for (int move = 0; move < 4; move++) {
-            double res = score_toplevel_move(board, move);
-
-            if (res > best) {
-                best = res;
-                bestmove = move;
-            }
+            futures.put(move, thrd_pool.submit(new callback(board, move)));
         }
+
+        try {
+            for (int move = 0; move < 4; move++) {
+                if (futures.get(move).get(Long.MAX_VALUE, TimeUnit.NANOSECONDS).doubleValue() > best) {
+                    best = futures.get(move).get().doubleValue();
+                    bestmove = move;
+                }
+            }
+        } catch (final Exception e) {
+            System.out.println(e);
+            System.exit(-1);
+        }
+
         System.out.printf("Selected bestmove: %d, result: %f\n", bestmove, best);
 
         return bestmove;
@@ -444,5 +476,6 @@ class Class2048
         Class2048 class_2048 = new Class2048();
         class_2048.init_tables();
         class_2048.play_game();
+        class_2048.thrd_pool.shutdown();
     }
 }

@@ -328,7 +328,7 @@ java -Djava.library.path=. Class2048
 
 ## java/2048-ai.java + java/javadeps.c
 
-Java AI实现，查表法 + HashMap cache，由于Java标准库不支持清除屏幕，由JNI方式——java/javadeps.c实现。
+Java AI实现，查表法 + HashMap cache，默认多线程，由于Java标准库不支持清除屏幕，由JNI方式——java/javadeps.c实现。
 
 Java版本和平台支持同上。
 
