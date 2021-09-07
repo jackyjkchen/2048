@@ -25,7 +25,6 @@ const (
 	DOWN    = 1
 	LEFT    = 2
 	RIGHT   = 3
-	RETRACT = 4
 )
 
 type get_move_func_t func(board board_t) int
@@ -438,12 +437,6 @@ func play_game(get_move get_move_func_t) {
 	var last_score int32 = 0
 	moveno := 0
 
-	const MAX_RETRACT = 64
-	var retract_vec [MAX_RETRACT]board_t
-	var retract_penalty_vec [MAX_RETRACT]int32
-	retract_pos := 0
-	retract_num := 0
-
 	for true {
 		move := 0
 		var tile board_t = 0
@@ -469,22 +462,6 @@ func play_game(get_move get_move_func_t) {
 			break
 		}
 
-		if move == RETRACT {
-			if moveno <= 1 || retract_num <= 0 {
-				moveno--
-				continue
-			}
-			moveno -= 2
-			if retract_pos == 0 && retract_num > 0 {
-				retract_pos = MAX_RETRACT
-			}
-			retract_pos--
-			board = retract_vec[retract_pos]
-			scorepenalty -= retract_penalty_vec[retract_pos]
-			retract_num--
-			continue
-		}
-
 		newboard = execute_move(move, board)
 		if newboard == board {
 			moveno--
@@ -494,17 +471,6 @@ func play_game(get_move get_move_func_t) {
 		tile = draw_tile()
 		if tile == 2 {
 			scorepenalty += 4
-			retract_penalty_vec[retract_pos] = 4
-		} else {
-			retract_penalty_vec[retract_pos] = 0
-		}
-		retract_vec[retract_pos] = board
-		retract_pos++
-		if retract_pos == MAX_RETRACT {
-			retract_pos = 0
-		}
-		if retract_num < MAX_RETRACT {
-			retract_num++
 		}
 
 		board = insert_tile_rand(newboard, tile)

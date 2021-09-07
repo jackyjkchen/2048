@@ -112,7 +112,6 @@ enum {
     DOWN,
     LEFT,
     RIGHT,
-    RETRACT
 };
 
 typedef int (*get_move_func_t)(board_t);

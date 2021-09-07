@@ -16,7 +16,6 @@ Public Module Class2048
     Const DOWN As Integer = 1
     Const LEFT As Integer = 2
     Const RIGHT As Integer = 3
-    Const RETRACT As Integer = 4
 
     Friend Structure trans_table_entry_t
         Public depth As Integer

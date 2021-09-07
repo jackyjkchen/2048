@@ -12,11 +12,6 @@ begin
     clrscr;
 end;
 
-function get_ch : char;
-begin
-    get_ch := ReadKey;
-end;
-
 type
     board_t = qword;
     row_t   = word;
@@ -28,7 +23,6 @@ const
     DOWN     : integer = 1;
     LEFT     : integer = 2;
     RIGHT    : integer = 3;
-    RETRACT  : integer = 4;
 
 function unpack_col(row : row_t) : board_t;
 var
@@ -99,6 +93,8 @@ const
     SCORE_SUM_WEIGHT          : single = 11.0;
     SCORE_MERGES_WEIGHT       : single = 700.0;
     SCORE_EMPTY_WEIGHT        : single = 270.0;
+    CPROB_THRESH_BASE         : single = 0.0001;
+    CACHE_DEPTH_LIMIT                  = 15;
 
 type
     row_table_t   =  array[0..(TABLESIZE)-1] of word;
@@ -324,25 +320,145 @@ begin
     score_board := score_helper(board, score_table);
 end;
 
-function ask_for_move(board : board_t) : integer;
+function score_move_node(var state : eval_state; board : board_t; cprob : single) : single; forward;
+
+function score_tilechoose_node(var state : eval_state; board : board_t; cprob : single) : single;
 var
-    movechar : char;
-    _pos     : pchar;
-const
-    allmoves : pchar = 'wsadkjhl';
+    res   : single;
+    entry : trans_table_entry_t;
+    tile_2, tmp : board_t;
+    num_open    : integer;
 begin
-    print_board(board);
-    while true do
+    if (cprob < CPROB_THRESH_BASE) or (state.curdepth >= state.depth_limit) then
     begin
-        movechar := get_ch;
-        if movechar = 'q' then
-            exit(-1);
-        if movechar = 'r' then 
-            exit(RETRACT);
-        _pos := strscan(allmoves, movechar);
-        if _pos <> nil then
-            exit((_pos - allmoves) mod 4);
+        state.maxdepth := max(state.curdepth, state.maxdepth);
+        exit(score_heur_board(board));
     end;
+    if state.curdepth < CACHE_DEPTH_LIMIT then
+    begin
+        if state.trans_table.TryGetData(board, entry) then
+        begin
+            if entry.depth <= state.curdepth then
+            begin
+                state.cachehits := state.cachehits + 1;
+                exit(entry.heuristic);
+            end;
+        end;
+    end;
+
+    num_open := count_empty(board);
+    cprob := cprob / num_open;
+    res := 0.0;
+    tmp := board;
+    tile_2 := 1;
+
+    while tile_2 <> 0 do
+    begin
+        if (tmp and $f) = 0 then
+        begin
+            res := res + score_move_node(state, board or tile_2, cprob * 0.9) * 0.9;
+            res := res + score_move_node(state, board or (tile_2 shl 1), cprob * 0.1) * 0.1;
+        end;
+        tmp := tmp shr 4;
+        tile_2 := tile_2 shl 4;
+    end;
+    res := res / num_open;
+
+    if state.curdepth < CACHE_DEPTH_LIMIT then
+    begin
+        entry.depth := state.curdepth;
+        entry.heuristic := res;
+        state.trans_table.AddOrSetData(board, entry);
+    end;
+
+    score_tilechoose_node := res;
+end;
+
+function score_move_node(var state : eval_state; board : board_t; cprob : single) : single;
+var
+    best : single;
+    _move : integer;
+    newboard : board_t;
+begin
+    best := 0.0;
+
+    state.curdepth := state.curdepth + 1;
+    for _move := 0 to 3 do
+    begin
+        newboard := execute_move(_move, board);
+        state.moves_evaled := state.moves_evaled + 1;
+
+        if board <> newboard then
+            best := max(best, score_tilechoose_node(state, newboard, cprob));
+    end;
+    state.curdepth := state.curdepth - 1;
+
+    score_move_node := best;
+end;
+
+function _score_toplevel_move(var state : eval_state; board : board_t; _move : integer) : single;
+var
+    newboard : board_t;
+begin
+    newboard := execute_move(_move, board);
+
+    if board = newboard then
+        exit(0.0);
+
+    _score_toplevel_move := score_tilechoose_node(state, newboard, 1.0) + 0.000001;
+end;
+
+function score_toplevel_move(board : board_t; _move : integer) : single;
+var
+    state : eval_state;
+    res : single;
+begin
+    state.trans_table := trans_table_t.Create();
+    state.maxdepth := 0;
+    state.curdepth := 0;
+    state.cachehits :=0;
+    state.moves_evaled := 0;
+    state.depth_limit := count_distinct_tiles(board) - 2;
+    if state.depth_limit < 3 then
+        state.depth_limit := 3;
+
+    res := _score_toplevel_move(state, board, _move);
+
+    writeln(format('Move %d: result %f: eval''d %d moves (%d cache hits, %d cache size) (maxdepth=%d)', [_move, res,
+           state.moves_evaled, state.cachehits, state.trans_table.Count, state.maxdepth]));
+
+    score_toplevel_move := res;
+end;
+
+function find_best_move(board : board_t) : integer;
+var
+    _move, bestmove : integer;
+    best : single;
+    res : array[0..3] of single;
+begin
+    _move := 0;
+    bestmove := -1;
+    best := 0.0;
+
+    print_board(board);
+    writeln(format('Current scores: heur %d, actual %d', [round(score_heur_board(board)), score_board(board)]));
+
+    for _move := 0 to 3 do
+    begin
+        res[_move] := score_toplevel_move(board, _move);
+    end;
+
+    for _move := 0 to 3 do
+    begin
+        if res[_move] > best then
+        begin
+            best := res[_move];
+            bestmove := _move;
+        end;
+    end;
+    writeln(format('Selected bestmove: %d, result: %f', [bestmove, best]));
+
+    find_best_move := bestmove;
 end;
 
 function draw_tile : word;
@@ -391,8 +507,6 @@ type
     get_move_func_t = function(board : board_t) : integer;
 
 procedure play_game(get_move : get_move_func_t);
-const
-    MAX_RETRACT = 64;
 var
     board               : board_t;
     newboard            : board_t;
@@ -402,20 +516,12 @@ var
     moveno              : dword;
     _move               : integer;
     tile                : word;
-    retract_vec         : array[0..(MAX_RETRACT)-1] of board_t;
-    retract_penalty_vec : array[0..(MAX_RETRACT)-1] of byte;
-    retract_pos         : integer;
-    retract_num         : integer;
 begin
     board := initial_board;
     scorepenalty := 0;
     current_score := 0;
     last_score := 0;
     moveno := 0;
-    fillbyte(retract_vec, sizeof(retract_vec), 0);
-    fillbyte(retract_penalty_vec, sizeof(retract_penalty_vec), 0);
-    retract_pos := 0;
-    retract_num := 0;
 
     while true do
     begin
@@ -437,23 +543,6 @@ begin
         _move := get_move(board);
         if _move < 0 then break;
 
-        if _move = RETRACT then
-        begin
-            if (moveno <= 1) or (retract_num <= 0) then
-            begin
-                moveno := moveno - 1;
-                continue;
-            end;
-            moveno := moveno - 2;
-            if (retract_pos = 0) and (retract_num > 0) then
-                retract_pos := MAX_RETRACT;
-            retract_pos := retract_pos - 1;
-            board := retract_vec[retract_pos];
-            scorepenalty := scorepenalty - retract_penalty_vec[retract_pos];
-            retract_num := retract_num - 1;
-            continue;
-        end;
-
         newboard := execute_move(_move, board);
         if newboard = board then
         begin
@@ -462,18 +551,9 @@ begin
         end;
 
         tile := draw_tile;
-        if tile = 2 then begin
+        if tile = 2 then
             scorepenalty := scorepenalty + 4;
-            retract_penalty_vec[retract_pos] := 4;
-        end else begin
-            retract_penalty_vec[retract_pos] := 0;
-        end;
-        retract_vec[retract_pos] := board;
-        retract_pos := retract_pos + 1;
-        if retract_pos = MAX_RETRACT then
-            retract_pos := 0;
-        if retract_num < MAX_RETRACT then
-            retract_num := retract_num + 1;
+
         board := insert_tile_rand(newboard, tile);
     end;
     print_board(board);
@@ -483,5 +563,5 @@ end;
 begin
     randomize;
     init_tables;
-    play_game(@ask_for_move);
+    play_game(@find_best_move);
 end.

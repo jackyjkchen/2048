@@ -17,7 +17,6 @@ public class Class2048
     const int DOWN = 1;
     const int LEFT = 2;
     const int RIGHT = 3;
-    const int RETRACT = 4;
 
     struct trans_table_entry_t
     {

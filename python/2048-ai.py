@@ -25,7 +25,6 @@ UP = 0
 DOWN = 1
 LEFT = 2
 RIGHT = 3
-RETRACT = 4
 
 def unpack_col(row):
     return (row | (row << 12) | (row << 24) | (row << 36)) & COL_MASK
@@ -345,12 +344,6 @@ def play_game(get_move):
     current_score = 0
     moveno = 0
 
-    MAX_RETRACT = 64
-    retract_vec = [0] * MAX_RETRACT
-    retract_penalty_vec = [0] * MAX_RETRACT
-    retract_pos = 0
-    retract_num = 0
-
     while True:
         clear_screen()
         move = 0
@@ -371,19 +364,6 @@ def play_game(get_move):
         if move < 0:
             break
 
-        if move == RETRACT:
-            if moveno <= 1 or retract_num <= 0:
-                moveno -= 1
-                continue
-            moveno -= 2
-            if retract_pos == 0 and retract_num > 0:
-                retract_pos = MAX_RETRACT
-            retract_pos -= 1
-            board = retract_vec[retract_pos]
-            scorepenalty = scorepenalty - retract_penalty_vec[retract_pos]
-            retract_num -= 1
-            continue
-
         newboard = execute_move(move, board)
         if newboard == board:
             moveno -= 1
@@ -392,15 +372,6 @@ def play_game(get_move):
         tile = draw_tile()
         if tile == 2:
             scorepenalty += 4
-            retract_penalty_vec[retract_pos] = 4
-        else:
-            retract_penalty_vec[retract_pos] = 0
-        retract_vec[retract_pos] = board
-        retract_pos += 1
-        if retract_pos == MAX_RETRACT:
-            retract_pos = 0
-        if retract_num < MAX_RETRACT:
-            retract_num += 1
 
         board = insert_tile_rand(newboard, tile)
 

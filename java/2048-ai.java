@@ -21,7 +21,6 @@ class Class2048
     final int DOWN = 1;
     final int LEFT = 2;
     final int RIGHT = 3;
-    final int RETRACT = 4;
 
     class trans_table_entry_t
     {
