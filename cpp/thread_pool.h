@@ -151,7 +151,7 @@ public:
     void wait_all_task();
     void wait_all_thrd();
     int32 get_max_thrd_num();
-    static int32 get_logical_cpu_count();
+    static int32 get_cpu_num();
 
     std::deque<ThrdCallback> m_queue;
 private:

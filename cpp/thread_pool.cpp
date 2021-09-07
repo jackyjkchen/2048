@@ -130,9 +130,9 @@ void* ThreadPool::_threadstart(void *param)
 }
 #endif
 
-int32 ThreadPool::get_logical_cpu_count()
+int32 ThreadPool::get_cpu_num()
 {
-    int32 logical_cpu_count = 0;
+    int32 cpu_num = 0;
 #ifdef _WIN32
 #if (defined(WINVER) && WINVER >= 0x0502) || (defined(NTDDI_VERSION) && NTDDI_VERSION >= 0x05010300)
     DWORD length = 0;
@@ -153,7 +153,7 @@ int32 ThreadPool::get_logical_cpu_count()
     ptr = buf;
     while ((BYTE *)ptr - (BYTE *)buf + sizeof(SYSTEM_LOGICAL_PROCESSOR_INFORMATION) <= length) {
         if (ptr && ptr->Relationship == RelationProcessorCore) {
-            logical_cpu_count += _count_set_bits(ptr->ProcessorMask);
+            cpu_num += _count_set_bits(ptr->ProcessorMask);
         }
         ptr++;
     }
@@ -161,12 +161,12 @@ int32 ThreadPool::get_logical_cpu_count()
 #else
     SYSTEM_INFO sysinfo;
     GetSystemInfo(&sysinfo);
-    logical_cpu_count = sysinfo.dwNumberOfProcessors;
+    cpu_num = sysinfo.dwNumberOfProcessors;
 #endif
 #else
-    logical_cpu_count = (int32)sysconf(_SC_NPROCESSORS_CONF);
+    cpu_num = (int32)sysconf(_SC_NPROCESSORS_CONF);
 #endif
-    return logical_cpu_count;
+    return cpu_num;
 }
 
 ThreadPool::ThreadPool(int32 max_thrd_num/* = 0*/) : m_pool_signaled(false), m_stop(false), m_max_thrd_num(max_thrd_num), m_thrd_num(0), m_active_thrd_num(0), m_thread_handle(NULL)
@@ -185,7 +185,7 @@ bool ThreadPool::init()
 {
     m_ctrl_lock.lock();
     if (m_max_thrd_num == 0) {
-        m_max_thrd_num = get_logical_cpu_count();
+        m_max_thrd_num = get_cpu_num();
     }
     if (m_max_thrd_num <= 0 || m_thrd_num != 0) {
         m_ctrl_lock.unlock();

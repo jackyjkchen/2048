@@ -679,7 +679,7 @@ void thrd_worker(void *param) {
 }
 
 ThreadPool &get_thrd_pool() {
-    static ThreadPool thrd_pool(ThreadPool::get_logical_cpu_count() >= 4 ? 4 : 0);
+    static ThreadPool thrd_pool(ThreadPool::get_cpu_num() >= 4 ? 4 : 0);
     return thrd_pool;
 }
 #endif
