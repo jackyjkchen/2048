@@ -223,6 +223,19 @@ static const float SCORE_SUM_POWER = 3.5f;
 static const float SCORE_SUM_WEIGHT = 11.0f;
 static const float SCORE_MERGES_WEIGHT = 700.0f;
 static const float SCORE_EMPTY_WEIGHT = 270.0f;
+static const float CPROB_THRESH_BASE = 0.0001f;
+static const uint16 CACHE_DEPTH_LIMIT = 15;
+
+struct eval_state {
+    trans_table_t trans_table;
+    int maxdepth;
+    int curdepth;
+    long cachehits;
+    long moves_evaled;
+    int depth_limit;
+
+    eval_state():maxdepth(0), curdepth(0), cachehits(0), moves_evaled(0), depth_limit(0) {}
+};
 
 #ifdef FASTMODE
 static void init_tables(void) {
@@ -457,17 +470,6 @@ static int count_distinct_tiles(board_t board) {
     return count;
 }
 
-struct eval_state {
-    trans_table_t trans_table;
-    int maxdepth;
-    int curdepth;
-    long cachehits;
-    long moves_evaled;
-    int depth_limit;
-
-    eval_state():maxdepth(0), curdepth(0), cachehits(0), moves_evaled(0), depth_limit(0) {}
-};
-
 #ifdef FASTMODE
 static float score_helper(board_t board, const float *table) {
     return table[(board >> 0) & ROW_MASK] + table[(board >> 16) & ROW_MASK] +
@@ -571,9 +573,6 @@ static uint32 score_board(board_t board) {
 #endif
 }
 
-static const float CPROB_THRESH_BASE = 0.0001f;
-static const uint16 CACHE_DEPTH_LIMIT = 15;
-
 static float score_move_node(eval_state &state, board_t board, float cprob);
 static float score_tilechoose_node(eval_state &state, board_t board, float cprob) {
     if (cprob < CPROB_THRESH_BASE || state.curdepth >= state.depth_limit) {
@@ -632,7 +631,10 @@ static float score_move_node(eval_state &state, board_t board, float cprob) {
         state.moves_evaled++;
 
         if (board != newboard) {
-            best = max(best, score_tilechoose_node(state, newboard, cprob));
+            float tmp = score_tilechoose_node(state, newboard, cprob);
+            if (best < tmp) {
+                best = tmp;
+            }
         }
     }
     state.curdepth--;

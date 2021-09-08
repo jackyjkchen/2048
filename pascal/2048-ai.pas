@@ -1,6 +1,6 @@
 program main_2048;
 
-uses crt, sysutils, strings, math, fgl;
+uses crt, sysutils, strings, math, generics.collections;
 
 function unif_random(n : integer) : integer;
 begin
@@ -86,19 +86,19 @@ end;
 
 const
     TABLESIZE = 65536;
-    SCORE_LOST_PENALTY        : single = 200000.0;
-    SCORE_MONOTONICITY_POWER  : single = 4.0;
-    SCORE_MONOTONICITY_WEIGHT : single = 47.0;
-    SCORE_SUM_POWER           : single = 3.5;
-    SCORE_SUM_WEIGHT          : single = 11.0;
-    SCORE_MERGES_WEIGHT       : single = 700.0;
-    SCORE_EMPTY_WEIGHT        : single = 270.0;
-    CPROB_THRESH_BASE         : single = 0.0001;
-    CACHE_DEPTH_LIMIT                  = 15;
+    SCORE_LOST_PENALTY        : real = 200000.0;
+    SCORE_MONOTONICITY_POWER  : real = 4.0;
+    SCORE_MONOTONICITY_WEIGHT : real = 47.0;
+    SCORE_SUM_POWER           : real = 3.5;
+    SCORE_SUM_WEIGHT          : real = 11.0;
+    SCORE_MERGES_WEIGHT       : real = 700.0;
+    SCORE_EMPTY_WEIGHT        : real = 270.0;
+    CPROB_THRESH_BASE         : real = 0.0001;
+    CACHE_DEPTH_LIMIT                = 15;
 
 type
     row_table_t   =  array[0..(TABLESIZE)-1] of word;
-    score_table_t =  array[0..(TABLESIZE)-1] of single;
+    score_table_t =  array[0..(TABLESIZE)-1] of real;
 
 var
     row_left_table   : row_table_t;
@@ -109,9 +109,9 @@ var
 type
     trans_table_entry_t = record
          depth : integer;
-         heuristic : float;
+         heuristic : real;
     end;
-    trans_table_t = specialize TFPGMap<board_t, trans_table_entry_t>;
+    trans_table_t = specialize TDictionary<board_t, trans_table_entry_t>;
     eval_state = record
         trans_table  : trans_table_t;
         maxdepth     : integer;
@@ -127,9 +127,9 @@ var
     i, j, rank : integer;
     row_line   : array[0..3] of byte;
     score      : dword;
-    sum        : single;
+    sum        : real;
     empty, merges, prev, counter : integer;
-    monotonicity_left, monotonicity_right : single;
+    monotonicity_left, monotonicity_right : real;
 begin
     row := 0;
     rev_row := 0;
@@ -235,7 +235,7 @@ begin
         row_right_table[rev_row] := rev_row xor rev_result;
 
         row := row + 1;
-    until row = (TABLESIZE - 1);
+    until row = 0;
 end;
 
 function execute_move_col(board : board_t; var table : row_table_t) : board_t;
@@ -302,29 +302,29 @@ begin
     count_distinct_tiles := count;
 end;
 
-function score_helper(board : board_t; var table : score_table_t) : dword;
+function score_helper(board : board_t; var table : score_table_t) : real;
 begin
-    score_helper := round(table[(board shr  0) and ROW_MASK] +
+    score_helper := table[(board shr  0) and ROW_MASK] +
                     table[(board shr 16) and ROW_MASK] +
                     table[(board shr 32) and ROW_MASK] +
-                    table[(board shr 48) and ROW_MASK]);
+                    table[(board shr 48) and ROW_MASK];
 end;
 
-function score_heur_board(board : board_t) : single;
+function score_heur_board(board : board_t) : real;
 begin
     score_heur_board := score_helper(board, heur_score_table) + score_helper(transpose(board), heur_score_table);
 end;
 
 function score_board(board : board_t) : dword;
 begin
-    score_board := score_helper(board, score_table);
+    score_board := round(score_helper(board, score_table));
 end;
 
-function score_move_node(var state : eval_state; board : board_t; cprob : single) : single; forward;
+function score_move_node(var state : eval_state; board : board_t; cprob : real) : real; forward;
 
-function score_tilechoose_node(var state : eval_state; board : board_t; cprob : single) : single;
+function score_tilechoose_node(var state : eval_state; board : board_t; cprob : real) : real;
 var
-    res   : single;
+    res   : real;
     entry : trans_table_entry_t;
     tile_2, tmp : board_t;
     num_open    : integer;
@@ -336,8 +336,9 @@ begin
     end;
     if state.curdepth < CACHE_DEPTH_LIMIT then
     begin
-        if state.trans_table.TryGetData(board, entry) then
+        if state.trans_table.ContainsKey(board) then
         begin
+            entry := state.trans_table[board];
             if entry.depth <= state.curdepth then
             begin
                 state.cachehits := state.cachehits + 1;
@@ -368,16 +369,16 @@ begin
     begin
         entry.depth := state.curdepth;
         entry.heuristic := res;
-        state.trans_table.AddOrSetData(board, entry);
+        state.trans_table.AddOrSetValue(board, entry);
     end;
 
     score_tilechoose_node := res;
 end;
 
-function score_move_node(var state : eval_state; board : board_t; cprob : single) : single;
+function score_move_node(var state : eval_state; board : board_t; cprob : real) : real;
 var
-    best : single;
     _move : integer;
+    best, tmp : real;
     newboard : board_t;
 begin
     best := 0.0;
@@ -389,34 +390,38 @@ begin
         state.moves_evaled := state.moves_evaled + 1;
 
         if board <> newboard then
-            best := max(best, score_tilechoose_node(state, newboard, cprob));
+        begin
+            tmp := score_tilechoose_node(state, newboard, cprob);
+            if best < tmp then
+                best := tmp;
+        end;
     end;
     state.curdepth := state.curdepth - 1;
 
     score_move_node := best;
 end;
 
-function _score_toplevel_move(var state : eval_state; board : board_t; _move : integer) : single;
+function _score_toplevel_move(var state : eval_state; board : board_t; _move : integer) : real;
 var
     newboard : board_t;
 begin
     newboard := execute_move(_move, board);
 
     if board = newboard then
-        exit(0.0);
-
-    _score_toplevel_move := score_tilechoose_node(state, newboard, 1.0) + 0.000001;
+        _score_toplevel_move := 0.0
+    else
+        _score_toplevel_move := score_tilechoose_node(state, newboard, 1.0) + 0.000001;
 end;
 
-function score_toplevel_move(board : board_t; _move : integer) : single;
+function score_toplevel_move(board : board_t; _move : integer) : real;
 var
     state : eval_state;
-    res : single;
+    res : real;
 begin
     state.trans_table := trans_table_t.Create();
     state.maxdepth := 0;
     state.curdepth := 0;
-    state.cachehits :=0;
+    state.cachehits := 0;
     state.moves_evaled := 0;
     state.depth_limit := count_distinct_tiles(board) - 2;
     if state.depth_limit < 3 then
@@ -433,8 +438,8 @@ end;
 function find_best_move(board : board_t) : integer;
 var
     _move, bestmove : integer;
-    best : single;
-    res : array[0..3] of single;
+    best : real;
+    res : array[0..3] of real;
 begin
     _move := 0;
     bestmove := -1;

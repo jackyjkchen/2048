@@ -165,7 +165,7 @@ begin
         row_right_table[rev_row] := rev_row xor rev_result;
 
         row := row + 1;
-    until row = (TABLESIZE - 1);
+    until row = 0;
 end;
 
 function execute_move_col(board : board_t; var table : row_table_t) : board_t;

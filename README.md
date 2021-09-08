@@ -276,6 +276,16 @@ gnu pascal 2.1 (linux, mingw, djgpp)
 ```
 
 
+## pascal/2048-ai.pas
+
+Pascal AI实现，使用uint64+查表法，TDictionary cache。
+
+已测试编译器和平台：
+```
+free pascal 3.2+ (linux, win32, freebsd, macos, dos32)
+```
+
+
 
 # Fortran
 
