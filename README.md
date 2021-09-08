@@ -10,6 +10,7 @@
 
 本项目中所有实现的AI版本2048，其输出格式完全一致。不同编译器和平台浮点精度可能有差异。
 
+
 # C&C++
 
 ## c/2048.c
@@ -278,7 +279,7 @@ gnu pascal 2.1 (linux, mingw, djgpp)
 
 ## pascal/2048-ai.pas
 
-Pascal AI实现，使用uint64+查表法，TDictionary cache。
+Pascal AI实现，使用uint64+查表法，TDictionary cache，默认多线程。
 
 已测试编译器和平台：
 ```

@@ -1,6 +1,6 @@
 program main_2048;
 
-uses crt, sysutils, strings, math, generics.collections;
+uses {$ifdef unix}cthreads, cmem, {$endif}crt, sysutils, strings, math, generics.collections;
 
 function unif_random(n : integer) : integer;
 begin
@@ -413,7 +413,7 @@ begin
         _score_toplevel_move := score_tilechoose_node(state, newboard, 1.0) + 0.000001;
 end;
 
-function score_toplevel_move(board : board_t; _move : integer) : real;
+function score_toplevel_move(board : board_t; _move : integer; var msg : string) : real;
 var
     state : eval_state;
     res : real;
@@ -429,17 +429,35 @@ begin
 
     res := _score_toplevel_move(state, board, _move);
 
-    writeln(format('Move %d: result %f: eval''d %d moves (%d cache hits, %d cache size) (maxdepth=%d)', [_move, res,
-           state.moves_evaled, state.cachehits, state.trans_table.Count, state.maxdepth]));
+    msg := format('Move %d: result %f: eval''d %d moves (%d cache hits, %d cache size) (maxdepth=%d)', [_move, res,
+           state.moves_evaled, state.cachehits, state.trans_table.Count, state.maxdepth]);
 
     score_toplevel_move := res;
+end;
+
+type
+    thrd_context = record
+        board : board_t;
+        _move : integer;
+        res : real;
+        msg : string;
+    end;
+
+function thrd_worker(param : pointer) : ptrint;
+var
+    pcontext : ^thrd_context;
+begin
+    pcontext := param;
+    pcontext^.res := score_toplevel_move(pcontext^.board, pcontext^._move, pcontext^.msg);
+    thrd_worker := 0
 end;
 
 function find_best_move(board : board_t) : integer;
 var
     _move, bestmove : integer;
     best : real;
-    res : array[0..3] of real;
+    thrd_ids : array[0..3] of TThreadID;
+    context : array[0..3] of thrd_context;
 begin
     _move := 0;
     bestmove := -1;
@@ -450,14 +468,19 @@ begin
 
     for _move := 0 to 3 do
     begin
-        res[_move] := score_toplevel_move(board, _move);
+        context[_move].board := board;
+        context[_move]._move := _move;
+        context[_move].res := 0.0;
+        thrd_ids[_move] := BeginThread(@thrd_worker, @context[_move]);
     end;
 
     for _move := 0 to 3 do
     begin
-        if res[_move] > best then
+        WaitForThreadTerminate(thrd_ids[_move], 2147483647);
+        writeln(context[_move].msg);
+        if context[_move].res > best then
         begin
-            best := res[_move];
+            best := context[_move].res;
             bestmove := _move;
         end;
     end;
