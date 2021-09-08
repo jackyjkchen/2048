@@ -167,7 +167,7 @@ private:
 #ifdef _WIN32
     HANDLE *m_thread_handle;
     static unsigned int WINAPI _threadstart(void *param);
-#if (defined(WINVER) && WINVER >= 0x0502) || (defined(NTDDI_VERSION) && NTDDI_VERSION >= 0x05010300)
+#if defined(WINVER) && WINVER >= 0x0501
     static DWORD _count_set_bits(ULONG_PTR bitMask);
 #endif
 #else

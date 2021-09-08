@@ -155,6 +155,27 @@ typedef std::map<board_t, trans_table_entry_t> trans_table_t;
 #define min(a,b) ( ((a)>(b)) ? (b):(a) )
 #endif
 
+static const float SCORE_LOST_PENALTY = 200000.0f;
+static const float SCORE_MONOTONICITY_POWER = 4.0f;
+static const float SCORE_MONOTONICITY_WEIGHT = 47.0f;
+static const float SCORE_SUM_POWER = 3.5f;
+static const float SCORE_SUM_WEIGHT = 11.0f;
+static const float SCORE_MERGES_WEIGHT = 700.0f;
+static const float SCORE_EMPTY_WEIGHT = 270.0f;
+static const float CPROB_THRESH_BASE = 0.0001f;
+static const uint16 CACHE_DEPTH_LIMIT = 15;
+
+struct eval_state {
+    trans_table_t trans_table;
+    int maxdepth;
+    int curdepth;
+    long cachehits;
+    long moves_evaled;
+    int depth_limit;
+
+    eval_state():maxdepth(0), curdepth(0), cachehits(0), moves_evaled(0), depth_limit(0) {}
+};
+
 static inline board_t unpack_col(row_t row) {
     board_t tmp = row;
 
@@ -214,30 +235,7 @@ static row_t row_left_table[TABLESIZE];
 static row_t row_right_table[TABLESIZE];
 static float score_table[TABLESIZE];
 static float heur_score_table[TABLESIZE];
-#endif
 
-static const float SCORE_LOST_PENALTY = 200000.0f;
-static const float SCORE_MONOTONICITY_POWER = 4.0f;
-static const float SCORE_MONOTONICITY_WEIGHT = 47.0f;
-static const float SCORE_SUM_POWER = 3.5f;
-static const float SCORE_SUM_WEIGHT = 11.0f;
-static const float SCORE_MERGES_WEIGHT = 700.0f;
-static const float SCORE_EMPTY_WEIGHT = 270.0f;
-static const float CPROB_THRESH_BASE = 0.0001f;
-static const uint16 CACHE_DEPTH_LIMIT = 15;
-
-struct eval_state {
-    trans_table_t trans_table;
-    int maxdepth;
-    int curdepth;
-    long cachehits;
-    long moves_evaled;
-    int depth_limit;
-
-    eval_state():maxdepth(0), curdepth(0), cachehits(0), moves_evaled(0), depth_limit(0) {}
-};
-
-#ifdef FASTMODE
 static void init_tables(void) {
     row_t row = 0, rev_row = 0;
     row_t result = 0, rev_result = 0;
@@ -331,9 +329,7 @@ static void init_tables(void) {
         row_right_table[rev_row] = rev_row ^ rev_result;
     } while (row++ != TABLESIZE - 1);
 }
-#endif
 
-#ifdef FASTMODE
 static board_t execute_move_col(board_t board, const row_t *table) {
     board_t ret = board;
     board_t t = transpose(board);
@@ -355,6 +351,10 @@ static board_t execute_move_row(board_t board, const row_t *table) {
     return ret;
 }
 
+static float score_helper(board_t board, const float *table) {
+    return table[(board >> 0) & ROW_MASK] + table[(board >> 16) & ROW_MASK] +
+        table[(board >> 32) & ROW_MASK] + table[(board >> 48) & ROW_MASK];
+}
 #else
 static row_t execute_move_helper(row_t row) {
     int i = 0, j = 0;
@@ -425,57 +425,6 @@ static board_t execute_move_row(board_t board, int move) {
     return ret;
 }
 
-#endif
-
-static board_t execute_move(int move, board_t board) {
-    switch (move) {
-#ifdef FASTMODE
-    case UP:
-        return execute_move_col(board, row_left_table);
-    case DOWN:
-        return execute_move_col(board, row_right_table);
-    case LEFT:
-        return execute_move_row(board, row_left_table);
-    case RIGHT:
-        return execute_move_row(board, row_right_table);
-#else
-    case UP:
-    case DOWN:
-        return execute_move_col(board, move);
-    case LEFT:
-    case RIGHT:
-        return execute_move_row(board, move);
-#endif
-    default:
-        return ~W64LIT(0);
-    }
-}
-
-static int count_distinct_tiles(board_t board) {
-    uint16 bitset = 0;
-
-    while (board) {
-        bitset |= 1 << (board & 0xf);
-        board >>= 4;
-    }
-
-    bitset >>= 1;
-
-    int count = 0;
-
-    while (bitset) {
-        bitset &= bitset - 1;
-        count++;
-    }
-    return count;
-}
-
-#ifdef FASTMODE
-static float score_helper(board_t board, const float *table) {
-    return table[(board >> 0) & ROW_MASK] + table[(board >> 16) & ROW_MASK] +
-        table[(board >> 32) & ROW_MASK] + table[(board >> 48) & ROW_MASK];
-}
-#else
 static float score_helper(board_t board) {
     int i = 0, j = 0;
     uint8 line[4] = { 0 };
@@ -557,12 +506,28 @@ static float score_heur_helper(board_t board) {
 }
 #endif
 
-static float score_heur_board(board_t board) {
+static board_t execute_move(int move, board_t board) {
+    switch (move) {
 #ifdef FASTMODE
-    return score_helper(board, heur_score_table) + score_helper(transpose(board), heur_score_table);
+    case UP:
+        return execute_move_col(board, row_left_table);
+    case DOWN:
+        return execute_move_col(board, row_right_table);
+    case LEFT:
+        return execute_move_row(board, row_left_table);
+    case RIGHT:
+        return execute_move_row(board, row_right_table);
 #else
-    return score_heur_helper(board) + score_heur_helper(transpose(board));
+    case UP:
+    case DOWN:
+        return execute_move_col(board, move);
+    case LEFT:
+    case RIGHT:
+        return execute_move_row(board, move);
 #endif
+    default:
+        return ~W64LIT(0);
+    }
 }
 
 static uint32 score_board(board_t board) {
@@ -571,6 +536,33 @@ static uint32 score_board(board_t board) {
 #else
     return (uint32)score_helper(board);
 #endif
+}
+
+static float score_heur_board(board_t board) {
+#ifdef FASTMODE
+    return score_helper(board, heur_score_table) + score_helper(transpose(board), heur_score_table);
+#else
+    return score_heur_helper(board) + score_heur_helper(transpose(board));
+#endif
+}
+
+static int count_distinct_tiles(board_t board) {
+    uint16 bitset = 0;
+
+    while (board) {
+        bitset |= 1 << (board & 0xf);
+        board >>= 4;
+    }
+
+    bitset >>= 1;
+
+    int count = 0;
+
+    while (bitset) {
+        bitset &= bitset - 1;
+        count++;
+    }
+    return count;
 }
 
 static float score_move_node(eval_state &state, board_t board, float cprob);

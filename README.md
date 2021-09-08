@@ -245,11 +245,16 @@ Java版本和平台支持同上。
 
 ## pascal/2048.pas
 
-现代Pascal实现，使用uint64+查表法。
+现代Pascal实现，使用uint64，由预处理FASTMODE决定是否使用查表法。
 
 已测试编译器和平台：
 ```
 free pascal 2.2+ (linux, win32, freebsd, macos, dos32)
+```
+
+编译命令行示例：
+```
+fpc -dFASTMODE -O2 pascal/2048.pas
 ```
 
 

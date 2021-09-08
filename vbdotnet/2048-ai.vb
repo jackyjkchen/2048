@@ -235,6 +235,18 @@ Public Module Class2048
         End Select
     End Function
 
+    Private Function score_helper(board As ULong, ByRef table As Double()) As Double
+        Return table(board >> 0 And ROW_MASK) + table(board >> 16 And ROW_MASK) + table(board >> 32 And ROW_MASK) + table(board >> 48 And ROW_MASK)
+    End Function
+
+    Private Function score_board(board As ULong) As UInteger
+        Return score_helper(board, score_table)
+    End Function
+
+    Private Function score_heur_board(board As ULong) As Double
+        Return score_helper(board, heur_score_table) + score_helper(transpose(board), heur_score_table)
+    End Function
+
     Private Function count_distinct_tiles(board As ULong) As Integer
         Dim bitset As UShort = 0
         While board <> 0
@@ -250,18 +262,6 @@ Public Module Class2048
         End While
 
         Return count
-    End Function
-
-    Private Function score_helper(board As ULong, ByRef table As Double()) As Double
-        Return table(board >> 0 And ROW_MASK) + table(board >> 16 And ROW_MASK) + table(board >> 32 And ROW_MASK) + table(board >> 48 And ROW_MASK)
-    End Function
-
-    Private Function score_board(board As ULong) As UInteger
-        Return score_helper(board, score_table)
-    End Function
-
-    Private Function score_heur_board(board As ULong) As Double
-        Return score_helper(board, heur_score_table) + score_helper(transpose(board), heur_score_table)
     End Function
 
     Private Function score_tilechoose_node(ByRef state As eval_state, board As ULong, cprob As Double) As Double

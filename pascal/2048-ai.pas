@@ -1,6 +1,13 @@
 program main_2048;
 
-uses {$ifdef unix}cthreads, cmem, {$endif}crt, sysutils, strings, math, generics.collections;
+uses
+    {$ifdef MULTI_THREAD}
+    {$ifdef unix}
+    cthreads,
+    cmem,
+    {$endif}
+    {$endif}
+    crt, sysutils, strings, math, generics.collections;
 
 function unif_random(n : integer) : integer;
 begin
@@ -280,6 +287,24 @@ begin
     execute_move := ret
 end;
 
+function score_helper(board : board_t; var table : score_table_t) : real;
+begin
+    score_helper := table[(board shr  0) and ROW_MASK] +
+                    table[(board shr 16) and ROW_MASK] +
+                    table[(board shr 32) and ROW_MASK] +
+                    table[(board shr 48) and ROW_MASK];
+end;
+
+function score_board(board : board_t) : dword;
+begin
+    score_board := round(score_helper(board, score_table));
+end;
+
+function score_heur_board(board : board_t) : real;
+begin
+    score_heur_board := score_helper(board, heur_score_table) + score_helper(transpose(board), heur_score_table);
+end;
+
 function count_distinct_tiles(board : board_t) : integer;
 var
     bitset : word;
@@ -300,24 +325,6 @@ begin
         count := count + 1;
     end;
     count_distinct_tiles := count;
-end;
-
-function score_helper(board : board_t; var table : score_table_t) : real;
-begin
-    score_helper := table[(board shr  0) and ROW_MASK] +
-                    table[(board shr 16) and ROW_MASK] +
-                    table[(board shr 32) and ROW_MASK] +
-                    table[(board shr 48) and ROW_MASK];
-end;
-
-function score_heur_board(board : board_t) : real;
-begin
-    score_heur_board := score_helper(board, heur_score_table) + score_helper(transpose(board), heur_score_table);
-end;
-
-function score_board(board : board_t) : dword;
-begin
-    score_board := round(score_helper(board, score_table));
 end;
 
 function score_move_node(var state : eval_state; board : board_t; cprob : real) : real; forward;
@@ -432,6 +439,7 @@ begin
     msg := format('Move %d: result %f: eval''d %d moves (%d cache hits, %d cache size) (maxdepth=%d)', [_move, res,
            state.moves_evaled, state.cachehits, state.trans_table.Count, state.maxdepth]);
 
+    state.trans_table.Free();
     score_toplevel_move := res;
 end;
 
@@ -456,7 +464,9 @@ function find_best_move(board : board_t) : integer;
 var
     _move, bestmove : integer;
     best : real;
+{$ifdef MULTI_THREAD}
     thrd_ids : array[0..3] of TThreadID;
+{$endif}
     context : array[0..3] of thrd_context;
 begin
     _move := 0;
@@ -471,12 +481,18 @@ begin
         context[_move].board := board;
         context[_move]._move := _move;
         context[_move].res := 0.0;
+{$ifdef MULTI_THREAD}
         thrd_ids[_move] := BeginThread(@thrd_worker, @context[_move]);
+{$else}
+        thrd_worker(@context[_move]);
+{$endif}
     end;
 
     for _move := 0 to 3 do
     begin
+{$ifdef MULTI_THREAD}
         WaitForThreadTerminate(thrd_ids[_move], 2147483647);
+{$endif}
         writeln(context[_move].msg);
         if context[_move].res > best then
         begin

@@ -244,6 +244,19 @@ class Class2048
         }
     }
     
+    double score_helper(long board, double[] table) {
+        return table[(int)(board & ROW_MASK)] + table[(int)((board >> 16) & ROW_MASK)] +
+            table[(int)((board >> 32) & ROW_MASK)] + table[(int)((board >> 48) & ROW_MASK)];
+    }
+
+    int score_board(long board) {
+        return (int)score_helper(board,  score_table);
+    }
+
+    double score_heur_board(long board) {
+        return score_helper(board, heur_score_table) + score_helper(transpose(board), heur_score_table);
+    }
+
     int count_distinct_tiles(long board)
     {
         int bitset = 0;
@@ -259,19 +272,6 @@ class Class2048
             count++;
         }
         return count;
-    }
-
-    double score_helper(long board, double[] table) {
-        return table[(int)(board & ROW_MASK)] + table[(int)((board >> 16) & ROW_MASK)] +
-            table[(int)((board >> 32) & ROW_MASK)] + table[(int)((board >> 48) & ROW_MASK)];
-    }
-
-    int score_board(long board) {
-        return (int)score_helper(board,  score_table);
-    }
-
-    double score_heur_board(long board) {
-        return score_helper(board, heur_score_table) + score_helper(transpose(board), heur_score_table);
     }
 
     double score_tilechoose_node(eval_state state, long board, double cprob) {

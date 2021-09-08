@@ -255,6 +255,19 @@ func execute_move(move int, board board_t) board_t {
 	}
 }
 
+func score_helper(board board_t, table *[TABLESIZE]float64) float64 {
+	return table[(board>>0)&ROW_MASK] + table[(board>>16)&ROW_MASK] +
+		table[(board>>32)&ROW_MASK] + table[(board>>48)&ROW_MASK]
+}
+
+func score_board(board board_t) uint32 {
+	return uint32(score_helper(board, &score_table))
+}
+
+func score_heur_board(board board_t) float64 {
+	return score_helper(board, &heur_score_table) + score_helper(transpose(board), &heur_score_table)
+}
+
 func count_distinct_tiles(board board_t) int {
 	var bitset uint16 = 0
 
@@ -270,19 +283,6 @@ func count_distinct_tiles(board board_t) int {
 		count++
 	}
 	return count
-}
-
-func score_helper(board board_t, table *[TABLESIZE]float64) float64 {
-	return table[(board>>0)&ROW_MASK] + table[(board>>16)&ROW_MASK] +
-		table[(board>>32)&ROW_MASK] + table[(board>>48)&ROW_MASK]
-}
-
-func score_heur_board(board board_t) float64 {
-	return score_helper(board, &heur_score_table) + score_helper(transpose(board), &heur_score_table)
-}
-
-func score_board(board board_t) uint32 {
-	return uint32(score_helper(board, &score_table))
 }
 
 func score_tilechoose_node(state *eval_state, board board_t, cprob float64) float64 {

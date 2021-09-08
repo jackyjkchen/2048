@@ -210,6 +210,19 @@ function execute_move(move, board)
     end
 end
 
+function score_helper(board, table)
+    return table[(board >>  0) & ROW_MASK] + table[(board >> 16) & ROW_MASK] +
+           table[(board >> 32) & ROW_MASK] + table[(board >> 48) & ROW_MASK]
+end
+
+function score_board(board)
+    return math.floor(score_helper(board, score_table))
+end
+
+function score_heur_board(board)
+    return score_helper(board, heur_score_table) + score_helper(transpose(board), heur_score_table)
+end
+
 function count_distinct_tiles(board)
     bitset = 0
 
@@ -226,19 +239,6 @@ function count_distinct_tiles(board)
         count = count + 1
     end
     return count
-end
-
-function score_helper(board, table)
-    return table[(board >>  0) & ROW_MASK] + table[(board >> 16) & ROW_MASK] +
-           table[(board >> 32) & ROW_MASK] + table[(board >> 48) & ROW_MASK]
-end
-
-function score_heur_board(board)
-    return score_helper(board, heur_score_table) + score_helper(transpose(board), heur_score_table)
-end
-
-function score_board(board)
-    return math.floor(score_helper(board, score_table))
 end
 
 function score_tilechoose_node(state, board, cprob)

@@ -90,6 +90,7 @@ begin
     count_empty := x and $f;
 end;
 
+{$ifdef FASTMODE}
 const
     TABLESIZE = 65536;
 type
@@ -193,10 +194,126 @@ begin
     execute_move_row := ret;
 end;
 
+function score_helper(board : board_t; var table : score_table_t) : dword;
+begin
+    score_helper := table[(board shr  0) and ROW_MASK] +
+                    table[(board shr 16) and ROW_MASK] +
+                    table[(board shr 32) and ROW_MASK] +
+                    table[(board shr 48) and ROW_MASK];
+end;
+{$else}
+function execute_move_helper(row : row_t) : row_t;
+var
+    i, j     : integer;
+    row_line : array[0..3] of byte;
+begin
+    row_line[0] := (row shr  0) and $f;
+    row_line[1] := (row shr  4) and $f;
+    row_line[2] := (row shr  8) and $f;
+    row_line[3] := (row shr 12) and $f;
+
+    i := 0;
+    while i < 3 do
+    begin
+        j := i + 1;
+        while j < 4 do
+        begin
+            if row_line[j] <> 0 then break;
+            j := j + 1;
+        end;
+        if j = 4 then break;
+
+        if row_line[i] = 0 then
+        begin
+            row_line[i] := row_line[j];
+            row_line[j] := 0;
+            i := i - 1;
+        end
+        else if row_line[i] = row_line[j] then
+        begin
+            if row_line[i] <> $f then
+                row_line[i] := row_line[i] + 1;
+            row_line[j] := 0;
+        end;
+        i := i + 1;
+    end;
+
+    execute_move_helper := (row_line[0] shl 0) or (row_line[1] shl 4) or (row_line[2] shl 8) or (row_line[3] shl 12);
+end;
+
+function execute_move_col(board : board_t; _move : integer) : board_t;
+var
+    ret ,t : board_t;
+    i : integer;
+    row, rev_row : row_t;
+begin
+    ret := board;
+    t := transpose(board);
+    for i := 0 to 3 do
+    begin
+        row := (t shr (i shl 4)) and ROW_MASK;
+        if _move = UP then begin
+            ret := ret xor (unpack_col(row xor execute_move_helper(row)) shl (i shl 2));
+        end else if _move = DOWN then begin
+            rev_row := reverse_row(row);
+            ret := ret xor (unpack_col(row xor reverse_row(execute_move_helper(rev_row))) shl (i shl 2));
+        end;
+    end;
+    execute_move_col := ret;
+end;
+
+function execute_move_row(board : board_t; _move : integer) : board_t;
+var
+    ret : board_t;
+    i : integer;
+    row, rev_row : row_t;
+begin
+    ret := board;
+    for i := 0 to 3 do
+    begin
+        row := (board shr (i shl 4)) and ROW_MASK;
+        if _move = LEFT then begin
+            ret := ret xor (board_t(row xor execute_move_helper(row)) shl (i shl 4));
+        end else if _move = RIGHT then begin
+            rev_row := reverse_row(row);
+            ret := ret xor (board_t(row xor reverse_row(execute_move_helper(rev_row))) shl (i shl 4));
+        end;
+    end;
+    execute_move_row := ret;
+end;
+
+function score_helper(board : board_t) : dword;
+var
+    i, j : integer;
+    row_line : array[0..3] of byte;
+    score : dword;
+    row : row_t;
+    rank : byte;
+begin
+    score := 0;
+    for j := 0 to 3 do
+    begin
+        row := (board shr (j shl 4)) and ROW_MASK;
+        row_line[0] := (row shr  0) and $f;
+        row_line[1] := (row shr  4) and $f;
+        row_line[2] := (row shr  8) and $f;
+        row_line[3] := (row shr 12) and $f;
+        for i := 0 to 3 do
+        begin
+            rank := row_line[i];
+            if rank >= 2 then
+                score := score + ((rank - 1) * (1 shl rank));
+        end;
+    end;
+    score_helper := score;
+end;
+{$endif}
+
 function execute_move(_move : integer; board : board_t) : board_t;
 var
     ret : board_t;
 begin
+{$ifdef FASTMODE}
     if _move = UP then
         ret := execute_move_col(board, row_left_table)
     else if _move = DOWN then
@@ -205,22 +322,24 @@ begin
         ret := execute_move_row(board, row_left_table)
     else if _move = RIGHT then
         ret := execute_move_row(board, row_right_table)
+{$else}
+    if (_move = UP) or (_move = DOWN) then
+        ret := execute_move_col(board, _move)
+    else if (_move = LEFT) or (_move = RIGHT) then
+        ret := execute_move_row(board, _move)
+{$endif}
     else
         ret := not board_t(0);
     execute_move := ret
 end;
 
-function score_helper(board : board_t; var table : score_table_t) : dword;
-begin
-    score_helper := table[(board shr  0) and ROW_MASK] +
-                    table[(board shr 16) and ROW_MASK] +
-                    table[(board shr 32) and ROW_MASK] +
-                    table[(board shr 48) and ROW_MASK];
-end;
-
 function score_board(board : board_t) : dword;
 begin
+{$ifdef FASTMODE}
     score_board := score_helper(board, score_table);
+{$else}
+    score_board := score_helper(board);
+{$endif}
 end;
 
 function ask_for_move(board : board_t) : integer;
@@ -381,6 +500,8 @@ end;
 
 begin
     randomize;
+{$ifdef FASTMODE}
     init_tables;
+{$endif}
     play_game(@ask_for_move);
 end.

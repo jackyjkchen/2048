@@ -213,9 +213,7 @@ static int count_empty(board_t x) {
 static row_t row_left_table[TABLESIZE];
 static row_t row_right_table[TABLESIZE];
 static uint32 score_table[TABLESIZE];
-#endif
 
-#ifdef FASTMODE
 static void init_tables(void) {
     row_t row = 0, rev_row = 0;
     row_t result = 0, rev_result = 0;
@@ -267,9 +265,7 @@ static void init_tables(void) {
         row_right_table[rev_row] = rev_row ^ rev_result;
     } while (row++ != TABLESIZE - 1);
 }
-#endif
 
-#ifdef FASTMODE
 static board_t execute_move_col(board_t board, row_t *table) {
     board_t ret = board;
     board_t t = transpose(board);
@@ -291,6 +287,10 @@ static board_t execute_move_row(board_t board, row_t *table) {
     return ret;
 }
 
+static uint32 score_helper(board_t board, const uint32 *table) {
+    return table[(board >> 0) & ROW_MASK] + table[(board >> 16) & ROW_MASK] +
+        table[(board >> 32) & ROW_MASK] + table[(board >> 48) & ROW_MASK];
+}
 #else
 static row_t execute_move_helper(row_t row) {
     int i = 0, j = 0;
@@ -361,6 +361,28 @@ static board_t execute_move_row(board_t board, int move) {
     return ret;
 }
 
+static uint32 score_helper(board_t board) {
+    int i = 0, j = 0;
+    uint8 line[4] = { 0 };
+    uint32 score = 0;
+
+    for (j = 0; j < 4; ++j) {
+        row_t row = (row_t)((board >> (j << 4)) & ROW_MASK);
+
+        line[0] = (row >> 0) & 0xf;
+        line[1] = (row >> 4) & 0xf;
+        line[2] = (row >> 8) & 0xf;
+        line[3] = (row >> 12) & 0xf;
+        for (i = 0; i < 4; ++i) {
+            uint8 rank = line[i];
+
+            if (rank >= 2) {
+                score += (rank - 1) * (1 << rank);
+            }
+        }
+    }
+    return score;
+}
 #endif
 
 static board_t execute_move(int move, board_t board) {
@@ -386,36 +408,6 @@ static board_t execute_move(int move, board_t board) {
         return ~W64LIT(0);
     }
 }
-
-#ifdef FASTMODE
-static uint32 score_helper(board_t board, const uint32 *table) {
-    return table[(board >> 0) & ROW_MASK] + table[(board >> 16) & ROW_MASK] +
-        table[(board >> 32) & ROW_MASK] + table[(board >> 48) & ROW_MASK];
-}
-#else
-static uint32 score_helper(board_t board) {
-    int i = 0, j = 0;
-    uint8 line[4] = { 0 };
-    uint32 score = 0;
-
-    for (j = 0; j < 4; ++j) {
-        row_t row = (row_t)((board >> (j << 4)) & ROW_MASK);
-
-        line[0] = (row >> 0) & 0xf;
-        line[1] = (row >> 4) & 0xf;
-        line[2] = (row >> 8) & 0xf;
-        line[3] = (row >> 12) & 0xf;
-        for (i = 0; i < 4; ++i) {
-            uint8 rank = line[i];
-
-            if (rank >= 2) {
-                score += (rank - 1) * (1 << rank);
-            }
-        }
-    }
-    return score;
-}
-#endif
 
 static uint32 score_board(board_t board) {
 #ifdef FASTMODE

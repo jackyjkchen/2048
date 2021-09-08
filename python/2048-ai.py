@@ -26,6 +26,22 @@ DOWN = 1
 LEFT = 2
 RIGHT = 3
 
+TABLESIZE = 65536
+row_left_table = [0] * TABLESIZE
+row_right_table = [0] * TABLESIZE
+score_table = [0] * TABLESIZE
+heur_score_table = [0] * TABLESIZE
+
+SCORE_LOST_PENALTY = 200000.0
+SCORE_MONOTONICITY_POWER = 4.0
+SCORE_MONOTONICITY_WEIGHT = 47.0
+SCORE_SUM_POWER = 3.5
+SCORE_SUM_WEIGHT = 11.0
+SCORE_MERGES_WEIGHT = 700.0
+SCORE_EMPTY_WEIGHT = 270.0
+CPROB_THRESH_BASE = 0.0001
+CACHE_DEPTH_LIMIT = 15
+
 def unpack_col(row):
     return (row | (row << 12) | (row << 24) | (row << 36)) & COL_MASK
 
@@ -64,22 +80,6 @@ def count_empty(x):
     x += x >>  8
     x += x >>  4
     return x & 0xf
-
-TABLESIZE = 65536
-row_left_table = [0] * TABLESIZE
-row_right_table = [0] * TABLESIZE
-score_table = [0] * TABLESIZE
-heur_score_table = [0] * TABLESIZE
-
-SCORE_LOST_PENALTY = 200000.0
-SCORE_MONOTONICITY_POWER = 4.0
-SCORE_MONOTONICITY_WEIGHT = 47.0
-SCORE_SUM_POWER = 3.5
-SCORE_SUM_WEIGHT = 11.0
-SCORE_MERGES_WEIGHT = 700.0
-SCORE_EMPTY_WEIGHT = 270.0
-CPROB_THRESH_BASE = 0.0001
-CACHE_DEPTH_LIMIT = 15
 
 class trans_table_entry_t:
     def __init__(self, depth, heuristic):
@@ -199,6 +199,16 @@ def execute_move(move, board):
     else:
         return INT64_MASK
 
+def score_helper(board, table):
+    return table[(board >>  0) & ROW_MASK] + table[(board >> 16) & ROW_MASK] + \
+           table[(board >> 32) & ROW_MASK] + table[(board >> 48) & ROW_MASK]
+
+def score_board(board):
+    return score_helper(board, score_table)
+
+def score_heur_board(board):
+    return score_helper(board, heur_score_table) + score_helper(transpose(board), heur_score_table)
+
 def count_distinct_tiles(board):
     bitset = 0
 
@@ -214,16 +224,6 @@ def count_distinct_tiles(board):
         bitset &= bitset - 1
         count += 1
     return count
-
-def score_helper(board, table):
-    return table[(board >>  0) & ROW_MASK] + table[(board >> 16) & ROW_MASK] + \
-           table[(board >> 32) & ROW_MASK] + table[(board >> 48) & ROW_MASK]
-
-def score_heur_board(board):
-    return score_helper(board, heur_score_table) + score_helper(transpose(board), heur_score_table)
-
-def score_board(board):
-    return score_helper(board, score_table)
 
 def score_tilechoose_node(state, board, cprob):
     if (cprob < CPROB_THRESH_BASE) or (state.curdepth >= state.depth_limit):
