@@ -284,11 +284,16 @@ gnu pascal 2.1 (linux, mingw, djgpp)
 
 ## pascal/2048-ai.pas
 
-Pascal AI实现，使用uint64+查表法，TDictionary cache，默认多线程。
+Pascal AI实现，使用uint64+查表法，TDictionary cache，由预处理MULTI_THREAD决定是否使用多线程。
 
 已测试编译器和平台：
 ```
 free pascal 3.2+ (linux, win32, freebsd, macos, dos32)
+```
+
+使用多线程的编译命令行示例：
+```
+fpc -dFASTMODE -dMULTI_THREAD -O2 pascal/2048-ai.pas
 ```
 
 
@@ -335,14 +340,12 @@ gfortran 4.0+ (linux, mingw, mingw-w64, cygwin, freebsd, djgpp)
 ```
 
 编译命令行示例：
-
 ```
 gcc-3.4.6 -O2 -c fortran/f77deps.c -o f77deps.o
 g77-3.4.6 -O2 fortran/2048f.f f77deps.o -o 2048
 ```
 
 使用-std=gnu，也可使用gfortran编译器：
-
 ```
 gcc -std=c90 -O2 -c fortran/f90deps.c -o f90deps.o
 gfortran -std=gnu -O2 fortran/2048f.f f90deps.o -o 2048
@@ -390,7 +393,6 @@ lua-5.3+ (linux, win32, freebsd, macos)
 ```
 
 编译运行命令行示例：
-
 ```
 gcc -std=c99 -I/usr/include/lua5.4 -shared -fPIC -O2 lua/luadeps.c  -o luadeps.so
 ./lua/2048.lua
