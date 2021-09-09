@@ -17,7 +17,7 @@
 
 通常的ISO C90跨平台实现，非严格C90内容仅为64位整数。
 
-使用FASTMODE预处理（默认），可启用快速查表法，会增加384KiB的常驻内存开销（意味着dos平台下必须使用dos扩展）。
+使用FASTMODE预处理（默认），可启用查表法，会增加384KiB的常驻内存开销（意味着dos平台下必须使用dos扩展）。
 
 已测试编译器和平台：
 ```
@@ -43,7 +43,7 @@ openwatcom c++ 1.9 (dos16, win16)
 
 ## c/2048-16b.c
 
-不使用64位整数的严格ISO C90实现，于兼容一些老编译器，由于目标是老编译器，因此去掉了快速查表法部分的代码。
+不使用64位整数的严格ISO C90实现，用于兼容一些老编译器，由于目标是老编译器，因此去掉了查表法部分的代码。
 
 已测试编译器和平台：
 ```
@@ -67,7 +67,7 @@ turbo c 1.5/2.01 (dos16)
 
 ## c/2048-kr.c
 
-在c/2048-16b.c基础上改用K&R格式，用于兼容一些老编译器，由于目标是老编译器，因此去掉了快速查表法部分的代码。
+在c/2048-16b.c基础上改用K&R格式，用于兼容一些老编译器，由于目标是老编译器，因此去掉了查表法部分的代码。
 
 因为大部分现代编译器仍然支持K&R格式，能编译c/2048-16b.c的编译器应该也能编译c/2048-kr.c，因此只列出新增编译器支持。
 
@@ -81,9 +81,9 @@ msc 3.0 (dos16)
 
 AI版本，ISO C++98实现，可选支持多线程（预处理MULTI_THREAD/MULTI_THREAD_OPENMP）。
 
-由于使用std::map且动态增长内存（可能超过1MiB），因此不支持dos16/win16，无论是否启用FASTMODE预处理（默认启用，FASTMODE增加640KiB内存占用），编译器和平台支持均一致。
+由于使用std::map且动态增长内存（可能超过1MiB），因此不支持dos16/win16，无论是否启用FASTMODE预处理（默认启用，增加640KiB内存占用），编译器和平台支持均一致。
 
-不启用MULTI_THREAD时，无须依赖thread_pool.cpp，已测试编译器和平台：
+不启用MULTI_THREAD时（默认），无须依赖thread_pool.cpp，已测试编译器和平台：
 ```
 gcc 2.8+ (linux, freebsd, macos, mingw, mingw-w64, cygwin, djgpp)
 clang 3.0+ (linux, macos, freebsd, win32)
@@ -131,7 +131,7 @@ msvc 8.0+ (win32)
 
 ## csharp/2048.cs
 
-C#实现，使用查表法。需要.net framework 2.0+。
+C#实现，查表法。需要.net framework 2.0+。
 
 已测试编译器和平台：
 ```
@@ -142,7 +142,7 @@ mono 1.1+ (linux)
 
 ## csharp/2048-ai.cs
 
-C# AI实现，使用原生Dictionary做cache，默认多线程。需要.net framework 2.0+。
+C# AI实现，查表法 + Dictionary + 多线程。需要.net framework 2.0+。
 
 已测试编译器和平台：
 ```
@@ -156,7 +156,7 @@ mono 1.1+ (linux)
 
 ## vbdotnet/2048.vb
 
-vb.net实现，使用查表法。需要.net framework 2.0+。
+vb.net实现，查表法。需要.net framework 2.0+。
 
 已测试编译器和平台：
 ```
@@ -167,7 +167,7 @@ mono 1.2.3+ (linux)
 
 ## vbdotnet/2048-ai.vb
 
-vb.net AI实现，使用原生Dictionary做cache，默认多线程。需要.net framework 2.0+。
+vb.net AI实现，查表法 + Dictionary + 多线程。需要.net framework 2.0+。
 
 已测试编译器和平台：
 ```
@@ -200,7 +200,7 @@ go build 2048.go
 
 ## go/2048-ai.go + go/godeps.c
 
-Go AI实现，查表法 + 原生map cache，默认goroutine并发，由于Go标准库不支持清除屏幕，由go/godeps.c提供。
+Go AI实现，查表法 + map + goroutine并发，由于Go标准库不支持清除屏幕，由go/godeps.c提供。
 
 编译器和平台支持同上。
 
@@ -228,7 +228,7 @@ java -Djava.library.path=. Class2048
 
 ## java/2048-ai.java + java/javadeps.c
 
-Java AI实现，查表法 + HashMap cache，默认多线程，由于Java标准库不支持清除屏幕，由JNI方式——java/javadeps.c实现。
+Java AI实现，查表法 + HashMap + 多线程，由于Java标准库不支持清除屏幕，由JNI方式——java/javadeps.c实现。
 
 Java版本和平台支持同上。
 
@@ -276,7 +276,7 @@ turbo pascal 4.0/5.5/6.0/7.1 (dos16)
 
 ## pascal/2048-ai.pas
 
-Pascal AI实现，使用uint64+查表法（FASTMODE控制，默认开启），TDictionary cache，由预处理MULTI_THREAD决定是否使用多线程。
+Pascal AI实现，查表法 + TDictionary，由预处理MULTI_THREAD决定是否使用多线程（默认不启用）。
 
 已测试编译器和平台：
 ```
@@ -294,7 +294,7 @@ fpc -dMULTI_THREAD -O2 pascal/2048-ai.pas
 
 ## fortran/2048.F03
 
-现代Fortran2003实现，使用FASTMODE预处理判定是否使用快速查表法（默认）。
+现代Fortran2003实现，使用FASTMODE预处理判定是否使用查表法（默认）。
 
 已测试编译器和平台：
 ```
@@ -307,7 +307,7 @@ gcc 4.3+ (linux, mingw, mingw-w64, cygwin, freebsd, macos, djgpp)
 
 ## fortran/2048.F90 + fortran/f90deps.c
 
-现代Fortran90实现，使用FSASTMODE预处理判定是否使用快速查表法（默认）。由于f90没有提供iso_c_binding，所以系统相关功能（无回显输入，清除屏幕），由fortran/f90deps.c提供。
+现代Fortran90实现，使用FSASTMODE预处理判定是否使用查表法（默认）。由于f90没有提供iso_c_binding，所以系统相关功能（无回显输入，清除屏幕），由fortran/f90deps.c提供。
 
 已测试编译器和平台：
 ```
@@ -323,7 +323,7 @@ gfortran -std=f95 -O2 fortran/2048.F90 f90deps.o -o 2048
 
 ## (fortran/2048f.f or fortran/2048s.f) + fortran/f77deps.c
 
-传统Fortran77实现，固定模式源码格式，2048f.f使用快速查表法，2048s.f不使用，由于f77没有提供iso_c_binding，所以系统相关功能（无回显输入，清除屏幕），由fortran/f77deps.c提供。
+传统Fortran77实现，固定模式源码格式，2048f.f使用查表法，2048s.f不使用，由于f77没有提供iso_c_binding，所以系统相关功能（无回显输入，清除屏幕），由fortran/f77deps.c提供。
 
 已测试编译器和平台：
 ```
