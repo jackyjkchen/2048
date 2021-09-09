@@ -3,11 +3,25 @@
 ROW_MASK = 0xFFFF
 COL_MASK = 0x000F000F000F000F
 
-
 UP = 0
 DOWN = 1
 LEFT = 2
 RIGHT = 3
+
+TABLESIZE = 65536
+row_table = {}
+score_table = {}
+score_heur_table ={}
+
+SCORE_LOST_PENALTY = 200000.0
+SCORE_MONOTONICITY_POWER = 4.0
+SCORE_MONOTONICITY_WEIGHT = 47.0
+SCORE_SUM_POWER = 3.5
+SCORE_SUM_WEIGHT = 11.0
+SCORE_MERGES_WEIGHT = 700.0
+SCORE_EMPTY_WEIGHT = 270.0
+CPROB_THRESH_BASE = 0.0001
+CACHE_DEPTH_LIMIT = 15
 
 luadeps = require 'luadeps'
 
@@ -59,32 +73,14 @@ function count_empty(x)
     x = ~x & 0x1111111111111111
     x = x + (x >> 32)
     x = x + (x >> 16)
-    x = x + (x >>  8)
-    x = x + (x >>  4)
+    x = x + (x >> 8)
+    x = x + (x >> 4)
     return x & 0xf
 end
 
-TABLESIZE = 65536
-row_left_table = {}
-row_right_table = {}
-score_table = {}
-heur_score_table ={}
-
-SCORE_LOST_PENALTY = 200000.0
-SCORE_MONOTONICITY_POWER = 4.0
-SCORE_MONOTONICITY_WEIGHT = 47.0
-SCORE_SUM_POWER = 3.5
-SCORE_SUM_WEIGHT = 11.0
-SCORE_MERGES_WEIGHT = 700.0
-SCORE_EMPTY_WEIGHT = 270.0
-CPROB_THRESH_BASE = 0.0001
-CACHE_DEPTH_LIMIT = 15
-
 function init_tables()
     for row = 0, 65535, 1 do
-        local rev_row = 0
         local result = 0
-        local rev_result = 0
         local score = 0.0
         local line = {}
         line[0] = row & 0xf
@@ -139,7 +135,7 @@ function init_tables()
             end
         end
 
-        heur_score_table[row] = SCORE_LOST_PENALTY + SCORE_EMPTY_WEIGHT * empty + SCORE_MERGES_WEIGHT * merges -
+        score_heur_table[row] = SCORE_LOST_PENALTY + SCORE_EMPTY_WEIGHT * empty + SCORE_MERGES_WEIGHT * merges -
             SCORE_MONOTONICITY_WEIGHT * math.min(monotonicity_left, monotonicity_right) - SCORE_SUM_WEIGHT * sum
 
         i = 0
@@ -169,58 +165,64 @@ function init_tables()
         end
 
         result = line[0] | (line[1] << 4) | (line[2] << 8) | (line[3] << 12)
-        rev_result = reverse_row(result)
-        rev_row = reverse_row(row)
-
-        row_left_table [    row] =     row ~     result
-        row_right_table[rev_row] = rev_row ~ rev_result
+        row_table[row] = row ~ result
     end
 end
 
-function execute_move_col(board, table)
+function execute_move_col(board, move)
     local ret = board
     local t = transpose(board)
-    ret = ret ~ (unpack_col(table[(t >>  0) & ROW_MASK]) <<  0)
-    ret = ret ~ (unpack_col(table[(t >> 16) & ROW_MASK]) <<  4)
-    ret = ret ~ (unpack_col(table[(t >> 32) & ROW_MASK]) <<  8)
-    ret = ret ~ (unpack_col(table[(t >> 48) & ROW_MASK]) << 12)
+    if (move == UP) then
+        ret = ret ~ unpack_col(row_table[t & ROW_MASK])
+        ret = ret ~ (unpack_col(row_table[(t >> 16) & ROW_MASK]) << 4)
+        ret = ret ~ (unpack_col(row_table[(t >> 32) & ROW_MASK]) << 8)
+        ret = ret ~ (unpack_col(row_table[(t >> 48) & ROW_MASK]) << 12)
+    elseif (move == DOWN) then
+        ret = ret ~ unpack_col(reverse_row(row_table[reverse_row(t & ROW_MASK)]))
+        ret = ret ~ (unpack_col(reverse_row(row_table[reverse_row((t >> 16) & ROW_MASK)])) << 4)
+        ret = ret ~ (unpack_col(reverse_row(row_table[reverse_row((t >> 32) & ROW_MASK)])) << 8)
+        ret = ret ~ (unpack_col(reverse_row(row_table[reverse_row((t >> 48) & ROW_MASK)])) << 12)
+    end
     return ret
 end
 
-function execute_move_row(board, table)
+function execute_move_row(board, move)
     local ret = board
-    ret = ret ~ (table[(board >>  0) & ROW_MASK] <<  0)
-    ret = ret ~ (table[(board >> 16) & ROW_MASK] << 16)
-    ret = ret ~ (table[(board >> 32) & ROW_MASK] << 32)
-    ret = ret ~ (table[(board >> 48) & ROW_MASK] << 48)
+    if (move == LEFT) then
+        ret = ret ~ row_table[board & ROW_MASK]
+        ret = ret ~ (row_table[(board >> 16) & ROW_MASK] << 16)
+        ret = ret ~ (row_table[(board >> 32) & ROW_MASK] << 32)
+        ret = ret ~ (row_table[(board >> 48) & ROW_MASK] << 48)
+    elseif (move == RIGHT) then
+        ret = ret ~ reverse_row(row_table[reverse_row(board & ROW_MASK)])
+        ret = ret ~ (reverse_row(row_table[reverse_row((board >> 16) & ROW_MASK)]) << 16)
+        ret = ret ~ (reverse_row(row_table[reverse_row((board >> 32) & ROW_MASK)]) << 32)
+        ret = ret ~ (reverse_row(row_table[reverse_row((board >> 48) & ROW_MASK)]) << 48)
+    end
     return ret
 end
 
 function execute_move(move, board)
-    if (move == UP) then
-        return execute_move_col(board, row_left_table)
-    elseif (move == DOWN) then
-        return execute_move_col(board, row_right_table)
-    elseif (move == LEFT) then
-        return execute_move_row(board, row_left_table)
-    elseif (move == RIGHT) then
-        return execute_move_row(board, row_right_table)
+    if (move == UP) or (move == DOWN) then
+        return execute_move_col(board, move)
+    elseif (move == LEFT) or (move == RIGHT) then
+        return execute_move_row(board, move)
     else
         return 0xFFFFFFFFFFFFFFFF
     end
 end
 
 function score_helper(board, table)
-    return table[(board >>  0) & ROW_MASK] + table[(board >> 16) & ROW_MASK] +
+    return table[board & ROW_MASK] + table[(board >> 16) & ROW_MASK] +
            table[(board >> 32) & ROW_MASK] + table[(board >> 48) & ROW_MASK]
 end
 
 function score_board(board)
-    return math.floor(score_helper(board, score_table))
+    return score_helper(board, score_table)
 end
 
 function score_heur_board(board)
-    return score_helper(board, heur_score_table) + score_helper(transpose(board), heur_score_table)
+    return score_helper(board, score_heur_table) + score_helper(transpose(board), score_heur_table)
 end
 
 function count_distinct_tiles(board)

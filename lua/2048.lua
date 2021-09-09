@@ -60,8 +60,8 @@ function count_empty(x)
     x = ~x & 0x1111111111111111
     x = x + (x >> 32)
     x = x + (x >> 16)
-    x = x + (x >>  8)
-    x = x + (x >>  4)
+    x = x + (x >> 8)
+    x = x + (x >> 4)
     return x & 0xf
 end
 
@@ -147,13 +147,8 @@ function score_helper(board)
 
     for j = 0, 3, 1 do
         row = (board >> (j << 4)) & ROW_MASK
-        local line = {}
-        line[0] = row & 0xf
-        line[1] = (row >> 4) & 0xf
-        line[2] = (row >> 8) & 0xf
-        line[3] = (row >> 12) & 0xf
         for i = 0, 3, 1 do
-            local rank = line[i]
+            local rank = (row >> (i << 2)) & 0xf
             if (rank >= 2) then
                 score = score + (rank - 1) * (1 << rank)
             end

@@ -27,10 +27,9 @@ LEFT = 2
 RIGHT = 3
 
 TABLESIZE = 65536
-row_left_table = [0] * TABLESIZE
-row_right_table = [0] * TABLESIZE
+row_table = [0] * TABLESIZE
 score_table = [0] * TABLESIZE
-heur_score_table = [0] * TABLESIZE
+score_heur_table = [0] * TABLESIZE
 
 SCORE_LOST_PENALTY = 200000.0
 SCORE_MONOTONICITY_POWER = 4.0
@@ -77,8 +76,8 @@ def count_empty(x):
     x = ~x & 0x1111111111111111
     x += x >> 32
     x += x >> 16
-    x += x >>  8
-    x += x >>  4
+    x += x >> 8
+    x += x >> 4
     return x & 0xf
 
 class trans_table_entry_t:
@@ -97,10 +96,8 @@ class eval_state:
 
 def init_tables():
     for row in range(0, 65536):
-        rev_row = 0
         result = 0
-        rev_result = 0
-        score = 0.0
+        score = 0
         line = [row & 0xf, (row >> 4) & 0xf, (row >> 8) & 0xf, (row >> 12) & 0xf]
 
         for i in range(0, 4):
@@ -140,7 +137,7 @@ def init_tables():
             else:
                 monotonicity_right += math.pow(line[i], SCORE_MONOTONICITY_POWER) - math.pow(line[i - 1], SCORE_MONOTONICITY_POWER)
 
-        heur_score_table[row] = SCORE_LOST_PENALTY + SCORE_EMPTY_WEIGHT * empty + SCORE_MERGES_WEIGHT * merges - \
+        score_heur_table[row] = SCORE_LOST_PENALTY + SCORE_EMPTY_WEIGHT * empty + SCORE_MERGES_WEIGHT * merges - \
             SCORE_MONOTONICITY_WEIGHT * min(monotonicity_left, monotonicity_right) - SCORE_SUM_WEIGHT * sum_
 
         i = 0
@@ -164,50 +161,54 @@ def init_tables():
             i += 1
 
         result = line[0] | (line[1] << 4) | (line[2] << 8) | (line[3] << 12)
-        rev_result = reverse_row(result)
-        rev_row = reverse_row(row)
+        row_table[row] = row ^ result
 
-        row_left_table [    row] =     row ^     result
-        row_right_table[rev_row] = rev_row ^ rev_result
-
-def execute_move_col(board, table):
+def execute_move_col(board, move):
     ret = board
     t = transpose(board)
-    ret ^= unpack_col(table[(t >>  0) & ROW_MASK]) <<  0
-    ret ^= unpack_col(table[(t >> 16) & ROW_MASK]) <<  4
-    ret ^= unpack_col(table[(t >> 32) & ROW_MASK]) <<  8
-    ret ^= unpack_col(table[(t >> 48) & ROW_MASK]) << 12
+    if move == UP:
+        ret ^= unpack_col(row_table[t & ROW_MASK])
+        ret ^= unpack_col(row_table[(t >> 16) & ROW_MASK]) << 4
+        ret ^= unpack_col(row_table[(t >> 32) & ROW_MASK]) << 8
+        ret ^= unpack_col(row_table[(t >> 48) & ROW_MASK]) << 12
+    elif move == DOWN:
+        ret ^= unpack_col(reverse_row(row_table[reverse_row(t & ROW_MASK)]))
+        ret ^= unpack_col(reverse_row(row_table[reverse_row((t >> 16) & ROW_MASK)])) << 4
+        ret ^= unpack_col(reverse_row(row_table[reverse_row((t >> 32) & ROW_MASK)])) << 8
+        ret ^= unpack_col(reverse_row(row_table[reverse_row((t >> 48) & ROW_MASK)])) << 12
     return ret
 
-def execute_move_row(board, table):
+def execute_move_row(board, move):
     ret = board
-    ret ^= table[(board >>  0) & ROW_MASK] <<  0
-    ret ^= table[(board >> 16) & ROW_MASK] << 16
-    ret ^= table[(board >> 32) & ROW_MASK] << 32
-    ret ^= table[(board >> 48) & ROW_MASK] << 48
+    if move == LEFT:
+        ret ^= row_table[board & ROW_MASK]
+        ret ^= row_table[(board >> 16) & ROW_MASK] << 16
+        ret ^= row_table[(board >> 32) & ROW_MASK] << 32
+        ret ^= row_table[(board >> 48) & ROW_MASK] << 48
+    elif move == RIGHT:
+        ret ^= reverse_row(row_table[reverse_row(board & ROW_MASK)])
+        ret ^= reverse_row(row_table[reverse_row((board >> 16) & ROW_MASK)]) << 16
+        ret ^= reverse_row(row_table[reverse_row((board >> 32) & ROW_MASK)]) << 32
+        ret ^= reverse_row(row_table[reverse_row((board >> 48) & ROW_MASK)]) << 48
     return ret
 
 def execute_move(move, board):
-    if (move == UP):
-        return execute_move_col(board, row_left_table)
-    elif (move == DOWN):
-        return execute_move_col(board, row_right_table)
-    elif (move == LEFT):
-        return execute_move_row(board, row_left_table)
-    elif (move == RIGHT):
-        return execute_move_row(board, row_right_table)
+    if move == UP or move == DOWN:
+        return execute_move_col(board, move)
+    elif move == LEFT or move == RIGHT:
+        return execute_move_row(board, move)
     else:
         return INT64_MASK
 
 def score_helper(board, table):
-    return table[(board >>  0) & ROW_MASK] + table[(board >> 16) & ROW_MASK] + \
+    return table[board & ROW_MASK] + table[(board >> 16) & ROW_MASK] + \
            table[(board >> 32) & ROW_MASK] + table[(board >> 48) & ROW_MASK]
 
 def score_board(board):
     return score_helper(board, score_table)
 
 def score_heur_board(board):
-    return score_helper(board, heur_score_table) + score_helper(transpose(board), heur_score_table)
+    return score_helper(board, score_heur_table) + score_helper(transpose(board), score_heur_table)
 
 def count_distinct_tiles(board):
     bitset = 0

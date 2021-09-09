@@ -154,7 +154,7 @@ static board_t unpack_col(row_t row) {
     board.r0 = (row & 0xF000) >> 12;
     board.r1 = (row & 0x0F00) >> 8;
     board.r2 = (row & 0x00F0) >> 4;
-    board.r3 = (row & 0x000F) >> 0;
+    board.r3 = row & 0x000F;
     return board;
 }
 
@@ -231,7 +231,7 @@ static row_t execute_move_helper(row_t row) {
     int i = 0, j = 0;
     uint8 line[4];
 
-    line[0] = (row >> 0) & 0xf;
+    line[0] = row & 0xf;
     line[1] = (row >> 4) & 0xf;
     line[2] = (row >> 8) & 0xf;
     line[3] = (row >> 12) & 0xf;
@@ -256,7 +256,7 @@ static row_t execute_move_helper(row_t row) {
         }
     }
 
-    return (line[0] << 0) | (line[1] << 4) | (line[2] << 8) | (line[3] << 12);
+    return line[0] | (line[1] << 4) | (line[2] << 8) | (line[3] << 12);
 }
 
 static board_t execute_move_col(board_t board, int move) {

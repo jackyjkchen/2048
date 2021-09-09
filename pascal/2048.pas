@@ -85,8 +85,8 @@ begin
     x := (not x) and $1111111111111111;
     x := x + (x shr 32);
     x := x + (x shr 16);
-    x := x + (x shr  8);
-    x := x + (x shr  4);
+    x := x + (x shr 8);
+    x := x + (x shr 4);
     count_empty := x and $f;
 end;
 
@@ -103,26 +103,23 @@ type
     score_table_t =  array[0..(TABLESIZE)-1] of dword;
 
 var
-    row_left_table  : row_table_t;
-    row_right_table : row_table_t;
-    score_table     : score_table_t;
+    row_table   : row_table_t;
+    score_table : score_table_t;
 
 procedure init_tables;
 var
-    row, rev_row, row_result, rev_result : row_t;
+    row, row_result : row_t;
     i, j, rank : integer;
     row_line   : array[0..3] of byte;
     score      : dword;
 begin
     row := 0;
-    rev_row := 0;
     row_result := 0;
-    rev_result := 0;
     repeat
         score := 0;
-        row_line[0] := (row shr  0) and $f;
-        row_line[1] := (row shr  4) and $f;
-        row_line[2] := (row shr  8) and $f;
+        row_line[0] := row and $f;
+        row_line[1] := (row shr 4) and $f;
+        row_line[2] := (row shr 8) and $f;
         row_line[3] := (row shr 12) and $f;
 
         for i := 0 to 3 do
@@ -159,52 +156,56 @@ begin
             i := i + 1;
         end;
 
-        row_result := (row_line[0] shl  0) or 
-                      (row_line[1] shl  4) or 
-                      (row_line[2] shl  8) or 
-                      (row_line[3] shl 12);
-
-        rev_result := reverse_row(row_result);
-        rev_row    := reverse_row(row);
-
-        row_left_table[row]      := row     xor row_result;
-        row_right_table[rev_row] := rev_row xor rev_result;
+        row_result := row_line[0] or (row_line[1] shl 4) or (row_line[2] shl 8) or (row_line[3] shl 12);
+        row_table[row] := row xor row_result;
 
         row := row + 1;
     until row = 0;
 end;
 
-function execute_move_col(board : board_t; var table : row_table_t) : board_t;
+function execute_move_col(board : board_t; _move : integer) : board_t;
 var
     ret, t : board_t;
 begin
     ret := board;
     t := transpose(board);
-    ret := ret xor (unpack_col(table[(t shr  0) and ROW_MASK]) shl  0);
-    ret := ret xor (unpack_col(table[(t shr 16) and ROW_MASK]) shl  4);
-    ret := ret xor (unpack_col(table[(t shr 32) and ROW_MASK]) shl  8);
-    ret := ret xor (unpack_col(table[(t shr 48) and ROW_MASK]) shl 12);
+    if _move = UP then begin
+        ret := ret xor unpack_col(row_table[t and ROW_MASK]);
+        ret := ret xor (unpack_col(row_table[(t shr 16) and ROW_MASK]) shl 4);
+        ret := ret xor (unpack_col(row_table[(t shr 32) and ROW_MASK]) shl 8);
+        ret := ret xor (unpack_col(row_table[(t shr 48) and ROW_MASK]) shl 12);
+    end else if _move = DOWN then begin
+        ret := ret xor unpack_col(reverse_row(row_table[reverse_row(t and ROW_MASK)]));
+        ret := ret xor (unpack_col(reverse_row(row_table[reverse_row((t shr 16) and ROW_MASK)])) shl 4);
+        ret := ret xor (unpack_col(reverse_row(row_table[reverse_row((t shr 32) and ROW_MASK)])) shl 8);
+        ret := ret xor (unpack_col(reverse_row(row_table[reverse_row((t shr 48) and ROW_MASK)])) shl 12);
+    end;
     execute_move_col := ret;
 end;
 
-function execute_move_row(board : board_t; var table : row_table_t) : board_t;
+function execute_move_row(board : board_t; _move : integer) : board_t;
 var
     ret : board_t;
 begin
     ret := board;
-    ret := ret xor (board_t(table[(board shr  0) and ROW_MASK]) shl  0);
-    ret := ret xor (board_t(table[(board shr 16) and ROW_MASK]) shl 16);
-    ret := ret xor (board_t(table[(board shr 32) and ROW_MASK]) shl 32);
-    ret := ret xor (board_t(table[(board shr 48) and ROW_MASK]) shl 48);
+    if _move = LEFT then begin
+        ret := ret xor board_t(row_table[board and ROW_MASK]);
+        ret := ret xor (board_t(row_table[(board shr 16) and ROW_MASK]) shl 16);
+        ret := ret xor (board_t(row_table[(board shr 32) and ROW_MASK]) shl 32);
+        ret := ret xor (board_t(row_table[(board shr 48) and ROW_MASK]) shl 48);
+    end else if _move = RIGHT then begin
+        ret := ret xor board_t(reverse_row(row_table[reverse_row(board and ROW_MASK)]));
+        ret := ret xor (board_t(reverse_row(row_table[reverse_row((board shr 16) and ROW_MASK)])) shl 16);
+        ret := ret xor (board_t(reverse_row(row_table[reverse_row((board shr 32) and ROW_MASK)])) shl 32);
+        ret := ret xor (board_t(reverse_row(row_table[reverse_row((board shr 48) and ROW_MASK)])) shl 48);
+    end;
     execute_move_row := ret;
 end;
 
-function score_helper(board : board_t; var table : score_table_t) : dword;
+function score_helper(board : board_t) : dword;
 begin
-    score_helper := table[(board shr  0) and ROW_MASK] +
-                    table[(board shr 16) and ROW_MASK] +
-                    table[(board shr 32) and ROW_MASK] +
-                    table[(board shr 48) and ROW_MASK];
+    score_helper := score_table[board and ROW_MASK] + score_table[(board shr 16) and ROW_MASK] +
+        score_table[(board shr 32) and ROW_MASK] + score_table[(board shr 48) and ROW_MASK];
 end;
 {$else}
 function execute_move_helper(row : row_t) : row_t;
@@ -212,9 +213,9 @@ var
     i, j     : integer;
     row_line : array[0..3] of byte;
 begin
-    row_line[0] := (row shr  0) and $f;
-    row_line[1] := (row shr  4) and $f;
-    row_line[2] := (row shr  8) and $f;
+    row_line[0] := row and $f;
+    row_line[1] := (row shr 4) and $f;
+    row_line[2] := (row shr 8) and $f;
     row_line[3] := (row shr 12) and $f;
 
     i := 0;
@@ -243,7 +244,7 @@ begin
         i := i + 1;
     end;
 
-    execute_move_helper := (row_line[0] shl 0) or (row_line[1] shl 4) or (row_line[2] shl 8) or (row_line[3] shl 12);
+    execute_move_helper := row_line[0] or (row_line[1] shl 4) or (row_line[2] shl 8) or (row_line[3] shl 12);
 end;
 
 function execute_move_col(board : board_t; _move : integer) : board_t;
@@ -290,7 +291,6 @@ end;
 function score_helper(board : board_t) : dword;
 var
     i, j : integer;
-    row_line : array[0..3] of byte;
     score : dword;
     row : row_t;
     rank : byte;
@@ -299,13 +299,9 @@ begin
     for j := 0 to 3 do
     begin
         row := (board shr (j shl 4)) and ROW_MASK;
-        row_line[0] := (row shr  0) and $f;
-        row_line[1] := (row shr  4) and $f;
-        row_line[2] := (row shr  8) and $f;
-        row_line[3] := (row shr 12) and $f;
         for i := 0 to 3 do
         begin
-            rank := row_line[i];
+            rank := (row shr (i shl 2)) and $f;
             if rank >= 2 then
                 score := score + ((rank - 1) * (1 shl rank));
         end;
@@ -318,21 +314,10 @@ function execute_move(_move : integer; board : board_t) : board_t;
 var
     ret : board_t;
 begin
-{$if FASTMODE <> 0}
-    if _move = UP then
-        ret := execute_move_col(board, row_left_table)
-    else if _move = DOWN then
-        ret := execute_move_col(board, row_right_table)
-    else if _move = LEFT then
-        ret := execute_move_row(board, row_left_table)
-    else if _move = RIGHT then
-        ret := execute_move_row(board, row_right_table)
-{$else}
     if (_move = UP) or (_move = DOWN) then
         ret := execute_move_col(board, _move)
     else if (_move = LEFT) or (_move = RIGHT) then
         ret := execute_move_row(board, _move)
-{$endif}
     else
         ret := not board_t(0);
     execute_move := ret
@@ -340,11 +325,7 @@ end;
 
 function score_board(board : board_t) : dword;
 begin
-{$if FASTMODE <> 0}
-    score_board := score_helper(board, score_table);
-{$else}
     score_board := score_helper(board);
-{$endif}
 end;
 
 function ask_for_move(board : board_t) : integer;

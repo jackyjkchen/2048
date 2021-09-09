@@ -90,8 +90,8 @@ def count_empty(x):
     x = ~x & 0x1111111111111111
     x += x >> 32
     x += x >> 16
-    x += x >>  8
-    x += x >>  4
+    x += x >> 8
+    x += x >> 4
     return x & 0xf
 
 def execute_move_helper(row):
@@ -156,10 +156,8 @@ def score_helper(board):
     score = 0
     for j in range(0, 4):
         row = (board >> (j << 4)) & ROW_MASK
-        line = [row & 0xf, (row >> 4) & 0xf, (row >> 8) & 0xf, (row >> 12) & 0xf]
-
         for i in range(0, 4):
-            rank = line[i]
+            rank = (row >> (i << 2)) & 0xf
             if rank >= 2:
                 score += (rank - 1) * (1 << rank)
     return score

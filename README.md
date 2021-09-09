@@ -112,9 +112,9 @@ borland c++ 5.5+ (win32)
 * msvc 5.0sp3能够编译成功，但生成的多线程代码错误。
 
 
-本实现亦支持openmp多线程，由预处理MULTI_THREAD_OPENMP控制，编译示例如下，以gcc为例：
+本实现亦支持openmp多线程，由预处理OPENMP_THREAD控制，编译示例如下，以gcc为例：
 ```
-g++ -DMULTI_THREAD_OPENMP -O2 -fopenmp cpp/2048-ai.cpp -o 2048
+g++ -DOPENMP_THREAD -O2 -fopenmp cpp/2048-ai.cpp -o 2048
 ```
 
 openmp多线程不依赖thread_pool.cpp，但编译器和平台更为受限，已测试编译器和平台：
@@ -260,7 +260,6 @@ fpc -dFASTMODE=0 -O2 pascal/2048.pas
 ```
 free pascal 2.2+ (linux, win32, freebsd, macos, dos32)
 turbo pascal 7.1 (dos16)
-gnu pascal 2.1 (linux, mingw, djgpp)
 ```
 
 
@@ -272,7 +271,6 @@ gnu pascal 2.1 (linux, mingw, djgpp)
 ```
 free pascal 2.2+ (linux, win32, freebsd, macos, dos32)
 turbo pascal 4.0/5.5/6.0/7.1 (dos16)
-gnu pascal 2.1 (linux, mingw, djgpp)
 ```
 
 

@@ -69,8 +69,8 @@ function count_empty() {
     x=$((~x & 0x1111111111111111))
     x=$((x + (x >> 32)))
     x=$((x + (x >> 16)))
-    x=$((x + (x >>  8)))
-    x=$((x + (x >>  4)))
+    x=$((x + (x >> 8)))
+    x=$((x + (x >> 4)))
     echo $((x & 0xf))
 }
 
@@ -112,7 +112,7 @@ function execute_move_helper() {
         i=$((i + 1))
     done
 
-    echo $(((line[0] << 0) | (line[1] << 4) | (line[2] << 8) | (line[3] << 12)))
+    echo $((line[0] | (line[1] << 4) | (line[2] << 8) | (line[3] << 12)))
 }
 
 function execute_move_col() {

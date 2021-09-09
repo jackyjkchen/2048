@@ -31,9 +31,9 @@ const
 procedure unpack_col(row : row_t; var board : board_t);
 begin
     board[0] := (row and $F000) shr 12;
-    board[1] := (row and $0F00) shr  8;
-    board[2] := (row and $00F0) shr  4;
-    board[3] := (row and $000F) shr  0;
+    board[1] := (row and $0F00) shr 8;
+    board[2] := (row and $00F0) shr 4;
+    board[3] := row and $000F;
 end;
 
 function reverse_row(row : row_t): row_t;
@@ -117,9 +117,9 @@ var
   row_line : array[0..3] of byte;
 label 1, 2;
 begin
-    row_line[0] := (row shr  0) and $f;
-    row_line[1] := (row shr  4) and $f;
-    row_line[2] := (row shr  8) and $f;
+    row_line[0] := row and $f;
+    row_line[1] := (row shr 4) and $f;
+    row_line[2] := (row shr 8) and $f;
     row_line[3] := (row shr 12) and $f;
 
     i := 0;
@@ -148,7 +148,7 @@ begin
         i := i + 1;
     end;
     2:
-    execute_move_helper := (row_line[0] shl 0) or (row_line[1] shl 4) or (row_line[2] shl 8) or (row_line[3] shl 12);
+    execute_move_helper := row_line[0] or (row_line[1] shl 4) or (row_line[2] shl 8) or (row_line[3] shl 12);
 end;
 
 procedure execute_move_col(var board : board_t; _move : integer);
@@ -203,7 +203,6 @@ end;
 function score_helper(board : board_t) : longint;
 var
   i, j : integer;
-  row_line : array[0..3] of byte;
   score : longint;
   row : row_t;
   rank : byte;
@@ -212,13 +211,9 @@ begin
     for j := 0 to 3 do
     begin
         row := board[3-j];
-        row_line[0] := (row shr  0) and $f;
-        row_line[1] := (row shr  4) and $f;
-        row_line[2] := (row shr  8) and $f;
-        row_line[3] := (row shr 12) and $f;
         for i := 0 to 3 do
         begin
-            rank := row_line[i];
+            rank := (row shr (i shl 2)) and $f;
             if rank >= 2 then
                 score := score + ((rank - 1) * (1 shl rank));
         end;

@@ -5,8 +5,7 @@ Public Module Class2048
     Const ROW_MASK As ULong = &HFFFFUL
     Const COL_MASK As ULong = &HF000F000F000FUL
     Const TABLESIZE As Integer = 65536
-    Private row_left_table As UShort() = New UShort(TABLESIZE - 1) {}
-    Private row_right_table As UShort() = New UShort(TABLESIZE - 1) {}
+    Private row_table As UShort() = New UShort(TABLESIZE - 1) {}
     Private score_table As UInteger() = New UInteger(TABLESIZE - 1) {}
     Delegate Function get_move_func_t(board As ULong) As Integer
     Const UP As Integer = 0
@@ -77,14 +76,14 @@ Public Module Class2048
     End Function
 
     Private Sub init_tables()
-        Dim row As UShort = 0, rev_row As UShort = 0
-        Dim result As UShort = 0, rev_result As UShort = 0
+        Dim row As UShort = 0
+        Dim result As UShort = 0
         Dim line As UShort() = New UShort(3) {}
 
         Do
             Dim i As Integer = 0, j As Integer = 0
             Dim score As UInteger = 0
-            line(0) = (row >> 0) And &HF
+            line(0) = row And &HF
             line(1) = (row >> 4) And &HF
             line(2) = (row >> 8) And &HF
             line(3) = (row >> 12) And &HF
@@ -121,55 +120,62 @@ Public Module Class2048
                 i += 1
             End While
 
-            result = (line(0) << 0) Or (line(1) << 4) Or (line(2) << 8) Or (line(3) << 12)
-            rev_result = reverse_row(result)
-            rev_row = reverse_row(row)
-            row_left_table(row) = row Xor result
-            row_right_table(rev_row) = rev_row Xor rev_result
+            result = line(0) Or (line(1) << 4) Or (line(2) << 8) Or (line(3) << 12)
+            row_table(row) = row Xor result
+
             row += 1
         Loop While row <> (TABLESIZE - 1)
     End Sub
 
-    Private Function execute_move_col(board As ULong, ByRef table As UShort()) As ULong
+    Private Function execute_move_col(board As ULong, _move As Integer) As ULong
         Dim ret As ULong = board
         Dim t As ULong = transpose(board)
-        ret = ret Xor (unpack_col(table((t >> 0) And ROW_MASK)) << 0)
-        ret = ret Xor (unpack_col(table((t >> 16) And ROW_MASK)) << 4)
-        ret = ret Xor (unpack_col(table((t >> 32) And ROW_MASK)) << 8)
-        ret = ret Xor (unpack_col(table((t >> 48) And ROW_MASK)) << 12)
+        If _move = UP Then
+            ret = ret Xor unpack_col(row_table(t And ROW_MASK))
+            ret = ret Xor (unpack_col(row_table((t >> 16) And ROW_MASK)) << 4)
+            ret = ret Xor (unpack_col(row_table((t >> 32) And ROW_MASK)) << 8)
+            ret = ret Xor (unpack_col(row_table((t >> 48) And ROW_MASK)) << 12)
+        ElseIf _move = DOWN Then
+            ret = ret Xor unpack_col(reverse_row(row_table(reverse_row(t And ROW_MASK))))
+            ret = ret Xor (unpack_col(reverse_row(row_table(reverse_row((t >> 16) And ROW_MASK)))) << 4)
+            ret = ret Xor (unpack_col(reverse_row(row_table(reverse_row((t >> 32) And ROW_MASK)))) << 8)
+            ret = ret Xor (unpack_col(reverse_row(row_table(reverse_row((t >> 48) And ROW_MASK)))) << 12)
+        End If
         Return ret
     End Function
 
-    Private Function execute_move_row(board As ULong, ByRef table As UShort()) As ULong
+    Private Function execute_move_row(board As ULong, _move As Integer ) As ULong
         Dim ret As ULong = board
-        ret = ret Xor (CULng(table((board >> 0) And ROW_MASK)) << 0)
-        ret = ret Xor (CULng(table((board >> 16) And ROW_MASK)) << 16)
-        ret = ret Xor (CULng(table((board >> 32) And ROW_MASK)) << 32)
-        ret = ret Xor (CULng(table((board >> 48) And ROW_MASK)) << 48)
+        If _move = LEFT Then
+            ret = ret Xor CULng(row_table(board And ROW_MASK))
+            ret = ret Xor (CULng(row_table((board >> 16) And ROW_MASK)) << 16)
+            ret = ret Xor (CULng(row_table((board >> 32) And ROW_MASK)) << 32)
+            ret = ret Xor (CULng(row_table((board >> 48) And ROW_MASK)) << 48)
+        ElseIf _move = RIGHT Then
+            ret = ret Xor CULng(reverse_row(row_table(reverse_row(board And ROW_MASK))))
+            ret = ret Xor (CULng(reverse_row(row_table(reverse_row((board >> 16) And ROW_MASK)))) << 16)
+            ret = ret Xor (CULng(reverse_row(row_table(reverse_row((board >> 32) And ROW_MASK)))) << 32)
+            ret = ret Xor (CULng(reverse_row(row_table(reverse_row((board >> 48) And ROW_MASK)))) << 48)
+        End If
         Return ret
     End Function
 
-    Private Function execute_move(move As Integer, board As ULong) As ULong
-        Select Case move
-            Case UP
-                Return execute_move_col(board, row_left_table)
-            Case DOWN
-                Return execute_move_col(board, row_right_table)
-            Case LEFT
-                Return execute_move_row(board, row_left_table)
-            Case RIGHT
-                Return execute_move_row(board, row_right_table)
-            Case Else
-                Return &HFFFFFFFFFFFFFFFFUL
-        End Select
+    Private Function execute_move(_move As Integer, board As ULong) As ULong
+        If _move = UP Or _move = DOWN Then
+            Return execute_move_col(board, _move)
+        ElseIf _move = LEFT Or _move = RIGHT Then
+            Return execute_move_row(board, _move)
+        Else
+            Return &HFFFFFFFFFFFFFFFFUL
+        End If
     End Function
 
-    Private Function score_helper(board As ULong, ByRef table As UInteger()) As UInteger
-        Return table(board >> 0 And ROW_MASK) + table(board >> 16 And ROW_MASK) + table(board >> 32 And ROW_MASK) + table(board >> 48 And ROW_MASK)
+    Private Function score_helper(board As ULong) As UInteger
+        Return score_table(board And ROW_MASK) + score_table(board >> 16 And ROW_MASK) + score_table(board >> 32 And ROW_MASK) + score_table(board >> 48 And ROW_MASK)
     End Function
 
     Private Function score_board(board As ULong) As UInteger
-        Return score_helper(board, score_table)
+        Return score_helper(board)
     End Function
 
     Private Function ask_for_move(board As ULong) As Integer
@@ -240,24 +246,24 @@ Public Module Class2048
         Dim retract_pos As Integer = 0, retract_num As Integer = 0
 
         While True
-            Dim move As Integer = 0
+            Dim _move As Integer = 0
             Dim tile As ULong = 0
             Dim newboard As ULong
             clear_screen()
 
-            For move = 0 To 3
-                If execute_move(move, board) <> board Then Exit For
+            For _move = 0 To 3
+                If execute_move(_move, board) <> board Then Exit For
             Next
 
-            If move = 4 Then Exit While
+            If _move = 4 Then Exit While
             current_score = CInt(score_board(board) - scorepenalty)
             moveno += 1
             Console.WriteLine("Move #{0}, current score={1}(+{2})", moveno, current_score, current_score - last_score)
             last_score = current_score
-            move = get_move(board)
-            If move < 0 Then Exit While
+            _move = get_move(board)
+            If _move < 0 Then Exit While
 
-            If move = RETRACT Then
+            If _move = RETRACT Then
 
                 If moveno <= 1 OrElse retract_num <= 0 Then
                     moveno -= 1
@@ -273,7 +279,7 @@ Public Module Class2048
                 Continue While
             End If
 
-            newboard = execute_move(move, board)
+            newboard = execute_move(_move, board)
 
             If newboard = board Then
                 moveno -= 1

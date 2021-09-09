@@ -91,7 +91,7 @@ sub execute_move_helper {
     my $i = 0;
     my $j = 0;
 
-    $line[0] = ($row >> 0) & 0xf;
+    $line[0] = $row & 0xf;
     $line[1] = ($row >> 4) & 0xf;
     $line[2] = ($row >> 8) & 0xf;
     $line[3] = ($row >> 12) & 0xf;
@@ -118,7 +118,7 @@ sub execute_move_helper {
         }
     }
 
-    return ($line[0] << 0) | ($line[1] << 4) | ($line[2] << 8) | ($line[3] << 12);
+    return $line[0] | ($line[1] << 4) | ($line[2] << 8) | ($line[3] << 12);
 }
 
 sub execute_move_col {

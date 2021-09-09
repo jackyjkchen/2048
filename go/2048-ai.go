@@ -218,12 +218,12 @@ func execute_move_col(board board_t, move int) board_t {
 	var t board_t = transpose(board)
 
 	if move == UP {
-		ret ^= unpack_col(row_table[t&ROW_MASK]) << 0
+		ret ^= unpack_col(row_table[t&ROW_MASK])
 		ret ^= unpack_col(row_table[(t>>16)&ROW_MASK]) << 4
 		ret ^= unpack_col(row_table[(t>>32)&ROW_MASK]) << 8
 		ret ^= unpack_col(row_table[(t>>48)&ROW_MASK]) << 12
 	} else if move == DOWN {
-		ret ^= unpack_col(reverse_row(row_table[reverse_row(row_t(t&ROW_MASK))])) << 0
+		ret ^= unpack_col(reverse_row(row_table[reverse_row(row_t(t&ROW_MASK))]))
 		ret ^= unpack_col(reverse_row(row_table[reverse_row(row_t((t>>16)&ROW_MASK))])) << 4
 		ret ^= unpack_col(reverse_row(row_table[reverse_row(row_t((t>>32)&ROW_MASK))])) << 8
 		ret ^= unpack_col(reverse_row(row_table[reverse_row(row_t((t>>48)&ROW_MASK))])) << 12
@@ -235,12 +235,12 @@ func execute_move_row(board board_t, move int) board_t {
 	var ret board_t = board
 
 	if move == LEFT {
-		ret ^= board_t(row_table[board&ROW_MASK]) << 0
+		ret ^= board_t(row_table[board&ROW_MASK])
 		ret ^= board_t(row_table[(board>>16)&ROW_MASK]) << 16
 		ret ^= board_t(row_table[(board>>32)&ROW_MASK]) << 32
 		ret ^= board_t(row_table[(board>>48)&ROW_MASK]) << 48
 	} else if move == RIGHT {
-		ret ^= board_t(reverse_row(row_table[reverse_row(row_t(board&ROW_MASK))])) << 0
+		ret ^= board_t(reverse_row(row_table[reverse_row(row_t(board&ROW_MASK))]))
 		ret ^= board_t(reverse_row(row_table[reverse_row(row_t((board>>16)&ROW_MASK))])) << 16
 		ret ^= board_t(reverse_row(row_table[reverse_row(row_t((board>>32)&ROW_MASK))])) << 32
 		ret ^= board_t(reverse_row(row_table[reverse_row(row_t((board>>48)&ROW_MASK))])) << 48
@@ -259,12 +259,12 @@ func execute_move(move int, board board_t) board_t {
 }
 
 func score_helper(board board_t) uint32 {
-	return score_table[(board>>0)&ROW_MASK] + score_table[(board>>16)&ROW_MASK] +
+	return score_table[board&ROW_MASK] + score_table[(board>>16)&ROW_MASK] +
 		score_table[(board>>32)&ROW_MASK] + score_table[(board>>48)&ROW_MASK]
 }
 
 func score_heur_helper(board board_t) float64 {
-	return score_heur_table[(board>>0)&ROW_MASK] + score_heur_table[(board>>16)&ROW_MASK] +
+	return score_heur_table[board&ROW_MASK] + score_heur_table[(board>>16)&ROW_MASK] +
 		score_heur_table[(board>>32)&ROW_MASK] + score_heur_table[(board>>48)&ROW_MASK]
 }
 

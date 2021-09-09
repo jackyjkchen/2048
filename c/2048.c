@@ -225,7 +225,7 @@ static void init_tables(void) {
         uint8 line[4] = { 0 };
         uint32 score = 0;
 
-        line[0] = (row >> 0) & 0xf;
+        line[0] = row & 0xf;
         line[1] = (row >> 4) & 0xf;
         line[2] = (row >> 8) & 0xf;
         line[3] = (row >> 12) & 0xf;
@@ -259,7 +259,7 @@ static void init_tables(void) {
             }
         }
 
-        result = (line[0] << 0) | (line[1] << 4) | (line[2] << 8) | (line[3] << 12);
+        result = line[0] | (line[1] << 4) | (line[2] << 8) | (line[3] << 12);
 
         row_table[row] = row ^ result;
     } while (row++ != TABLESIZE - 1);
@@ -270,12 +270,12 @@ static board_t execute_move_col(board_t board, int move) {
     board_t t = transpose(board);
 
     if (move == UP) {
-        ret ^= unpack_col(row_table[(t >> 0) & ROW_MASK]) << 0;
+        ret ^= unpack_col(row_table[t & ROW_MASK]);
         ret ^= unpack_col(row_table[(t >> 16) & ROW_MASK]) << 4;
         ret ^= unpack_col(row_table[(t >> 32) & ROW_MASK]) << 8;
         ret ^= unpack_col(row_table[(t >> 48) & ROW_MASK]) << 12;
     } else if (move == DOWN) {
-        ret ^= unpack_col(reverse_row(row_table[reverse_row((t >> 0) & ROW_MASK)])) << 0;
+        ret ^= unpack_col(reverse_row(row_table[reverse_row(t & ROW_MASK)]));
         ret ^= unpack_col(reverse_row(row_table[reverse_row((t >> 16) & ROW_MASK)])) << 4;
         ret ^= unpack_col(reverse_row(row_table[reverse_row((t >> 32) & ROW_MASK)])) << 8;
         ret ^= unpack_col(reverse_row(row_table[reverse_row((t >> 48) & ROW_MASK)])) << 12;
@@ -287,12 +287,12 @@ static board_t execute_move_row(board_t board, int move) {
     board_t ret = board;
 
     if (move == LEFT) {
-        ret ^= (board_t)(row_table[(board >> 0) & ROW_MASK]) << 0;
+        ret ^= (board_t)(row_table[board & ROW_MASK]);
         ret ^= (board_t)(row_table[(board >> 16) & ROW_MASK]) << 16;
         ret ^= (board_t)(row_table[(board >> 32) & ROW_MASK]) << 32;
         ret ^= (board_t)(row_table[(board >> 48) & ROW_MASK]) << 48;
     } else if (move == RIGHT) {
-        ret ^= (board_t)(reverse_row(row_table[reverse_row((board >> 0) & ROW_MASK)])) << 0;
+        ret ^= (board_t)(reverse_row(row_table[reverse_row(board & ROW_MASK)]));
         ret ^= (board_t)(reverse_row(row_table[reverse_row((board >> 16) & ROW_MASK)])) << 16;
         ret ^= (board_t)(reverse_row(row_table[reverse_row((board >> 32) & ROW_MASK)])) << 32;
         ret ^= (board_t)(reverse_row(row_table[reverse_row((board >> 48) & ROW_MASK)])) << 48;
@@ -301,7 +301,7 @@ static board_t execute_move_row(board_t board, int move) {
 }
 
 static uint32 score_helper(board_t board) {
-    return score_table[(board >> 0) & ROW_MASK] + score_table[(board >> 16) & ROW_MASK] +
+    return score_table[board & ROW_MASK] + score_table[(board >> 16) & ROW_MASK] +
         score_table[(board >> 32) & ROW_MASK] + score_table[(board >> 48) & ROW_MASK];
 }
 #else
@@ -309,7 +309,7 @@ static row_t execute_move_helper(row_t row) {
     int i = 0, j = 0;
     uint8 line[4] = { 0 };
 
-    line[0] = (row >> 0) & 0xf;
+    line[0] = row & 0xf;
     line[1] = (row >> 4) & 0xf;
     line[2] = (row >> 8) & 0xf;
     line[3] = (row >> 12) & 0xf;
@@ -334,7 +334,7 @@ static row_t execute_move_helper(row_t row) {
         }
     }
 
-    return (line[0] << 0) | (line[1] << 4) | (line[2] << 8) | (line[3] << 12);
+    return line[0] | (line[1] << 4) | (line[2] << 8) | (line[3] << 12);
 }
 
 static board_t execute_move_col(board_t board, int move) {

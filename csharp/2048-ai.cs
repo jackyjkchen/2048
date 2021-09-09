@@ -122,8 +122,7 @@ class Class2048
         {
             int i = 0, j = 0;
             UInt32 score = 0;
-
-            line[0] = (UInt16)((row >> 0) & 0xf);
+            line[0] = (UInt16)(row & 0xf);
             line[1] = (UInt16)((row >> 4) & 0xf);
             line[2] = (UInt16)((row >> 8) & 0xf);
             line[3] = (UInt16)((row >> 12) & 0xf);
@@ -212,9 +211,7 @@ class Class2048
                     line[j] = 0;
                 }
             }
-
-            result = (UInt16)((line[0] << 0) | (line[1] << 4) | (line[2] << 8) | (line[3] << 12));
-
+            result = (UInt16)(line[0] | (line[1] << 4) | (line[2] << 8) | (line[3] << 12));
             row_table[row] = (UInt16)(row ^ result);
         } while (row++ != TABLESIZE - 1);
     }
@@ -225,12 +222,12 @@ class Class2048
         UInt64 t = transpose(board);
 
         if (move == UP) {
-            ret ^= unpack_col(row_table[(t >> 0) & ROW_MASK]) << 0;
+            ret ^= unpack_col(row_table[t & ROW_MASK]);
             ret ^= unpack_col(row_table[(t >> 16) & ROW_MASK]) << 4;
             ret ^= unpack_col(row_table[(t >> 32) & ROW_MASK]) << 8;
             ret ^= unpack_col(row_table[(t >> 48) & ROW_MASK]) << 12;
         } else if (move == DOWN) {
-            ret ^= unpack_col(reverse_row(row_table[reverse_row((UInt16)((t >> 0) & ROW_MASK))])) << 0;
+            ret ^= unpack_col(reverse_row(row_table[reverse_row((UInt16)(t & ROW_MASK))]));
             ret ^= unpack_col(reverse_row(row_table[reverse_row((UInt16)((t >> 16) & ROW_MASK))])) << 4;
             ret ^= unpack_col(reverse_row(row_table[reverse_row((UInt16)((t >> 32) & ROW_MASK))])) << 8;
             ret ^= unpack_col(reverse_row(row_table[reverse_row((UInt16)((t >> 48) & ROW_MASK))])) << 12;
@@ -243,12 +240,12 @@ class Class2048
         UInt64 ret = board;
 
         if (move == LEFT) {
-            ret ^= (UInt64)(row_table[(board >> 0) & ROW_MASK]) << 0;
+            ret ^= (UInt64)(row_table[board & ROW_MASK]);
             ret ^= (UInt64)(row_table[(board >> 16) & ROW_MASK]) << 16;
             ret ^= (UInt64)(row_table[(board >> 32) & ROW_MASK]) << 32;
             ret ^= (UInt64)(row_table[(board >> 48) & ROW_MASK]) << 48;
         } else if (move == RIGHT) {
-            ret ^= (UInt64)(reverse_row(row_table[reverse_row((UInt16)((board >> 0) & ROW_MASK))])) << 0;
+            ret ^= (UInt64)(reverse_row(row_table[reverse_row((UInt16)(board & ROW_MASK))]));
             ret ^= (UInt64)(reverse_row(row_table[reverse_row((UInt16)((board >> 16) & ROW_MASK))])) << 16;
             ret ^= (UInt64)(reverse_row(row_table[reverse_row((UInt16)((board >> 32) & ROW_MASK))])) << 32;
             ret ^= (UInt64)(reverse_row(row_table[reverse_row((UInt16)((board >> 48) & ROW_MASK))])) << 48;
@@ -273,13 +270,13 @@ class Class2048
 
     UInt32 score_helper(UInt64 board)
     {
-        return score_table[(board >> 0) & ROW_MASK] + score_table[(board >> 16) & ROW_MASK] +
+        return score_table[board & ROW_MASK] + score_table[(board >> 16) & ROW_MASK] +
             score_table[(board >> 32) & ROW_MASK] + score_table[(board >> 48) & ROW_MASK];
     }
 
     double score_heur_helper(UInt64 board)
     {
-        return score_heur_table[(board >> 0) & ROW_MASK] + score_heur_table[(board >> 16) & ROW_MASK] +
+        return score_heur_table[board & ROW_MASK] + score_heur_table[(board >> 16) & ROW_MASK] +
             score_heur_table[(board >> 32) & ROW_MASK] + score_heur_table[(board >> 48) & ROW_MASK];
     }
 
