@@ -35,6 +35,10 @@ function c_system(cmd) bind(c, name='system')
     integer(c_int) :: c_system
 end function c_system
 
+#if !defined(FASTMODE) || (defined(FASTMODE) && FASTMODE != 0)
+#define FASTMODE 1
+#endif
+
 #ifdef _WIN32
 #define TERM_INIT
 #define TERM_CLEAR
@@ -47,7 +51,7 @@ end function c_system
 
 end interface
 
-#ifdef FASTMODE
+#if FASTMODE != 0
 integer(2) :: row_left_table(-32768:32767)
 integer(2) :: row_right_table(-32768:32767)
 integer(4) :: score_table(-32768:32767)
@@ -167,7 +171,7 @@ function count_empty(x)
     count_empty = iand(x, int(Z000F, kind=8))
 end function count_empty
 
-#ifdef FASTMODE
+#if FASTMODE != 0
 subroutine init_tables()
     integer(2) :: row, rev_row, row_result, rev_result, t0, t1, t2, t3
     integer(2) :: i, j, rank
@@ -238,7 +242,7 @@ subroutine init_tables()
 end subroutine init_tables
 #endif
 
-#ifdef FASTMODE
+#if FASTMODE != 0
 function execute_move_col(board, table)
     integer(8), value, intent(in) :: board
     integer(2) :: table(-32768:32767)
@@ -359,7 +363,7 @@ function execute_move(move, board)
     integer(8) :: execute_move
     integer(8) :: ret
 
-#ifdef FASTMODE
+#if FASTMODE != 0
     if (move == UP) then
         ret = execute_move_col(board, row_left_table)
     else if (move == DOWN) then
@@ -380,7 +384,7 @@ function execute_move(move, board)
     execute_move = ret 
 end function execute_move
 
-#ifdef FASTMODE
+#if FASTMODE != 0
 function score_helper(board, table)
     integer(8), value, intent(in) :: board
     integer(4) :: table(-32768:32767)
@@ -423,7 +427,7 @@ function score_board(board)
     integer(8), value, intent(in) :: board
     integer(4) :: score_board
 
-#ifdef FASTMODE
+#if FASTMODE != 0
     score_board = score_helper(board, score_table)
 #else
     score_board = score_helper(board)
@@ -593,7 +597,7 @@ end subroutine play_game
 subroutine main()
     TERM_INIT
     call c_srand(int(c_time(int(0, kind=c_long)), kind=c_int))
-#ifdef FASTMODE
+#if FASTMODE != 0
     call init_tables()
 #endif
     call play_game()

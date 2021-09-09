@@ -4,6 +4,10 @@
 #include <string.h>
 #include <time.h>
 
+#if !defined(FASTMODE) || (defined(FASTMODE) && FASTMODE != 0)
+#define FASTMODE 1
+#endif
+
 #if defined(__MSDOS__) || defined(_MSDOS)
 #ifndef MSDOS
 #define MSDOS
@@ -229,7 +233,7 @@ static int count_empty(board_t x) {
     return (int)(x & 0xf);
 }
 
-#ifdef FASTMODE
+#if FASTMODE != 0
 #define TABLESIZE 65536
 static row_t row_left_table[TABLESIZE];
 static row_t row_right_table[TABLESIZE];
@@ -425,10 +429,10 @@ static board_t execute_move_row(board_t board, int move) {
     return ret;
 }
 
-static float score_helper(board_t board) {
+static uint32 score_helper(board_t board) {
     int i = 0, j = 0;
     uint8 line[4] = { 0 };
-    float score = 0.0f;
+    uint32 score = 0;
 
     for (j = 0; j < 4; ++j) {
         row_t row = (row_t)((board >> (j << 4)) & ROW_MASK);
@@ -438,7 +442,7 @@ static float score_helper(board_t board) {
         line[2] = (row >> 8) & 0xf;
         line[3] = (row >> 12) & 0xf;
         for (i = 0; i < 4; ++i) {
-            uint8 rank = line[i];
+            int rank = line[i];
 
             if (rank >= 2) {
                 score += (rank - 1) * (1 << rank);
@@ -508,7 +512,7 @@ static float score_heur_helper(board_t board) {
 
 static board_t execute_move(int move, board_t board) {
     switch (move) {
-#ifdef FASTMODE
+#if FASTMODE != 0
     case UP:
         return execute_move_col(board, row_left_table);
     case DOWN:
@@ -531,15 +535,15 @@ static board_t execute_move(int move, board_t board) {
 }
 
 static uint32 score_board(board_t board) {
-#ifdef FASTMODE
+#if FASTMODE != 0
     return (uint32)score_helper(board, score_table);
 #else
-    return (uint32)score_helper(board);
+    return score_helper(board);
 #endif
 }
 
 static float score_heur_board(board_t board) {
-#ifdef FASTMODE
+#if FASTMODE != 0
     return score_helper(board, heur_score_table) + score_helper(transpose(board), heur_score_table);
 #else
     return score_heur_helper(board) + score_heur_helper(transpose(board));
@@ -797,7 +801,7 @@ int main() {
     ThreadPool &thrd_pool = get_thrd_pool();
     thrd_pool.init();
 #endif
-#ifdef FASTMODE
+#if FASTMODE != 0
     init_tables();
 #endif
     play_game(find_best_move);

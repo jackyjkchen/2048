@@ -90,7 +90,12 @@ begin
     count_empty := x and $f;
 end;
 
-{$ifdef FASTMODE}
+{$macro on}
+{$if (not defined(FASTMODE)) or (defined(FASTMODE) and FASTMODE <> 0)}
+{$define FASTMODE := 1}
+{$endif}
+
+{$if FASTMODE <> 0}
 const
     TABLESIZE = 65536;
 type
@@ -313,7 +318,7 @@ function execute_move(_move : integer; board : board_t) : board_t;
 var
     ret : board_t;
 begin
-{$ifdef FASTMODE}
+{$if FASTMODE <> 0}
     if _move = UP then
         ret := execute_move_col(board, row_left_table)
     else if _move = DOWN then
@@ -335,7 +340,7 @@ end;
 
 function score_board(board : board_t) : dword;
 begin
-{$ifdef FASTMODE}
+{$if FASTMODE <> 0}
     score_board := score_helper(board, score_table);
 {$else}
     score_board := score_helper(board);
@@ -500,7 +505,7 @@ end;
 
 begin
     randomize;
-{$ifdef FASTMODE}
+{$if FASTMODE <> 0}
     init_tables;
 {$endif}
     play_game(@ask_for_move);

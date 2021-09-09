@@ -357,7 +357,7 @@ static uint32 score_helper(board)
         line[2] = (row >> 8) & 0xf;
         line[3] = (row >> 12) & 0xf;
         for (i = 0; i < 4; ++i) {
-            uint8 rank = line[i];
+            int rank = line[i];
 
             if (rank >= 2) {
                 score += (rank - 1) * (1 << rank);

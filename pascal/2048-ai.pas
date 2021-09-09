@@ -92,7 +92,6 @@ begin
 end;
 
 const
-    TABLESIZE = 65536;
     SCORE_LOST_PENALTY        : real = 200000.0;
     SCORE_MONOTONICITY_POWER  : real = 4.0;
     SCORE_MONOTONICITY_WEIGHT : real = 47.0;
@@ -102,16 +101,6 @@ const
     SCORE_EMPTY_WEIGHT        : real = 270.0;
     CPROB_THRESH_BASE         : real = 0.0001;
     CACHE_DEPTH_LIMIT                = 15;
-
-type
-    row_table_t   =  array[0..(TABLESIZE)-1] of word;
-    score_table_t =  array[0..(TABLESIZE)-1] of real;
-
-var
-    row_left_table   : row_table_t;
-    row_right_table  : row_table_t;
-    score_table      : score_table_t;
-    heur_score_table : score_table_t;
 
 type
     trans_table_entry_t = record
@@ -127,6 +116,24 @@ type
         moves_evaled : longint;
         depth_limit  : integer;
     end;
+
+{$macro on}
+{$if (not defined(FASTMODE)) or (defined(FASTMODE) and FASTMODE <> 0)}
+{$define FASTMODE := 1}
+{$endif}
+
+{$if FASTMODE <> 0}
+const
+    TABLESIZE = 65536;
+type
+    row_table_t   =  array[0..(TABLESIZE)-1] of word;
+    score_table_t =  array[0..(TABLESIZE)-1] of real;
+
+var
+    row_left_table   : row_table_t;
+    row_right_table  : row_table_t;
+    score_table      : score_table_t;
+    heur_score_table : score_table_t;
 
 procedure init_tables;
 var
@@ -270,10 +277,192 @@ begin
     execute_move_row := ret;
 end;
 
+function score_helper(board : board_t; var table : score_table_t) : real;
+begin
+    score_helper := table[(board shr  0) and ROW_MASK] +
+                    table[(board shr 16) and ROW_MASK] +
+                    table[(board shr 32) and ROW_MASK] +
+                    table[(board shr 48) and ROW_MASK];
+end;
+{$else}
+function execute_move_helper(row : row_t) : row_t;
+var
+    i, j     : integer;
+    row_line : array[0..3] of byte;
+begin
+    row_line[0] := (row shr  0) and $f;
+    row_line[1] := (row shr  4) and $f;
+    row_line[2] := (row shr  8) and $f;
+    row_line[3] := (row shr 12) and $f;
+
+    i := 0;
+    while i < 3 do
+    begin
+        j := i + 1;
+        while j < 4 do
+        begin
+            if row_line[j] <> 0 then break;
+            j := j + 1;
+        end;
+        if j = 4 then break;
+
+        if row_line[i] = 0 then
+        begin
+            row_line[i] := row_line[j];
+            row_line[j] := 0;
+            i := i - 1;
+        end
+        else if row_line[i] = row_line[j] then
+        begin
+            if row_line[i] <> $f then
+                row_line[i] := row_line[i] + 1;
+            row_line[j] := 0;
+        end;
+        i := i + 1;
+    end;
+
+    execute_move_helper := (row_line[0] shl 0) or (row_line[1] shl 4) or (row_line[2] shl 8) or (row_line[3] shl 12);
+end;
+
+function execute_move_col(board : board_t; _move : integer) : board_t;
+var
+    ret ,t : board_t;
+    i : integer;
+    row, rev_row : row_t;
+begin
+    ret := board;
+    t := transpose(board);
+    for i := 0 to 3 do
+    begin
+        row := (t shr (i shl 4)) and ROW_MASK;
+        if _move = UP then begin
+            ret := ret xor (unpack_col(row xor execute_move_helper(row)) shl (i shl 2));
+        end else if _move = DOWN then begin
+            rev_row := reverse_row(row);
+            ret := ret xor (unpack_col(row xor reverse_row(execute_move_helper(rev_row))) shl (i shl 2));
+        end;
+    end;
+    execute_move_col := ret;
+end;
+
+function execute_move_row(board : board_t; _move : integer) : board_t;
+var
+    ret : board_t;
+    i : integer;
+    row, rev_row : row_t;
+begin
+    ret := board;
+    for i := 0 to 3 do
+    begin
+        row := (board shr (i shl 4)) and ROW_MASK;
+        if _move = LEFT then begin
+            ret := ret xor (board_t(row xor execute_move_helper(row)) shl (i shl 4));
+        end else if _move = RIGHT then begin
+            rev_row := reverse_row(row);
+            ret := ret xor (board_t(row xor reverse_row(execute_move_helper(rev_row))) shl (i shl 4));
+        end;
+    end;
+    execute_move_row := ret;
+end;
+
+function score_helper(board : board_t) : dword;
+var
+    i, j : integer;
+    row_line : array[0..3] of byte;
+    score : dword;
+    row : row_t;
+    rank : byte;
+begin
+    score := 0;
+    for j := 0 to 3 do
+    begin
+        row := (board shr (j shl 4)) and ROW_MASK;
+        row_line[0] := (row shr  0) and $f;
+        row_line[1] := (row shr  4) and $f;
+        row_line[2] := (row shr  8) and $f;
+        row_line[3] := (row shr 12) and $f;
+        for i := 0 to 3 do
+        begin
+            rank := row_line[i];
+            if rank >= 2 then
+                score := score + ((rank - 1) * (1 shl rank));
+        end;
+    end;
+    score_helper := score;
+end;
+
+function score_heur_helper(board : board_t) : real;
+var
+    row : row_t;
+    i, j, rank : integer;
+    row_line   : array[0..3] of byte;
+    heur_score, sum : real;
+    empty, merges, prev, counter : integer;
+    monotonicity_left, monotonicity_right : real;
+begin
+    heur_score := 0.0;
+    for j := 0 to 3 do
+    begin
+        sum := 0.0;
+        empty := 0;
+        merges := 0;
+        prev := 0;
+        counter := 0;
+        row := (board shr (j shl 4)) and ROW_MASK;
+        row_line[0] := (row shr  0) and $f;
+        row_line[1] := (row shr  4) and $f;
+        row_line[2] := (row shr  8) and $f;
+        row_line[3] := (row shr 12) and $f;
+        for i := 0 to 3 do
+        begin
+            rank := row_line[i];
+
+            sum := sum + power(rank, SCORE_SUM_POWER);
+            if rank = 0 then
+            begin
+                empty := empty + 1;
+            end else
+            begin
+                if prev = rank then
+                begin
+                    counter := counter + 1;
+                end
+                else if counter > 0 then
+                begin
+                    merges := merges + 1 + counter;
+                    counter := 0;
+                end;
+                prev := rank;
+            end;
+        end;
+        if counter > 0 then
+            merges := merges + 1 + counter;
+
+        monotonicity_left := 0.0;
+        monotonicity_right := 0.0;
+
+        for i := 1 to 3 do
+        begin
+            if row_line[i - 1] > row_line[i] then
+                monotonicity_left := monotonicity_left +
+                    power(row_line[i - 1], SCORE_MONOTONICITY_POWER) - power(row_line[i], SCORE_MONOTONICITY_POWER)
+            else
+                monotonicity_right := monotonicity_right +
+                    power(row_line[i], SCORE_MONOTONICITY_POWER) - power(row_line[i - 1], SCORE_MONOTONICITY_POWER);
+        end;
+
+        heur_score := heur_score + SCORE_LOST_PENALTY + SCORE_EMPTY_WEIGHT * empty + SCORE_MERGES_WEIGHT * merges -
+            SCORE_MONOTONICITY_WEIGHT * min(monotonicity_left, monotonicity_right) - SCORE_SUM_WEIGHT * sum;
+    end;
+    score_heur_helper := heur_score;
+end;
+{$endif}
+
 function execute_move(_move : integer; board : board_t) : board_t;
 var
     ret : board_t;
 begin
+{$if FASTMODE <> 0}
     if _move = UP then
         ret := execute_move_col(board, row_left_table)
     else if _move = DOWN then
@@ -282,27 +471,33 @@ begin
         ret := execute_move_row(board, row_left_table)
     else if _move = RIGHT then
         ret := execute_move_row(board, row_right_table)
+{$else}
+    if (_move = UP) or (_move = DOWN) then
+        ret := execute_move_col(board, _move)
+    else if (_move = LEFT) or (_move = RIGHT) then
+        ret := execute_move_row(board, _move)
+{$endif}
     else
         ret := not board_t(0);
     execute_move := ret
 end;
 
-function score_helper(board : board_t; var table : score_table_t) : real;
-begin
-    score_helper := table[(board shr  0) and ROW_MASK] +
-                    table[(board shr 16) and ROW_MASK] +
-                    table[(board shr 32) and ROW_MASK] +
-                    table[(board shr 48) and ROW_MASK];
-end;
-
 function score_board(board : board_t) : dword;
 begin
+{$if FASTMODE <> 0}
     score_board := round(score_helper(board, score_table));
+{$else}
+    score_board := score_helper(board);
+{$endif}
 end;
 
 function score_heur_board(board : board_t) : real;
 begin
+{$if FASTMODE <> 0}
     score_heur_board := score_helper(board, heur_score_table) + score_helper(transpose(board), heur_score_table);
+{$else}
+    score_heur_board := score_heur_helper(board) + score_heur_helper(transpose(board));
+{$endif}
 end;
 
 function count_distinct_tiles(board : board_t) : integer;
@@ -606,6 +801,8 @@ end;
 
 begin
     randomize;
+{$if FASTMODE <> 0}
     init_tables;
+{$endif}
     play_game(@find_best_move);
 end.

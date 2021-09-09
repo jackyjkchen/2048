@@ -10,5 +10,7 @@
 *.dll
 *.exe
 *.o
+*.orig
 *.out
+*.rej
 *.so

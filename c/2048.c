@@ -3,6 +3,10 @@
 #include <string.h>
 #include <time.h>
 
+#if !defined(FASTMODE) || (defined(FASTMODE) && FASTMODE != 0)
+#define FASTMODE 1
+#endif
+
 #if defined(__MSDOS__) || defined(_MSDOS)
 #ifndef MSDOS
 #define MSDOS
@@ -208,7 +212,7 @@ static int count_empty(board_t x) {
     return (int)(x & 0xf);
 }
 
-#ifdef FASTMODE
+#if FASTMODE != 0
 #define TABLESIZE 65536
 static row_t row_left_table[TABLESIZE];
 static row_t row_right_table[TABLESIZE];
@@ -387,7 +391,7 @@ static uint32 score_helper(board_t board) {
 
 static board_t execute_move(int move, board_t board) {
     switch (move) {
-#ifdef FASTMODE
+#if FASTMODE != 0
     case UP:
         return execute_move_col(board, row_left_table);
     case DOWN:
@@ -410,7 +414,7 @@ static board_t execute_move(int move, board_t board) {
 }
 
 static uint32 score_board(board_t board) {
-#ifdef FASTMODE
+#if FASTMODE != 0
     return score_helper(board, score_table);
 #else
     return score_helper(board);
@@ -538,7 +542,7 @@ void play_game(get_move_func_t get_move) {
 
 int main() {
     TERM_INIT;
-#ifdef FASTMODE
+#if FASTMODE != 0
     init_tables();
 #endif
     play_game(ask_for_move);
