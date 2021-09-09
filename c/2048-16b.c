@@ -3,10 +3,6 @@
 #include <string.h>
 #include <time.h>
 
-#if !defined(FASTMODE)
-#define FASTMODE 0
-#endif
-
 #if defined(__MSDOS__) || defined(_MSDOS)
 #ifndef MSDOS
 #define MSDOS
@@ -231,109 +227,6 @@ static int count_empty(board_t board) {
     return sum & 0xf;
 }
 
-#if FASTMODE != 0
-#define TABLESIZE 65536
-static row_t row_left_table[TABLESIZE];
-static row_t row_right_table[TABLESIZE];
-static uint32 score_table[TABLESIZE];
-
-static void init_tables(void) {
-    row_t row = 0, rev_row = 0;
-    row_t result = 0, rev_result = 0;
-
-    do {
-        int i = 0, j = 0;
-        uint8 line[4];
-        uint32 score = 0;
-
-        line[0] = (row >> 0) & 0xf;
-        line[1] = (row >> 4) & 0xf;
-        line[2] = (row >> 8) & 0xf;
-        line[3] = (row >> 12) & 0xf;
-
-        for (i = 0; i < 4; ++i) {
-            int rank = line[i];
-
-            if (rank >= 2) {
-                score += (rank - 1) * (1 << rank);
-            }
-        }
-        score_table[row] = score;
-
-        for (i = 0; i < 3; ++i) {
-            for (j = i + 1; j < 4; ++j) {
-                if (line[j] != 0)
-                    break;
-            }
-            if (j == 4)
-                break;
-
-            if (line[i] == 0) {
-                line[i] = line[j];
-                line[j] = 0;
-                i--;
-            } else if (line[i] == line[j]) {
-                if (line[i] != 0xf) {
-                    line[i]++;
-                }
-                line[j] = 0;
-            }
-        }
-
-        result = (line[0] << 0) | (line[1] << 4) | (line[2] << 8) | (line[3] << 12);
-        rev_result = reverse_row(result);
-        rev_row = reverse_row(row);
-
-        row_left_table[row] = row ^ result;
-        row_right_table[rev_row] = rev_row ^ rev_result;
-    } while (row++ != TABLESIZE - 1);
-}
-
-static board_t execute_move_col(board_t board, row_t *table) {
-    board_t ret, tmp;
-    board_t tran;
-    uint16 *t = (uint16 *)&tran;
-
-    ret = board;
-    tran = transpose(board);
-    tmp = unpack_col(table[t[3]]);
-    ret.r0 ^= tmp.r0;
-    ret.r1 ^= tmp.r1;
-    ret.r2 ^= tmp.r2;
-    ret.r3 ^= tmp.r3;
-    tmp = unpack_col(table[t[2]]);
-    ret.r0 ^= tmp.r0 << 4;
-    ret.r1 ^= tmp.r1 << 4;
-    ret.r2 ^= tmp.r2 << 4;
-    ret.r3 ^= tmp.r3 << 4;
-    tmp = unpack_col(table[t[1]]);
-    ret.r0 ^= tmp.r0 << 8;
-    ret.r1 ^= tmp.r1 << 8;
-    ret.r2 ^= tmp.r2 << 8;
-    ret.r3 ^= tmp.r3 << 8;
-    tmp = unpack_col(table[t[0]]);
-    ret.r0 ^= tmp.r0 << 12;
-    ret.r1 ^= tmp.r1 << 12;
-    ret.r2 ^= tmp.r2 << 12;
-    ret.r3 ^= tmp.r3 << 12;
-    return ret;
-}
-
-static board_t execute_move_row(board_t board, row_t *table) {
-    board_t ret;
-
-    ret = board;
-    ret.r3 ^= table[ret.r3];
-    ret.r2 ^= table[ret.r2];
-    ret.r1 ^= table[ret.r1];
-    ret.r0 ^= table[ret.r0];
-    return ret;
-}
-
-static uint32 score_helper(board_t board, const uint32 *table) {
-    return table[board.r3] + table[board.r2] + table[board.r1] + table[board.r0];
-}
-#else
 static row_t execute_move_helper(row_t row) {
     int i = 0, j = 0;
     uint8 line[4];
@@ -379,9 +272,7 @@ static board_t execute_move_col(board_t board, int move) {
         if (move == UP) {
             tmp = unpack_col(row ^ execute_move_helper(row));
         } else if (move == DOWN) {
-            row_t rev_row = reverse_row(row);
-
-            tmp = unpack_col(row ^ reverse_row(execute_move_helper(rev_row)));
+            tmp = unpack_col(row ^ reverse_row(execute_move_helper(reverse_row(row))));
         }
         ret.r0 ^= tmp.r0 << (i << 2);
         ret.r1 ^= tmp.r1 << (i << 2);
@@ -403,9 +294,7 @@ static board_t execute_move_row(board_t board, int move) {
         if (move == LEFT) {
             t[3 - i] ^= row ^ execute_move_helper(row);
         } else if (move == RIGHT) {
-            row_t rev_row = reverse_row(row);
-
-            t[3 - i] ^= row ^ reverse_row(execute_move_helper(rev_row));
+            t[3 - i] ^= row ^ reverse_row(execute_move_helper(reverse_row(row)));
         }
     }
     return ret;
@@ -413,18 +302,13 @@ static board_t execute_move_row(board_t board, int move) {
 
 static uint32 score_helper(board_t board) {
     int i = 0, j = 0;
-    uint8 line[4];
     uint32 score = 0;
 
     for (j = 0; j < 4; ++j) {
         uint16 row = ((uint16 *)&board)[3 - j];
 
-        line[0] = (row >> 0) & 0xf;
-        line[1] = (row >> 4) & 0xf;
-        line[2] = (row >> 8) & 0xf;
-        line[3] = (row >> 12) & 0xf;
         for (i = 0; i < 4; ++i) {
-            int rank = line[i];
+            int rank = (row >> (i << 2)) & 0xf;
 
             if (rank >= 2) {
                 score += (rank - 1) * (1 << rank);
@@ -433,29 +317,17 @@ static uint32 score_helper(board_t board) {
     }
     return score;
 }
-#endif
 
 static board_t execute_move(int move, board_t board) {
     board_t invalid;
 
     switch (move) {
-#if FASTMODE != 0
-    case UP:
-        return execute_move_col(board, row_left_table);
-    case DOWN:
-        return execute_move_col(board, row_right_table);
-    case LEFT:
-        return execute_move_row(board, row_left_table);
-    case RIGHT:
-        return execute_move_row(board, row_right_table);
-#else
     case UP:
     case DOWN:
         return execute_move_col(board, move);
     case LEFT:
     case RIGHT:
         return execute_move_row(board, move);
-#endif
     default:
         memset(&invalid, 0xFF, sizeof(board_t));
         return invalid;
@@ -463,11 +335,7 @@ static board_t execute_move(int move, board_t board) {
 }
 
 static uint32 score_board(board_t board) {
-#if FASTMODE != 0
-    return score_helper(board, score_table);
-#else
     return score_helper(board);
-#endif
 }
 
 int ask_for_move(board_t board) {
@@ -613,9 +481,6 @@ void play_game(get_move_func_t get_move) {
 
 int main() {
     TERM_INIT;
-#if FASTMODE != 0
-    init_tables();
-#endif
     play_game(ask_for_move);
 
     TERM_CLEAR;

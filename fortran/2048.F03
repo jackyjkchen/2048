@@ -52,8 +52,7 @@ end function c_system
 end interface
 
 #if FASTMODE != 0
-integer(2) :: row_left_table(-32768:32767)
-integer(2) :: row_right_table(-32768:32767)
+integer(2) :: row_table(-32768:32767)
 integer(4) :: score_table(-32768:32767)
 #endif
 
@@ -173,15 +172,13 @@ end function count_empty
 
 #if FASTMODE != 0
 subroutine init_tables()
-    integer(2) :: row, rev_row, row_result, rev_result, t0, t1, t2, t3
+    integer(2) :: row, row_result, t0, t1, t2, t3
     integer(2) :: i, j, rank
     integer(2) :: row_line(0:3)
     integer(4) :: score
 
     row = 0
-    rev_row = 0
     row_result = 0
-    rev_result = 0
     do row = -32768, 32767
         score = 0
         row_line(0) = iand(row, Z000F)
@@ -228,50 +225,71 @@ subroutine init_tables()
         t2 = ishft(row_line(2), 8)
         t3 = ishft(row_line(3), 12)
         row_result = ior(ior(ior(t0, t1), t2), t3)
-
-        rev_result = reverse_row(row_result)
-        rev_row    = reverse_row(row)
-
-        row_left_table(row)      = ieor(row, row_result)
-        row_right_table(rev_row) = ieor(rev_row, rev_result)
+        row_table(row) = ieor(row, row_result)
 
         if (row == 32767) then
             exit
         end if
     end do
 end subroutine init_tables
-#endif
 
-#if FASTMODE != 0
-function execute_move_col(board, table)
+function execute_move_col(board, move)
     integer(8), value, intent(in) :: board
-    integer(2) :: table(-32768:32767)
+    integer(4), value, intent(in) :: move
     integer(8) :: execute_move_col
     integer(8) :: ret, t
 
     ret = board
     t = transpose_board(board)
-    ret = ieor(ret, unpack_col(table(int(iand(t, ROW_MASK), kind=2))))
-    ret = ieor(ret, ishft(unpack_col(table(int(iand(ishft(t, -16), ROW_MASK), kind=2))), 4))
-    ret = ieor(ret, ishft(unpack_col(table(int(iand(ishft(t, -32), ROW_MASK), kind=2))), 8))
-    ret = ieor(ret, ishft(unpack_col(table(int(iand(ishft(t, -48), ROW_MASK), kind=2))), 12))
+    if (move == UP) then
+        ret = ieor(ret, unpack_col(row_table(int(iand(t, ROW_MASK), kind=2))))
+        ret = ieor(ret, ishft(unpack_col(row_table(int(iand(ishft(t, -16), ROW_MASK), kind=2))), 4))
+        ret = ieor(ret, ishft(unpack_col(row_table(int(iand(ishft(t, -32), ROW_MASK), kind=2))), 8))
+        ret = ieor(ret, ishft(unpack_col(row_table(int(iand(ishft(t, -48), ROW_MASK), kind=2))), 12))
+    else if (move == DOWN) then
+        ret = ieor(ret, unpack_col(reverse_row(row_table(reverse_row(int(iand(t, ROW_MASK), kind=2))))))
+        ret = ieor(ret, ishft(unpack_col(reverse_row(row_table(reverse_row(int(iand(ishft(t, -16), ROW_MASK), kind=2))))), 4))
+        ret = ieor(ret, ishft(unpack_col(reverse_row(row_table(reverse_row(int(iand(ishft(t, -32), ROW_MASK), kind=2))))), 8))
+        ret = ieor(ret, ishft(unpack_col(reverse_row(row_table(reverse_row(int(iand(ishft(t, -48), ROW_MASK), kind=2))))), 12))
+    end if
     execute_move_col = ret
 end function execute_move_col
 
-function execute_move_row(board, table)
+function execute_move_row(board, move)
     integer(8), value, intent(in) :: board
-    integer(2) :: table(-32768:32767)
+    integer(4), value, intent(in) :: move
     integer(8) :: execute_move_row
     integer(8) :: ret
 
     ret = board
-    ret = ieor(ret, iand(int((table(int(iand(board, ROW_MASK), kind=2))), kind=8), ROW_MASK))
-    ret = ieor(ret, ishft(iand(int((table(int(iand(ishft(board, -16), ROW_MASK), kind=2))), kind=8), ROW_MASK), 16))
-    ret = ieor(ret, ishft(iand(int((table(int(iand(ishft(board, -32), ROW_MASK), kind=2))), kind=8), ROW_MASK), 32))
-    ret = ieor(ret, ishft(iand(int((table(int(iand(ishft(board, -48), ROW_MASK), kind=2))), kind=8), ROW_MASK), 48))
+    if (move == LEFT) then
+        ret = ieor(ret, iand(int((row_table(int(iand(board, ROW_MASK), kind=2))), kind=8), ROW_MASK))
+        ret = ieor(ret, ishft(iand(int((row_table(int(iand(ishft(board, -16), ROW_MASK), kind=2))), kind=8), ROW_MASK), 16))
+        ret = ieor(ret, ishft(iand(int((row_table(int(iand(ishft(board, -32), ROW_MASK), kind=2))), kind=8), ROW_MASK), 32))
+        ret = ieor(ret, ishft(iand(int((row_table(int(iand(ishft(board, -48), ROW_MASK), kind=2))), kind=8), ROW_MASK), 48))
+    else if (move == RIGHT) then
+        ret = ieor(ret, iand(int(reverse_row(row_table(reverse_row(int(iand(board, ROW_MASK), kind=2)))), kind=8), ROW_MASK))
+        ret = ieor(ret, ishft(iand(int(reverse_row(row_table(reverse_row(int(iand(ishft(board, -16), ROW_MASK), kind=2)))), &
+              & kind=8), ROW_MASK), 16))
+        ret = ieor(ret, ishft(iand(int(reverse_row(row_table(reverse_row(int(iand(ishft(board, -32), ROW_MASK), kind=2)))), &
+              & kind=8), ROW_MASK), 32))
+        ret = ieor(ret, ishft(iand(int(reverse_row(row_table(reverse_row(int(iand(ishft(board, -48), ROW_MASK), kind=2)))), &
+              & kind=8), ROW_MASK), 48))
+    end if
     execute_move_row = ret
 end function execute_move_row
 
+function score_helper(board)
+    integer(8), value, intent(in) :: board
+    integer(4) :: score_helper
+    integer(4) :: t0, t1, t2, t3
+
+    t0 = score_table(int(iand(board, ROW_MASK), kind=2))
+    t1 = score_table(int(iand(ishft(board, -16), ROW_MASK), kind=2))
+    t2 = score_table(int(iand(ishft(board, -32), ROW_MASK), kind=2))
+    t3 = score_table(int(iand(ishft(board, -48), ROW_MASK), kind=2))
+    score_helper = t0 + t1 + t2 + t3
+end function score_helper
 #else
 function execute_move_helper(row)
     integer(2), value, intent(in) :: row
@@ -337,7 +355,7 @@ function execute_move_col(board, move)
 end function execute_move_col
 
 function execute_move_row(board, move)
-    integer(8), value, intent(in):: board
+    integer(8), value, intent(in) :: board
     integer(4), value, intent(in) :: move
     integer(8) :: execute_move_row
     integer(8) :: ret
@@ -355,65 +373,18 @@ function execute_move_row(board, move)
     end do
     execute_move_row = ret
 end function execute_move_row
-#endif
 
-function execute_move(move, board) 
-    integer(4), value, intent(in) :: move
-    integer(8), value, intent(in) :: board
-    integer(8) :: execute_move
-    integer(8) :: ret
-
-#if FASTMODE != 0
-    if (move == UP) then
-        ret = execute_move_col(board, row_left_table)
-    else if (move == DOWN) then
-        ret = execute_move_col(board, row_right_table)
-    else if (move == LEFT) then
-        ret = execute_move_row(board, row_left_table)
-    else if (move == RIGHT) then
-        ret = execute_move_row(board, row_right_table)
-#else
-    if ((move == UP) .or. (move == DOWN)) then
-        ret = execute_move_col(board, move)
-    else if ((move == LEFT) .or. (move == RIGHT)) then
-        ret = execute_move_row(board, move)
-#endif
-    else
-        ret = -1
-    end if
-    execute_move = ret 
-end function execute_move
-
-#if FASTMODE != 0
-function score_helper(board, table)
-    integer(8), value, intent(in) :: board
-    integer(4) :: table(-32768:32767)
-    integer(4) :: score_helper
-    integer(4) :: t0, t1, t2, t3
-
-    t0 = table(int(iand(board, ROW_MASK), kind=2))
-    t1 = table(int(iand(ishft(board, -16), ROW_MASK), kind=2))
-    t2 = table(int(iand(ishft(board, -32), ROW_MASK), kind=2))
-    t3 = table(int(iand(ishft(board, -48), ROW_MASK), kind=2))
-    score_helper = t0 + t1 + t2 + t3
-end function score_helper
-#else
 function score_helper(board)
     integer(8), value, intent(in) :: board
     integer(4) :: score_helper
     integer(4) :: score
-    integer(2) :: row, row_line(0:3), i, j, rank
+    integer(2) :: row, i, j, rank
 
     score = 0
     do j = 0, 3
         row = int(iand(ishft(board, -ishft(j, 4)), ROW_MASK), kind=2)
-        row_line(0) = iand(row, Z000F)
-        row_line(1) = iand(ishft(row, -4), Z000F)
-        row_line(2) = iand(ishft(row, -8), Z000F)
-        row_line(3) = iand(ishft(row, -12), Z000F)
-
         do i = 0, 3
-            rank = row_line(i)
+            rank = iand(ishft(row, -ishft(i, 2)), Z000F)
             if (rank >= 2) then
                 score = score + ((rank - 1) * ishft(1, rank))
             end if
@@ -423,15 +394,27 @@ function score_helper(board)
 end function score_helper
 #endif
 
+function execute_move(move, board)
+    integer(4), value, intent(in) :: move
+    integer(8), value, intent(in) :: board
+    integer(8) :: execute_move
+    integer(8) :: ret
+
+    if ((move == UP) .or. (move == DOWN)) then
+        ret = execute_move_col(board, move)
+    else if ((move == LEFT) .or. (move == RIGHT)) then
+        ret = execute_move_row(board, move)
+    else
+        ret = -1
+    end if
+    execute_move = ret
+end function execute_move
+
 function score_board(board)
     integer(8), value, intent(in) :: board
     integer(4) :: score_board
 
-#if FASTMODE != 0
-    score_board = score_helper(board, score_table)
-#else
     score_board = score_helper(board)
-#endif
 end function score_board
 
 function ask_for_move(board)

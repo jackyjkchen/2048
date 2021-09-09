@@ -116,8 +116,9 @@ static void term_init(s)
     tcsetattr(STDIN_FILENO, TCSANOW, &s->newt);
 }
 
-static void term_clear(s) {
+static void term_clear(s)
      term_state *s;
+{
     tcsetattr(STDIN_FILENO, TCSANOW, &s->oldt);
 }
 
@@ -288,9 +289,7 @@ static board_t execute_move_col(board, move)
         if (move == UP) {
             tmp = unpack_col(row ^ execute_move_helper(row));
         } else if (move == DOWN) {
-            row_t rev_row = reverse_row(row);
-
-            tmp = unpack_col(row ^ reverse_row(execute_move_helper(rev_row)));
+            tmp = unpack_col(row ^ reverse_row(execute_move_helper(reverse_row(row))));
         }
         ret.r0 ^= tmp.r0 << (i << 2);
         ret.r1 ^= tmp.r1 << (i << 2);
@@ -315,12 +314,30 @@ static board_t execute_move_row(board, move)
         if (move == LEFT) {
             t[3 - i] ^= row ^ execute_move_helper(row);
         } else if (move == RIGHT) {
-            row_t rev_row = reverse_row(row);
-
-            t[3 - i] ^= row ^ reverse_row(execute_move_helper(rev_row));
+            t[3 - i] ^= row ^ reverse_row(execute_move_helper(reverse_row(row)));
         }
     }
     return ret;
+}
+
+static uint32 score_helper(board)
+     board_t board;
+{
+    int i = 0, j = 0;
+    uint32 score = 0;
+
+    for (j = 0; j < 4; ++j) {
+        uint16 row = ((uint16 *)&board)[3 - j];
+
+        for (i = 0; i < 4; ++i) {
+            int rank = (row >> (i << 2)) & 0xf;
+
+            if (rank >= 2) {
+                score += (rank - 1) * (1 << rank);
+            }
+        }
+    }
+    return score;
 }
 
 static board_t execute_move(move, board)
@@ -340,31 +357,6 @@ static board_t execute_move(move, board)
         memset(&invalid, 0xFF, sizeof(board_t));
         return invalid;
     }
-}
-
-static uint32 score_helper(board)
-     board_t board;
-{
-    int i = 0, j = 0;
-    uint8 line[4];
-    uint32 score = 0;
-
-    for (j = 0; j < 4; ++j) {
-        uint16 row = ((uint16 *)&board)[3 - j];
-
-        line[0] = (row >> 0) & 0xf;
-        line[1] = (row >> 4) & 0xf;
-        line[2] = (row >> 8) & 0xf;
-        line[3] = (row >> 12) & 0xf;
-        for (i = 0; i < 4; ++i) {
-            int rank = line[i];
-
-            if (rank >= 2) {
-                score += (rank - 1) * (1 << rank);
-            }
-        }
-    }
-    return score;
 }
 
 static uint32 score_board(board)

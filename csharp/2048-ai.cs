@@ -2,16 +2,15 @@
 using System.Collections.Generic;
 using System.Threading;
 
-public class Class2048
+class Class2048
 {
     Random rand = new Random();
     const UInt64 ROW_MASK = 0xFFFF;
     const UInt64 COL_MASK = 0x000F000F000F000F;
     const int TABLESIZE = 65536;
-    UInt16[] row_left_table = new UInt16[TABLESIZE];
-    UInt16[] row_right_table = new UInt16[TABLESIZE];
-    double[] score_table = new double[TABLESIZE];
-    double[] heur_score_table = new double[TABLESIZE];
+    UInt16[] row_table = new UInt16[TABLESIZE];
+    UInt32[] score_table = new UInt32[TABLESIZE];
+    double[] score_heur_table = new double[TABLESIZE];
     delegate int get_move_func_t(UInt64 board);
     const int UP = 0;
     const int DOWN = 1;
@@ -116,8 +115,7 @@ public class Class2048
 
     void init_tables()
     {
-        UInt16 row = 0, rev_row = 0;
-        UInt16 result = 0, rev_result = 0;
+        UInt16 row = 0, result = 0;
         UInt16[] line = new UInt16[4];
 
         do
@@ -137,7 +135,7 @@ public class Class2048
                 if (rank >= 2)
                     score += (UInt32)((rank - 1) * (1 << rank));
             }
-            score_table[row] = (double)score;
+            score_table[row] = score;
 
             double sum = 0.0f;
             int empty = 0;
@@ -188,7 +186,7 @@ public class Class2048
                 }
             }
 
-            heur_score_table[row] = SCORE_LOST_PENALTY + SCORE_EMPTY_WEIGHT * empty + SCORE_MERGES_WEIGHT * merges -
+            score_heur_table[row] = SCORE_LOST_PENALTY + SCORE_EMPTY_WEIGHT * empty + SCORE_MERGES_WEIGHT * merges -
                 SCORE_MONOTONICITY_WEIGHT * Math.Min(monotonicity_left, monotonicity_right) - SCORE_SUM_WEIGHT * sum;
 
             for (i = 0; i < 3; ++i)
@@ -216,34 +214,45 @@ public class Class2048
             }
 
             result = (UInt16)((line[0] << 0) | (line[1] << 4) | (line[2] << 8) | (line[3] << 12));
-            rev_result = reverse_row(result);
-            rev_row = reverse_row(row);
 
-            row_left_table[row] = (UInt16)(row ^ result);
-            row_right_table[rev_row] = (UInt16)(rev_row ^ rev_result);
+            row_table[row] = (UInt16)(row ^ result);
         } while (row++ != TABLESIZE - 1);
     }
 
-    UInt64 execute_move_col(UInt64 board, ref UInt16[] table)
+    UInt64 execute_move_col(UInt64 board, int move)
     {
         UInt64 ret = board;
         UInt64 t = transpose(board);
 
-        ret ^= unpack_col(table[(t >> 0) & ROW_MASK]) << 0;
-        ret ^= unpack_col(table[(t >> 16) & ROW_MASK]) << 4;
-        ret ^= unpack_col(table[(t >> 32) & ROW_MASK]) << 8;
-        ret ^= unpack_col(table[(t >> 48) & ROW_MASK]) << 12;
+        if (move == UP) {
+            ret ^= unpack_col(row_table[(t >> 0) & ROW_MASK]) << 0;
+            ret ^= unpack_col(row_table[(t >> 16) & ROW_MASK]) << 4;
+            ret ^= unpack_col(row_table[(t >> 32) & ROW_MASK]) << 8;
+            ret ^= unpack_col(row_table[(t >> 48) & ROW_MASK]) << 12;
+        } else if (move == DOWN) {
+            ret ^= unpack_col(reverse_row(row_table[reverse_row((UInt16)((t >> 0) & ROW_MASK))])) << 0;
+            ret ^= unpack_col(reverse_row(row_table[reverse_row((UInt16)((t >> 16) & ROW_MASK))])) << 4;
+            ret ^= unpack_col(reverse_row(row_table[reverse_row((UInt16)((t >> 32) & ROW_MASK))])) << 8;
+            ret ^= unpack_col(reverse_row(row_table[reverse_row((UInt16)((t >> 48) & ROW_MASK))])) << 12;
+        }
         return ret;
     }
 
-    UInt64 execute_move_row(UInt64 board, ref UInt16[] table)
+    UInt64 execute_move_row(UInt64 board, int move)
     {
         UInt64 ret = board;
 
-        ret ^= (UInt64)(table[(board >> 0) & ROW_MASK]) << 0;
-        ret ^= (UInt64)(table[(board >> 16) & ROW_MASK]) << 16;
-        ret ^= (UInt64)(table[(board >> 32) & ROW_MASK]) << 32;
-        ret ^= (UInt64)(table[(board >> 48) & ROW_MASK]) << 48;
+        if (move == LEFT) {
+            ret ^= (UInt64)(row_table[(board >> 0) & ROW_MASK]) << 0;
+            ret ^= (UInt64)(row_table[(board >> 16) & ROW_MASK]) << 16;
+            ret ^= (UInt64)(row_table[(board >> 32) & ROW_MASK]) << 32;
+            ret ^= (UInt64)(row_table[(board >> 48) & ROW_MASK]) << 48;
+        } else if (move == RIGHT) {
+            ret ^= (UInt64)(reverse_row(row_table[reverse_row((UInt16)((board >> 0) & ROW_MASK))])) << 0;
+            ret ^= (UInt64)(reverse_row(row_table[reverse_row((UInt16)((board >> 16) & ROW_MASK))])) << 16;
+            ret ^= (UInt64)(reverse_row(row_table[reverse_row((UInt16)((board >> 32) & ROW_MASK))])) << 32;
+            ret ^= (UInt64)(reverse_row(row_table[reverse_row((UInt16)((board >> 48) & ROW_MASK))])) << 48;
+        }
         return ret;
     }
 
@@ -252,32 +261,36 @@ public class Class2048
         switch (move)
         {
             case UP:
-                return execute_move_col(board, ref row_left_table);
             case DOWN:
-                return execute_move_col(board, ref row_right_table);
+                return execute_move_col(board, move);
             case LEFT:
-                return execute_move_row(board, ref row_left_table);
             case RIGHT:
-                return execute_move_row(board, ref row_right_table);
+                return execute_move_row(board, move);
             default:
                 return 0xFFFFFFFFFFFFFFFF;
         }
     }
 
-    double score_helper(UInt64 board, ref double[] table)
+    UInt32 score_helper(UInt64 board)
     {
-        return table[(board >> 0) & ROW_MASK] + table[(board >> 16) & ROW_MASK] +
-            table[(board >> 32) & ROW_MASK] + table[(board >> 48) & ROW_MASK];
+        return score_table[(board >> 0) & ROW_MASK] + score_table[(board >> 16) & ROW_MASK] +
+            score_table[(board >> 32) & ROW_MASK] + score_table[(board >> 48) & ROW_MASK];
+    }
+
+    double score_heur_helper(UInt64 board)
+    {
+        return score_heur_table[(board >> 0) & ROW_MASK] + score_heur_table[(board >> 16) & ROW_MASK] +
+            score_heur_table[(board >> 32) & ROW_MASK] + score_heur_table[(board >> 48) & ROW_MASK];
     }
 
     UInt32 score_board(UInt64 board)
     {
-        return (UInt32)(score_helper(board, ref score_table));
+        return score_helper(board);
     }
 
     double score_heur_board(UInt64 board)
     {
-        return score_helper(board, ref heur_score_table) + score_helper(transpose(board), ref heur_score_table);
+        return score_heur_helper(board) + score_heur_helper(transpose(board));
     }
 
     int count_distinct_tiles(UInt64 board)

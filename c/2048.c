@@ -214,13 +214,11 @@ static int count_empty(board_t x) {
 
 #if FASTMODE != 0
 #define TABLESIZE 65536
-static row_t row_left_table[TABLESIZE];
-static row_t row_right_table[TABLESIZE];
+static row_t row_table[TABLESIZE];
 static uint32 score_table[TABLESIZE];
 
 static void init_tables(void) {
-    row_t row = 0, rev_row = 0;
-    row_t result = 0, rev_result = 0;
+    row_t row = 0, result = 0;
 
     do {
         int i = 0, j = 0;
@@ -262,38 +260,49 @@ static void init_tables(void) {
         }
 
         result = (line[0] << 0) | (line[1] << 4) | (line[2] << 8) | (line[3] << 12);
-        rev_result = reverse_row(result);
-        rev_row = reverse_row(row);
 
-        row_left_table[row] = row ^ result;
-        row_right_table[rev_row] = rev_row ^ rev_result;
+        row_table[row] = row ^ result;
     } while (row++ != TABLESIZE - 1);
 }
 
-static board_t execute_move_col(board_t board, row_t *table) {
+static board_t execute_move_col(board_t board, int move) {
     board_t ret = board;
     board_t t = transpose(board);
 
-    ret ^= unpack_col(table[(t >> 0) & ROW_MASK]) << 0;
-    ret ^= unpack_col(table[(t >> 16) & ROW_MASK]) << 4;
-    ret ^= unpack_col(table[(t >> 32) & ROW_MASK]) << 8;
-    ret ^= unpack_col(table[(t >> 48) & ROW_MASK]) << 12;
+    if (move == UP) {
+        ret ^= unpack_col(row_table[(t >> 0) & ROW_MASK]) << 0;
+        ret ^= unpack_col(row_table[(t >> 16) & ROW_MASK]) << 4;
+        ret ^= unpack_col(row_table[(t >> 32) & ROW_MASK]) << 8;
+        ret ^= unpack_col(row_table[(t >> 48) & ROW_MASK]) << 12;
+    } else if (move == DOWN) {
+        ret ^= unpack_col(reverse_row(row_table[reverse_row((t >> 0) & ROW_MASK)])) << 0;
+        ret ^= unpack_col(reverse_row(row_table[reverse_row((t >> 16) & ROW_MASK)])) << 4;
+        ret ^= unpack_col(reverse_row(row_table[reverse_row((t >> 32) & ROW_MASK)])) << 8;
+        ret ^= unpack_col(reverse_row(row_table[reverse_row((t >> 48) & ROW_MASK)])) << 12;
+    }
     return ret;
 }
 
-static board_t execute_move_row(board_t board, row_t *table) {
+static board_t execute_move_row(board_t board, int move) {
     board_t ret = board;
 
-    ret ^= (board_t)(table[(board >> 0) & ROW_MASK]) << 0;
-    ret ^= (board_t)(table[(board >> 16) & ROW_MASK]) << 16;
-    ret ^= (board_t)(table[(board >> 32) & ROW_MASK]) << 32;
-    ret ^= (board_t)(table[(board >> 48) & ROW_MASK]) << 48;
+    if (move == LEFT) {
+        ret ^= (board_t)(row_table[(board >> 0) & ROW_MASK]) << 0;
+        ret ^= (board_t)(row_table[(board >> 16) & ROW_MASK]) << 16;
+        ret ^= (board_t)(row_table[(board >> 32) & ROW_MASK]) << 32;
+        ret ^= (board_t)(row_table[(board >> 48) & ROW_MASK]) << 48;
+    } else if (move == RIGHT) {
+        ret ^= (board_t)(reverse_row(row_table[reverse_row((board >> 0) & ROW_MASK)])) << 0;
+        ret ^= (board_t)(reverse_row(row_table[reverse_row((board >> 16) & ROW_MASK)])) << 16;
+        ret ^= (board_t)(reverse_row(row_table[reverse_row((board >> 32) & ROW_MASK)])) << 32;
+        ret ^= (board_t)(reverse_row(row_table[reverse_row((board >> 48) & ROW_MASK)])) << 48;
+    }
     return ret;
 }
 
-static uint32 score_helper(board_t board, const uint32 *table) {
-    return table[(board >> 0) & ROW_MASK] + table[(board >> 16) & ROW_MASK] +
-        table[(board >> 32) & ROW_MASK] + table[(board >> 48) & ROW_MASK];
+static uint32 score_helper(board_t board) {
+    return score_table[(board >> 0) & ROW_MASK] + score_table[(board >> 16) & ROW_MASK] +
+        score_table[(board >> 32) & ROW_MASK] + score_table[(board >> 48) & ROW_MASK];
 }
 #else
 static row_t execute_move_helper(row_t row) {
@@ -339,9 +348,7 @@ static board_t execute_move_col(board_t board, int move) {
         if (move == UP) {
             ret ^= unpack_col(row ^ execute_move_helper(row)) << (i << 2);
         } else if (move == DOWN) {
-            row_t rev_row = reverse_row(row);
-
-            ret ^= unpack_col(row ^ reverse_row(execute_move_helper(rev_row))) << (i << 2);
+            ret ^= unpack_col(row ^ reverse_row(execute_move_helper(reverse_row(row)))) << (i << 2);
         }
     }
     return ret;
@@ -357,9 +364,7 @@ static board_t execute_move_row(board_t board, int move) {
         if (move == LEFT) {
             ret ^= (board_t)(row ^ execute_move_helper(row)) << (i << 4);
         } else if (move == RIGHT) {
-            row_t rev_row = reverse_row(row);
-
-            ret ^= (board_t)(row ^ reverse_row(execute_move_helper(rev_row))) << (i << 4);
+            ret ^= (board_t)(row ^ reverse_row(execute_move_helper(reverse_row(row)))) << (i << 4);
         }
     }
     return ret;
@@ -367,18 +372,13 @@ static board_t execute_move_row(board_t board, int move) {
 
 static uint32 score_helper(board_t board) {
     int i = 0, j = 0;
-    uint8 line[4] = { 0 };
     uint32 score = 0;
 
     for (j = 0; j < 4; ++j) {
         row_t row = (row_t)((board >> (j << 4)) & ROW_MASK);
 
-        line[0] = (row >> 0) & 0xf;
-        line[1] = (row >> 4) & 0xf;
-        line[2] = (row >> 8) & 0xf;
-        line[3] = (row >> 12) & 0xf;
         for (i = 0; i < 4; ++i) {
-            uint8 rank = line[i];
+            int rank = (row >> (i << 2)) & 0xf;
 
             if (rank >= 2) {
                 score += (rank - 1) * (1 << rank);
@@ -391,34 +391,19 @@ static uint32 score_helper(board_t board) {
 
 static board_t execute_move(int move, board_t board) {
     switch (move) {
-#if FASTMODE != 0
-    case UP:
-        return execute_move_col(board, row_left_table);
-    case DOWN:
-        return execute_move_col(board, row_right_table);
-    case LEFT:
-        return execute_move_row(board, row_left_table);
-    case RIGHT:
-        return execute_move_row(board, row_right_table);
-#else
     case UP:
     case DOWN:
         return execute_move_col(board, move);
     case LEFT:
     case RIGHT:
         return execute_move_row(board, move);
-#endif
     default:
         return ~W64LIT(0);
     }
 }
 
 static uint32 score_board(board_t board) {
-#if FASTMODE != 0
-    return score_helper(board, score_table);
-#else
     return score_helper(board);
-#endif
 }
 
 int ask_for_move(board_t board) {

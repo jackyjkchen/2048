@@ -297,14 +297,14 @@
         else
           ret = -1
         end if
-        execute_move = ret 
+        execute_move = ret
         return
       end
 
       integer*4 function score_helper(board)
         integer*8 :: board
         integer*4 :: score
-        integer*2 :: row, row_line(0:3), i, j, rank
+        integer*2 :: row, i, j, rank
 
         integer*2 :: Z000F, Z00F0, Z0F00
         common /CONST_NUM/  Z000F, Z00F0, Z0F00
@@ -314,13 +314,8 @@
         score = 0
         do j = 0, 3
           row = iand(ishft(board, -ishft(j, 4)), ROW_MASK)
-          row_line(0) = iand(row, Z000F)
-          row_line(1) = iand(ishft(row, -4), Z000F)
-          row_line(2) = iand(ishft(row, -8), Z000F)
-          row_line(3) = iand(ishft(row, -12), Z000F)
-
           do i = 0, 3
-            rank = row_line(i)
+            rank = iand(ishft(row, -ishft(i, 2)), Z000F)
             if (rank >= 2) then
               score = score + ((rank - 1) * ishft(1, rank))
             end if

@@ -194,13 +194,10 @@ function score_helper() {
     while [ $((j)) -lt 4 ]
     do
         row=$(((board >> (j << 4)) & ROW_MASK))
-        local line=( $((row & 0xf)) $(((row >> 4) & 0xf)) $(((row >> 8) & 0xf)) $(((row >> 12) & 0xf)) )
-
         i=0
         while [ $((i)) -lt 4 ]
         do
-            rank=$((line[i]))
-
+            rank=$(((row >> (i << 2)) & 0xf))
             if [ $((rank)) -ge 2 ]
             then
                 score=$((score + (rank - 1) * (1 << rank)))

@@ -34,8 +34,7 @@ type get_move_func_t func(board board_t) int
 
 const TABLESIZE = 65536
 
-var row_left_table [TABLESIZE]row_t
-var row_right_table [TABLESIZE]row_t
+var row_table [TABLESIZE]row_t
 var score_table [TABLESIZE]uint32
 
 var rd = rand.New(rand.NewSource(time.Now().UnixNano()))
@@ -96,8 +95,7 @@ func count_empty(x board_t) uint32 {
 }
 
 func init_tables() {
-	var row, rev_row row_t = 0, 0
-	var result, rev_result row_t = 0, 0
+	var row, result row_t = 0, 0
 
 	for true {
 		i := 0
@@ -105,7 +103,7 @@ func init_tables() {
 		var line [4]row_t
 		var score uint32 = 0
 
-		line[0] = (row >> 0) & 0xf
+		line[0] = row & 0xf
 		line[1] = (row >> 4) & 0xf
 		line[2] = (row >> 8) & 0xf
 		line[3] = (row >> 12) & 0xf
@@ -141,12 +139,8 @@ func init_tables() {
 			}
 		}
 
-		result = (line[0] << 0) | (line[1] << 4) | (line[2] << 8) | (line[3] << 12)
-		rev_result = reverse_row(result)
-		rev_row = reverse_row(row)
-
-		row_left_table[row] = row ^ result
-		row_right_table[rev_row] = rev_row ^ rev_result
+		result = line[0] | (line[1] << 4) | (line[2] << 8) | (line[3] << 12)
+		row_table[row] = row ^ result
 
 		if row == TABLESIZE-1 {
 			break
@@ -155,49 +149,58 @@ func init_tables() {
 	}
 }
 
-func execute_move_col(board board_t, table *[TABLESIZE]row_t) board_t {
+func execute_move_col(board board_t, move int) board_t {
 	var ret board_t = board
 	var t board_t = transpose(board)
 
-	ret ^= unpack_col(table[(t>>0)&ROW_MASK]) << 0
-	ret ^= unpack_col(table[(t>>16)&ROW_MASK]) << 4
-	ret ^= unpack_col(table[(t>>32)&ROW_MASK]) << 8
-	ret ^= unpack_col(table[(t>>48)&ROW_MASK]) << 12
+	if move == UP {
+		ret ^= unpack_col(row_table[t&ROW_MASK]) << 0
+		ret ^= unpack_col(row_table[(t>>16)&ROW_MASK]) << 4
+		ret ^= unpack_col(row_table[(t>>32)&ROW_MASK]) << 8
+		ret ^= unpack_col(row_table[(t>>48)&ROW_MASK]) << 12
+	} else if move == DOWN {
+		ret ^= unpack_col(reverse_row(row_table[reverse_row(row_t(t&ROW_MASK))])) << 0
+		ret ^= unpack_col(reverse_row(row_table[reverse_row(row_t((t>>16)&ROW_MASK))])) << 4
+		ret ^= unpack_col(reverse_row(row_table[reverse_row(row_t((t>>32)&ROW_MASK))])) << 8
+		ret ^= unpack_col(reverse_row(row_table[reverse_row(row_t((t>>48)&ROW_MASK))])) << 12
+	}
 	return ret
 }
 
-func execute_move_row(board board_t, table *[TABLESIZE]row_t) board_t {
+func execute_move_row(board board_t, move int) board_t {
 	var ret board_t = board
 
-	ret ^= board_t(table[(board>>0)&ROW_MASK]) << 0
-	ret ^= board_t(table[(board>>16)&ROW_MASK]) << 16
-	ret ^= board_t(table[(board>>32)&ROW_MASK]) << 32
-	ret ^= board_t(table[(board>>48)&ROW_MASK]) << 48
+	if move == LEFT {
+		ret ^= board_t(row_table[board&ROW_MASK]) << 0
+		ret ^= board_t(row_table[(board>>16)&ROW_MASK]) << 16
+		ret ^= board_t(row_table[(board>>32)&ROW_MASK]) << 32
+		ret ^= board_t(row_table[(board>>48)&ROW_MASK]) << 48
+	} else if move == RIGHT {
+		ret ^= board_t(reverse_row(row_table[reverse_row(row_t(board&ROW_MASK))])) << 0
+		ret ^= board_t(reverse_row(row_table[reverse_row(row_t((board>>16)&ROW_MASK))])) << 16
+		ret ^= board_t(reverse_row(row_table[reverse_row(row_t((board>>32)&ROW_MASK))])) << 32
+		ret ^= board_t(reverse_row(row_table[reverse_row(row_t((board>>48)&ROW_MASK))])) << 48
+	}
 	return ret
 }
 
 func execute_move(move int, board board_t) board_t {
-	switch move {
-	case UP:
-		return execute_move_col(board, &row_left_table)
-	case DOWN:
-		return execute_move_col(board, &row_right_table)
-	case LEFT:
-		return execute_move_row(board, &row_left_table)
-	case RIGHT:
-		return execute_move_row(board, &row_right_table)
-	default:
+	if move == UP || move == DOWN {
+		return execute_move_col(board, move)
+	} else if move == LEFT || move == RIGHT {
+		return execute_move_row(board, move)
+	} else {
 		return 0xFFFFFFFFFFFFFFFF
 	}
 }
 
-func score_helper(board board_t, table *[TABLESIZE]uint32) uint32 {
-	return table[(board>>0)&ROW_MASK] + table[(board>>16)&ROW_MASK] +
-		table[(board>>32)&ROW_MASK] + table[(board>>48)&ROW_MASK]
+func score_helper(board board_t) uint32 {
+	return score_table[(board>>0)&ROW_MASK] + score_table[(board>>16)&ROW_MASK] +
+		score_table[(board>>32)&ROW_MASK] + score_table[(board>>48)&ROW_MASK]
 }
 
 func score_board(board board_t) uint32 {
-	return score_helper(board, &score_table)
+	return score_helper(board)
 }
 
 func ask_for_move(board board_t) int {

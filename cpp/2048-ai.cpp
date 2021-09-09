@@ -235,14 +235,12 @@ static int count_empty(board_t x) {
 
 #if FASTMODE != 0
 #define TABLESIZE 65536
-static row_t row_left_table[TABLESIZE];
-static row_t row_right_table[TABLESIZE];
-static float score_table[TABLESIZE];
-static float heur_score_table[TABLESIZE];
+static row_t row_table[TABLESIZE];
+static uint32 score_table[TABLESIZE];
+static float score_heur_table[TABLESIZE];
 
 static void init_tables(void) {
-    row_t row = 0, rev_row = 0;
-    row_t result = 0, rev_result = 0;
+    row_t row = 0, result = 0;
 
     do {
         int i = 0, j = 0;
@@ -302,7 +300,7 @@ static void init_tables(void) {
             }
         }
 
-        heur_score_table[row] = (float)(SCORE_LOST_PENALTY + SCORE_EMPTY_WEIGHT * empty + SCORE_MERGES_WEIGHT * merges -
+        score_heur_table[row] = (float)(SCORE_LOST_PENALTY + SCORE_EMPTY_WEIGHT * empty + SCORE_MERGES_WEIGHT * merges -
             SCORE_MONOTONICITY_WEIGHT * min(monotonicity_left, monotonicity_right) - SCORE_SUM_WEIGHT * sum);
 
         for (i = 0; i < 3; ++i) {
@@ -326,38 +324,54 @@ static void init_tables(void) {
         }
 
         result = (line[0] << 0) | (line[1] << 4) | (line[2] << 8) | (line[3] << 12);
-        rev_result = reverse_row(result);
-        rev_row = reverse_row(row);
 
-        row_left_table[row] = row ^ result;
-        row_right_table[rev_row] = rev_row ^ rev_result;
+        row_table[row] = row ^ result;
     } while (row++ != TABLESIZE - 1);
 }
 
-static board_t execute_move_col(board_t board, const row_t *table) {
+static board_t execute_move_col(board_t board, int move) {
     board_t ret = board;
     board_t t = transpose(board);
 
-    ret ^= unpack_col(table[(t >> 0) & ROW_MASK]) << 0;
-    ret ^= unpack_col(table[(t >> 16) & ROW_MASK]) << 4;
-    ret ^= unpack_col(table[(t >> 32) & ROW_MASK]) << 8;
-    ret ^= unpack_col(table[(t >> 48) & ROW_MASK]) << 12;
+    if (move == UP) {
+        ret ^= unpack_col(row_table[(t >> 0) & ROW_MASK]) << 0;
+        ret ^= unpack_col(row_table[(t >> 16) & ROW_MASK]) << 4;
+        ret ^= unpack_col(row_table[(t >> 32) & ROW_MASK]) << 8;
+        ret ^= unpack_col(row_table[(t >> 48) & ROW_MASK]) << 12;
+    } else if (move == DOWN) {
+        ret ^= unpack_col(reverse_row(row_table[reverse_row((t >> 0) & ROW_MASK)])) << 0;
+        ret ^= unpack_col(reverse_row(row_table[reverse_row((t >> 16) & ROW_MASK)])) << 4;
+        ret ^= unpack_col(reverse_row(row_table[reverse_row((t >> 32) & ROW_MASK)])) << 8;
+        ret ^= unpack_col(reverse_row(row_table[reverse_row((t >> 48) & ROW_MASK)])) << 12;
+    }
     return ret;
 }
 
-static board_t execute_move_row(board_t board, const row_t *table) {
+static board_t execute_move_row(board_t board, int move) {
     board_t ret = board;
 
-    ret ^= (board_t)(table[(board >> 0) & ROW_MASK]) << 0;
-    ret ^= (board_t)(table[(board >> 16) & ROW_MASK]) << 16;
-    ret ^= (board_t)(table[(board >> 32) & ROW_MASK]) << 32;
-    ret ^= (board_t)(table[(board >> 48) & ROW_MASK]) << 48;
+    if (move == LEFT) {
+        ret ^= (board_t)(row_table[(board >> 0) & ROW_MASK]) << 0;
+        ret ^= (board_t)(row_table[(board >> 16) & ROW_MASK]) << 16;
+        ret ^= (board_t)(row_table[(board >> 32) & ROW_MASK]) << 32;
+        ret ^= (board_t)(row_table[(board >> 48) & ROW_MASK]) << 48;
+    } else if (move == RIGHT) {
+        ret ^= (board_t)(reverse_row(row_table[reverse_row((board >> 0) & ROW_MASK)])) << 0;
+        ret ^= (board_t)(reverse_row(row_table[reverse_row((board >> 16) & ROW_MASK)])) << 16;
+        ret ^= (board_t)(reverse_row(row_table[reverse_row((board >> 32) & ROW_MASK)])) << 32;
+        ret ^= (board_t)(reverse_row(row_table[reverse_row((board >> 48) & ROW_MASK)])) << 48;
+    }
     return ret;
 }
 
-static float score_helper(board_t board, const float *table) {
-    return table[(board >> 0) & ROW_MASK] + table[(board >> 16) & ROW_MASK] +
-        table[(board >> 32) & ROW_MASK] + table[(board >> 48) & ROW_MASK];
+static uint32 score_helper(board_t board) {
+    return score_table[(board >> 0) & ROW_MASK] + score_table[(board >> 16) & ROW_MASK] +
+        score_table[(board >> 32) & ROW_MASK] + score_table[(board >> 48) & ROW_MASK];
+}
+
+static float score_heur_helper(board_t board) {
+    return score_heur_table[(board >> 0) & ROW_MASK] + score_heur_table[(board >> 16) & ROW_MASK] +
+        score_heur_table[(board >> 32) & ROW_MASK] + score_heur_table[(board >> 48) & ROW_MASK];
 }
 #else
 static row_t execute_move_helper(row_t row) {
@@ -403,9 +417,7 @@ static board_t execute_move_col(board_t board, int move) {
         if (move == UP) {
             ret ^= unpack_col(row ^ execute_move_helper(row)) << (i << 2);
         } else if (move == DOWN) {
-            row_t rev_row = reverse_row(row);
-
-            ret ^= unpack_col(row ^ reverse_row(execute_move_helper(rev_row))) << (i << 2);
+            ret ^= unpack_col(row ^ reverse_row(execute_move_helper(reverse_row(row)))) << (i << 2);
         }
     }
     return ret;
@@ -421,9 +433,7 @@ static board_t execute_move_row(board_t board, int move) {
         if (move == LEFT) {
             ret ^= (board_t)(row ^ execute_move_helper(row)) << (i << 4);
         } else if (move == RIGHT) {
-            row_t rev_row = reverse_row(row);
-
-            ret ^= (board_t)(row ^ reverse_row(execute_move_helper(rev_row))) << (i << 4);
+            ret ^= (board_t)(row ^ reverse_row(execute_move_helper(reverse_row(row)))) << (i << 4);
         }
     }
     return ret;
@@ -431,18 +441,13 @@ static board_t execute_move_row(board_t board, int move) {
 
 static uint32 score_helper(board_t board) {
     int i = 0, j = 0;
-    uint8 line[4] = { 0 };
     uint32 score = 0;
 
     for (j = 0; j < 4; ++j) {
         row_t row = (row_t)((board >> (j << 4)) & ROW_MASK);
 
-        line[0] = (row >> 0) & 0xf;
-        line[1] = (row >> 4) & 0xf;
-        line[2] = (row >> 8) & 0xf;
-        line[3] = (row >> 12) & 0xf;
         for (i = 0; i < 4; ++i) {
-            int rank = line[i];
+            int rank = (row >> (i << 2)) & 0xf;
 
             if (rank >= 2) {
                 score += (rank - 1) * (1 << rank);
@@ -454,16 +459,10 @@ static uint32 score_helper(board_t board) {
 
 static float score_heur_helper(board_t board) {
     int i = 0, j = 0;
-    uint8 line[4] = { 0 };
     float heur_score = 0.0f;
 
     for (j = 0; j < 4; ++j) {
         row_t row = (row_t)((board >> (j << 4)) & ROW_MASK);
-
-        line[0] = (row >> 0) & 0xf;
-        line[1] = (row >> 4) & 0xf;
-        line[2] = (row >> 8) & 0xf;
-        line[3] = (row >> 12) & 0xf;
 
         float sum = 0.0f;
         int empty = 0;
@@ -472,7 +471,7 @@ static float score_heur_helper(board_t board) {
         int counter = 0;
 
         for (i = 0; i < 4; ++i) {
-            int rank = line[i];
+            int rank = (row >> (i << 2)) & 0xf;
 
             sum += (float)pow(rank, SCORE_SUM_POWER);
             if (rank == 0) {
@@ -512,42 +511,23 @@ static float score_heur_helper(board_t board) {
 
 static board_t execute_move(int move, board_t board) {
     switch (move) {
-#if FASTMODE != 0
-    case UP:
-        return execute_move_col(board, row_left_table);
-    case DOWN:
-        return execute_move_col(board, row_right_table);
-    case LEFT:
-        return execute_move_row(board, row_left_table);
-    case RIGHT:
-        return execute_move_row(board, row_right_table);
-#else
     case UP:
     case DOWN:
         return execute_move_col(board, move);
     case LEFT:
     case RIGHT:
         return execute_move_row(board, move);
-#endif
     default:
         return ~W64LIT(0);
     }
 }
 
 static uint32 score_board(board_t board) {
-#if FASTMODE != 0
-    return (uint32)score_helper(board, score_table);
-#else
     return score_helper(board);
-#endif
 }
 
 static float score_heur_board(board_t board) {
-#if FASTMODE != 0
-    return score_helper(board, heur_score_table) + score_helper(transpose(board), heur_score_table);
-#else
     return score_heur_helper(board) + score_heur_helper(transpose(board));
-#endif
 }
 
 static int count_distinct_tiles(board_t board) {

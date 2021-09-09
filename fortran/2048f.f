@@ -184,25 +184,22 @@
       end
 
       subroutine init_tables()
-        integer*2 :: row, rev_row, row_result, rev_result
+        integer*2 :: row, row_result
         integer*2 :: i, j, rank, t0, t1, t2, t3
         integer*2 :: row_line(0:3)
         integer*4 :: score
 
         integer*2 :: reverse_row
 
-        integer*2 :: row_left_table(-32768:32767)
-        integer*2 :: row_right_table(-32768:32767)
+        integer*2 :: row_table(-32768:32767)
         integer*4 :: score_table(-32768:32767)
-        common /TABLE/ row_left_table, row_right_table, score_table
+        common /TABLE/ row_table, score_table
 
         integer*2 :: Z000F, Z00F0, Z0F00
         common /CONST_NUM/  Z000F, Z00F0, Z0F00
 
         row = -32768
-        rev_row = 0
         row_result = 0
-        rev_result = 0
         do
           score = 0
           row_line(0) = iand(row, Z000F)
@@ -249,68 +246,96 @@
           t2 = ishft(row_line(2), 8)
           t3 = ishft(row_line(3), 12)
           row_result = ior(ior(ior(t0, t1), t2), t3)
+          row_table(row)      = ieor(row, row_result)
 
-          rev_result = reverse_row(row_result)
-          rev_row    = reverse_row(row)
-
-          row_left_table(row)      = ieor(row, row_result)
-          row_right_table(rev_row) = ieor(rev_row, rev_result)
-
-          row = row + 1
           if (row == 32767) then
             exit
           end if
+          row = row + 1
         end do
         return
       end
 
-      integer*8 function execute_move_col(board, table)
+      integer*8 function execute_move_col(board, move)
         integer*8 :: board
-        integer*2 :: table(-32768:32767)
+        integer*4 :: move
         integer*8 :: ret, t
-        integer*2 :: t_
 
         integer*8 :: transpose_board, unpack_col
+        integer*2 :: reverse_row, t_
 
         integer*8 :: ROW_MASK, COL_MASK
         common /MASK_NUM/ ROW_MASK, COL_MASK
+        integer*2 :: row_table(-32768:32767)
+        integer*4 :: score_table(-32768:32767)
+        common /TABLE/ row_table, score_table
 
         ret = board
         t = transpose_board(board)
-        t_ = iand(t, ROW_MASK)
-        ret = ieor(ret, unpack_col(table(t_)))
-        t_ = iand(ishft(t, -16), ROW_MASK)
-        ret = ieor(ret, ishft(unpack_col(table(t_)), 4))
-        t_ = iand(ishft(t, -32), ROW_MASK)
-        ret = ieor(ret, ishft(unpack_col(table(t_)), 8))
-        t_ = iand(ishft(t, -48), ROW_MASK)
-        ret = ieor(ret, ishft(unpack_col(table(t_)), 12))
+        if (move == 0) then
+          t_ = iand(t, ROW_MASK)
+          ret = ieor(ret, unpack_col(row_table(t_)))
+          t_ = iand(ishft(t, -16), ROW_MASK)
+          ret = ieor(ret, ishft(unpack_col(row_table(t_)), 4))
+          t_ = iand(ishft(t, -32), ROW_MASK)
+          ret = ieor(ret, ishft(unpack_col(row_table(t_)), 8))
+          t_ = iand(ishft(t, -48), ROW_MASK)
+          ret = ieor(ret, ishft(unpack_col(row_table(t_)), 12))
+        else if (move == 1) then
+          t_ = iand(t, ROW_MASK)
+          ret = ieor(ret, unpack_col(reverse_row(row_table(reverse_row(
+     & t_)))))
+          t_ = iand(ishft(t, -16), ROW_MASK)
+          ret = ieor(ret, ishft(unpack_col(reverse_row(row_table(
+     & reverse_row(t_)))), 4))
+          t_ = iand(ishft(t, -32), ROW_MASK)
+          ret = ieor(ret, ishft(unpack_col(reverse_row(row_table(
+     & reverse_row(t_)))), 8))
+          t_ = iand(ishft(t, -48), ROW_MASK)
+          ret = ieor(ret, ishft(unpack_col(reverse_row(row_table(
+     & reverse_row(t_)))), 12))
+        end if
         execute_move_col = ret
         return
       end
 
-      integer*8 function execute_move_row(board, table)
+      integer*8 function execute_move_row(board, move)
         integer*8 :: board
-        integer*2 :: table(-32768:32767)
-        integer*8 :: ret, t
-        integer*2 :: t_
+        integer*4 :: move
+        integer*8 :: ret
+
+        integer*2 :: reverse_row, t_
 
         integer*8 :: ROW_MASK, COL_MASK
         common /MASK_NUM/ ROW_MASK, COL_MASK
+        integer*2 :: row_table(-32768:32767)
+        integer*4 :: score_table(-32768:32767)
+        common /TABLE/ row_table, score_table
 
         ret = board
-        t_ = iand(board, ROW_MASK)
-        t = table(t_)
-        ret = ieor(ret, iand(t, ROW_MASK))
-        t_ = iand(ishft(board, -16), ROW_MASK)
-        t = table(t_)
-        ret = ieor(ret, ishft(iand(t, ROW_MASK), 16))
-        t_ = iand(ishft(board, -32), ROW_MASK)
-        t = table(t_)
-        ret = ieor(ret, ishft(iand(t, ROW_MASK), 32))
-        t_ = iand(ishft(board, -48), ROW_MASK)
-        t = table(t_)
-        ret = ieor(ret, ishft(iand(t, ROW_MASK), 48))
+        if (move == 2) then
+          t_ = iand(board, ROW_MASK)
+          ret = ieor(ret, iand(row_table(t_), ROW_MASK))
+          t_ = iand(ishft(board, -16), ROW_MASK)
+          ret = ieor(ret, ishft(iand(row_table(t_), ROW_MASK), 16))
+          t_ = iand(ishft(board, -32), ROW_MASK)
+          ret = ieor(ret, ishft(iand(row_table(t_), ROW_MASK), 32))
+          t_ = iand(ishft(board, -48), ROW_MASK)
+          ret = ieor(ret, ishft(iand(row_table(t_), ROW_MASK), 48))
+        else if (move == 3) then
+          t_ = iand(board, ROW_MASK)
+          ret = ieor(ret, iand(reverse_row(row_table(reverse_row(t_))),
+     & ROW_MASK))
+          t_ = iand(ishft(board, -16), ROW_MASK)
+          ret = ieor(ret, ishft(iand(reverse_row(row_table(
+     & reverse_row(t_))), ROW_MASK), 16))
+          t_ = iand(ishft(board, -32), ROW_MASK)
+          ret = ieor(ret, ishft(iand(reverse_row(row_table(
+     & reverse_row(t_))), ROW_MASK), 32))
+          t_ = iand(ishft(board, -48), ROW_MASK)
+          ret = ieor(ret, ishft(iand(reverse_row(row_table(
+     & reverse_row(t_))), ROW_MASK), 48))
+        end if
         execute_move_row = ret
         return
       end
@@ -322,19 +347,10 @@
 
         integer*8 :: execute_move_col, execute_move_row
 
-        integer*2 :: row_left_table(-32768:32767)
-        integer*2 :: row_right_table(-32768:32767)
-        integer*4 :: score_table(-32768:32767)
-        common /TABLE/ row_left_table, row_right_table, score_table
-
-        if (move == 0) then
-          ret = execute_move_col(board, row_left_table)
-        else if (move == 1) then
-          ret = execute_move_col(board, row_right_table)
-        else if (move == 2) then
-          ret = execute_move_row(board, row_left_table)
-        else if (move == 3) then
-          ret = execute_move_row(board, row_right_table)
+        if ((move == 0) .or. (move == 1)) then
+          ret = execute_move_col(board, move)
+        else if ((move == 2) .or. (move == 3)) then
+          ret = execute_move_row(board, move)
         else
           ret = -1
         end if
@@ -342,23 +358,21 @@
         return
       end
 
-      integer*4 function score_helper(board, table)
+      integer*4 function score_helper(board)
         integer*8 :: board
         integer*4 :: table(-32768:32767)
         integer*4 :: t0, t1, t2, t3
-        integer*2 :: t_
 
         integer*8 :: ROW_MASK, COL_MASK
         common /MASK_NUM/ ROW_MASK, COL_MASK
+        integer*2 :: row_table(-32768:32767)
+        integer*4 :: score_table(-32768:32767)
+        common /TABLE/ row_table, score_table
 
-        t_ = iand(board, ROW_MASK)
-        t0 = table(t_)
-        t_ = iand(ishft(board, -16), ROW_MASK)
-        t1 = table(t_)
-        t_ = iand(ishft(board, -32), ROW_MASK)
-        t2 = table(t_)
-        t_ = iand(ishft(board, -48), ROW_MASK)
-        t3 = table(t_)
+        t0 = score_table(iand(board, ROW_MASK))
+        t1 = score_table(iand(ishft(board, -16), ROW_MASK))
+        t2 = score_table(iand(ishft(board, -32), ROW_MASK))
+        t3 = score_table(iand(ishft(board, -48), ROW_MASK))
         score_helper = t0 + t1 + t2 + t3
         return
       end
@@ -368,12 +382,7 @@
 
         integer*4 :: score_helper
 
-        integer*2 :: row_left_table(-32768:32767)
-        integer*2 :: row_right_table(-32768:32767)
-        integer*4 :: score_table(-32768:32767)
-        common /TABLE/ row_left_table, row_right_table, score_table
-
-        score_board = score_helper(board, score_table)
+        score_board = score_helper(board)
         return
       end
 

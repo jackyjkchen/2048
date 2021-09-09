@@ -170,18 +170,12 @@ sub execute_move {
 
 sub score_helper {
     my $board = $_[0];
-    my @line;
     my $score = 0;
 
     for (my $j=0; $j<4; ++$j) {
         my $row = ($board >> ($j << 4)) & $ROW_MASK;
-
-        $line[0] = ($row >> 0) & 0xf;
-        $line[1] = ($row >> 4) & 0xf;
-        $line[2] = ($row >> 8) & 0xf;
-        $line[3] = ($row >> 12) & 0xf;
         for (my $i=0; $i<4; ++$i) {
-            my $rank = $line[$i];
+            my $rank = ($row >> ($i << 2)) & 0xf;
             if ($rank >= 2) {
                 $score += ($rank - 1) * (1 << $rank);
             }

@@ -17,7 +17,7 @@
 
 通常的ISO C90跨平台实现，非严格C90内容仅为64位整数。
 
-使用FASTMODE预处理（默认），可启用快速查表法，会增加512KiB的常驻内存开销（意味着dos平台下必须使用dos扩展）。
+使用FASTMODE预处理（默认），可启用快速查表法，会增加384KiB的常驻内存开销（意味着dos平台下必须使用dos扩展）。
 
 已测试编译器和平台：
 ```
@@ -43,24 +43,17 @@ openwatcom c++ 1.9 (dos16, win16)
 
 ## c/2048-16b.c
 
-不使用64位整数的严格ISO C90实现。
-
-使用FASTMODE预处理（-DFASTMODE=1），可启用快速查表法，会增加512KiB的常驻内存开销（意味着dos平台下必须使用dos扩展）。
+不使用64位整数的严格ISO C90实现，于兼容一些老编译器，由于目标是老编译器，因此去掉了快速查表法部分的代码。
 
 已测试编译器和平台：
 ```
 gcc 2.0+ (linux, freebsd, macos, mingw, mingw-w64, cygwin, djgpp)
 clang 3.0+ (linux, macos, freebsd, win32)
 msvc 2.0+ (win32)
-openwatcom 1.9 (win32, win386, dos32 pmode, dos4gw)
+openwatcom 1.9 (win32, win386, dos32 pmode, dos4gw, dos16, win16)
 borland c++ 5.5+ (win32)
 tcc 0.9.27 (linux, win32)
 lcc 4.0 (win32)
-```
-
-使用FASTMODE=0预处理（默认），代码和数据段可控制在64KiB以内，额外支持：
-```
-openwatcom 1.9 (dos16, win16)
 msvc 1.52 (dos16)
 msc 5.1/6.0/7.0 (dos16)
 quickc 2.0/2.51 (dos16)
@@ -88,7 +81,7 @@ msc 3.0 (dos16)
 
 AI版本，ISO C++98实现，可选支持多线程（预处理MULTI_THREAD/MULTI_THREAD_OPENMP）。
 
-由于使用std::map且动态增长内存（可能超过1MiB），因此不支持dos16/win16，无论是否启用FASTMODE预处理（默认启用，FASTMODE增加768KiB内存占用），编译器和平台支持均一致。
+由于使用std::map且动态增长内存（可能超过1MiB），因此不支持dos16/win16，无论是否启用FASTMODE预处理（默认启用，FASTMODE增加640KiB内存占用），编译器和平台支持均一致。
 
 不启用MULTI_THREAD时，无须依赖thread_pool.cpp，已测试编译器和平台：
 ```
