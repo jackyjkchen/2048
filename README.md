@@ -79,7 +79,7 @@ msc 3.0 (dos16)
 
 ## cpp/2048-ai.cpp + cpp/thread_pool.cpp + cpp/thread_pool.h
 
-AI版本，ISO C++98实现，可选支持多线程（预处理MULTI_THREAD/MULTI_THREAD_OPENMP）。
+AI版本，ISO C++98实现，可选支持多线程（预处理MULTI_THREAD或OPENMP_THREAD）。
 
 由于使用std::map且动态增长内存（可能超过1MiB），因此不支持dos16/win16，无论是否启用FASTMODE预处理（默认启用，增加640KiB内存占用），编译器和平台支持均一致。
 
