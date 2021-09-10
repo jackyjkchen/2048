@@ -36,7 +36,7 @@ lcc 4.0 (win32)
 
 * win64、windows for arm等均为win32的不同硬件架构，不单独说明，类似的linux、bsd等也不针对特定硬件架构。
 
-使用FASTMODE=0预处理（-DFASTMODE=0），代码和数据段可控制在64KiB以内，额外支持：
+使用FASTMODE=0预处理，代码和数据段可控制在64KiB以内，额外支持：
 ```
 openwatcom c++ 1.9 (dos16, win16)
 ```
