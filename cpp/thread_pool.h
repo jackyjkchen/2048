@@ -46,7 +46,6 @@ struct ThrdCallback {
 };
 
 #if defined(WINVER) && WINVER < 0x0600
-template<class LOCK>
 class ConditionVariable
 {
 public:
@@ -89,7 +88,7 @@ public:
     }
 
 private:
-    LOCK &m_lock;
+    ThreadLock &m_lock;
     HANDLE m_semphore;
     int32 m_wait_num;
 };
@@ -122,11 +121,10 @@ private:
 #endif
 };
 
-template<class LOCK>
 class LockScope
 {
 public:
-    explicit LockScope(LOCK &lock) : m_lock(lock)
+    explicit LockScope(ThreadLock &lock) : m_lock(lock)
     {
         m_lock.lock();
     }
@@ -137,7 +135,7 @@ public:
 private:
     LockScope(const LockScope&);
     LockScope& operator=(LockScope&);
-    LOCK &m_lock;
+    ThreadLock &m_lock;
 };
 
 class ThreadPool

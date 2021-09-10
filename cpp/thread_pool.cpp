@@ -221,7 +221,7 @@ bool ThreadPool::init()
 
 void ThreadPool::add_task(thrd_callback func, void *param)
 {
-    LockScope<ThreadLock>(this->m_ctrl_lock);
+    LockScope(this->m_ctrl_lock);
     if (m_thrd_num == 0) {
         return;
     }
@@ -237,7 +237,7 @@ void ThreadPool::add_task(thrd_callback func, void *param)
 
 void ThreadPool::wait_all_task()
 {
-    LockScope<ThreadLock>(this->m_ctrl_lock);
+    LockScope(this->m_ctrl_lock);
     if (m_thrd_num == 0) {
         return;
     }
@@ -255,7 +255,7 @@ void ThreadPool::wait_all_task()
 
 void ThreadPool::wait_all_thrd()
 {
-    LockScope<ThreadLock>(this->m_ctrl_lock);
+    LockScope(this->m_ctrl_lock);
     if (m_thrd_num == 0) {
         return;
     }
@@ -280,7 +280,7 @@ void ThreadPool::wait_all_thrd()
 
 int ThreadPool::get_max_thrd_num()
 {
-    LockScope<ThreadLock>(this->m_ctrl_lock);
+    LockScope(this->m_ctrl_lock);
     return m_max_thrd_num;
 }
 
