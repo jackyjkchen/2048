@@ -149,6 +149,8 @@ typedef std::unordered_map<board_t, trans_table_entry_t> trans_table_t;
 #include <map>
 #if defined(__GNUC__) && __GNUC__ == 2 && __GNUC_MINOR__ == 7
 typedef map<board_t, trans_table_entry_t, less<board_t> > trans_table_t;
+#elif defined(_MSC_VER) && _MSC_VER < 1100
+typedef map<board_t, trans_table_entry_t, less<board_t>, allocator<trans_table_entry_t> > trans_table_t;
 #else
 typedef std::map<board_t, trans_table_entry_t> trans_table_t;
 #endif
@@ -259,7 +261,7 @@ static void init_tables(void) {
         }
         score_table[row] = score;
 
-        double sum = 0.0f;
+        float sum = 0.0f;
         int empty = 0;
         int merges = 0;
         int prev = 0;
@@ -285,16 +287,16 @@ static void init_tables(void) {
             merges += 1 + counter;
         }
 
-        double monotonicity_left = 0.0f;
-        double monotonicity_right = 0.0f;
+        float monotonicity_left = 0.0f;
+        float monotonicity_right = 0.0f;
 
         for (i = 1; i < 4; ++i) {
             if (line[i - 1] > line[i]) {
                 monotonicity_left +=
-                    pow(line[i - 1], SCORE_MONOTONICITY_POWER) - pow(line[i], SCORE_MONOTONICITY_POWER);
+                    pow((float)line[i - 1], SCORE_MONOTONICITY_POWER) - pow((float)line[i], SCORE_MONOTONICITY_POWER);
             } else {
                 monotonicity_right +=
-                    pow(line[i], SCORE_MONOTONICITY_POWER) - pow(line[i - 1], SCORE_MONOTONICITY_POWER);
+                    pow((float)line[i], SCORE_MONOTONICITY_POWER) - pow((float)line[i - 1], SCORE_MONOTONICITY_POWER);
             }
         }
 

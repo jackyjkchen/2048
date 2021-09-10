@@ -46,7 +46,7 @@ struct ThrdCallback {
 };
 
 #if defined(WINVER) && WINVER < 0x0600
-template<typename LOCK>
+template<class LOCK>
 class ConditionVariable
 {
 public:
@@ -122,7 +122,7 @@ private:
 #endif
 };
 
-template<typename LOCK>
+template<class LOCK>
 class LockScope
 {
 public:
@@ -153,7 +153,11 @@ public:
     int32 get_max_thrd_num();
     static int32 get_cpu_num();
 
+#if defined(_MSC_VER) && _MSC_VER < 1100
+    deque<ThrdCallback, allocator<ThrdCallback> > m_queue;
+#else
     std::deque<ThrdCallback> m_queue;
+#endif
 private:
     static void thread_instance(void *param);
     ThrdCallback m_thrd;

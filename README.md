@@ -87,12 +87,12 @@ AI版本，ISO C++98实现，可选支持多线程（预处理MULTI_THREAD/MULTI
 ```
 gcc 2.7+ (linux, freebsd, macos, mingw, mingw-w64, cygwin, djgpp)
 clang 3.0+ (linux, macos, freebsd, win32)
-msvc 5.0sp3+ (win32)
+msvc 4.2+ (win32)
 openwatcom 1.9 (win32, win386, dos32 pmode, dos4gw)
 borland c++ 5.5+ (win32)
 ```
 
-* msvc 5.0必须应用SP3，否则优化选项会生成错误代码或者编译失败。
+* msvc 5.0必须应用SP3，否则优化选项会生成错误代码或者编译失败，其他版本msvc也都测试的是补丁打满的版本。
 
 
 本实现支持多线程，由预处理MULTI_THREAD控制，编译示例如下，以gcc为例：
@@ -104,7 +104,7 @@ g++ -DMULTI_THREAD -O2 cpp/2048-ai.cpp cpp/thread_pool.cpp -pthread -o 2048
 ```
 gcc 2.8+ (linux, freebsd, macos, mingw, mingw-w64, cygwin)
 clang 3.0+ (linux, macos, freebsd, win32)
-msvc 5.0sp3+ (win32)
+msvc 4.2+ (win32)
 openwatcom 1.9 (win32)
 borland c++ 5.5+ (win32)
 ```
