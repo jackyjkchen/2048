@@ -85,7 +85,7 @@ AI版本，ISO C++98实现，可选支持多线程（预处理MULTI_THREAD/MULTI
 
 不启用MULTI_THREAD时（默认），无须依赖thread_pool.cpp，已测试编译器和平台：
 ```
-gcc 2.8+ (linux, freebsd, macos, mingw, mingw-w64, cygwin, djgpp)
+gcc 2.7+ (linux, freebsd, macos, mingw, mingw-w64, cygwin, djgpp)
 clang 3.0+ (linux, macos, freebsd, win32)
 msvc 5.0sp3+ (win32)
 openwatcom 1.9 (win32, win386, dos32 pmode, dos4gw)
@@ -104,13 +104,10 @@ g++ -DMULTI_THREAD -O2 cpp/2048-ai.cpp cpp/thread_pool.cpp -pthread -o 2048
 ```
 gcc 2.8+ (linux, freebsd, macos, mingw, mingw-w64, cygwin)
 clang 3.0+ (linux, macos, freebsd, win32)
-msvc 6.0sp6+ (win32)
+msvc 5.0sp3+ (win32)
 openwatcom 1.9 (win32)
 borland c++ 5.5+ (win32)
 ```
-
-* msvc 5.0sp3能够编译成功，但生成的多线程代码错误。
-
 
 本实现亦支持openmp多线程，由预处理OPENMP_THREAD控制，编译示例如下，以gcc为例：
 ```

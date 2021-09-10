@@ -142,22 +142,20 @@ typedef struct {
 #undef min
 #endif
 
-#include <algorithm>
 #if __cplusplus >= 201103L
 #include <unordered_map>
 typedef std::unordered_map<board_t, trans_table_entry_t> trans_table_t;
 #else
 #include <map>
+#if defined(__GNUC__) && __GNUC__ == 2 && __GNUC_MINOR__ == 7
+typedef map<board_t, trans_table_entry_t, less<board_t> > trans_table_t;
+#else
 typedef std::map<board_t, trans_table_entry_t> trans_table_t;
 #endif
+#endif
 
-#if __cplusplus >= 199711L
-#define max std::max
-#define min std::min
-#else
 #define max(a,b) ( ((a)>(b)) ? (a):(b) )
 #define min(a,b) ( ((a)>(b)) ? (b):(a) )
-#endif
 
 static const float SCORE_LOST_PENALTY = 200000.0f;
 static const float SCORE_MONOTONICITY_POWER = 4.0f;
@@ -259,7 +257,7 @@ static void init_tables(void) {
                 score += (rank - 1) * (1 << rank);
             }
         }
-        score_table[row] = (float)score;
+        score_table[row] = score;
 
         double sum = 0.0f;
         int empty = 0;
@@ -556,13 +554,8 @@ static float score_tilechoose_node(eval_state &state, board_t board, float cprob
         return score_heur_board(board);
     }
     if (state.curdepth < CACHE_DEPTH_LIMIT) {
-#if defined(__WATCOMC__)
-        trans_table_t::iterator &i = state.trans_table.find(board);
-#else
-        const trans_table_t::iterator &i = state.trans_table.find(board);
-#endif
-        if (i != state.trans_table.end()) {
-            trans_table_entry_t entry = i->second;
+        if (state.trans_table.find(board) != state.trans_table.end()) {
+            trans_table_entry_t entry = state.trans_table[board];
 
             if (entry.depth <= state.curdepth) {
                 state.cachehits++;
