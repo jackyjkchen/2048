@@ -8,7 +8,7 @@ ThreadLock::ThreadLock()
 {
 #ifdef _WIN32
     InitializeCriticalSection(&m_mutex);
-#if WINVER > 0x0600
+#if WINVER >= 0x0600
     InitializeConditionVariable(&m_cond);
 #endif
 #else
