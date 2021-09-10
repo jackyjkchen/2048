@@ -208,6 +208,7 @@ bool ThreadPool::init()
 #else
         if (pthread_create(&m_thread_handle[i], NULL, ThreadPool::_threadstart, &m_thrd) != 0) {
 #endif
+            m_thread_handle[i] = 0;
             m_ctrl_lock.unlock(); //LCOV_EXCL_LINE
             wait_all_thrd();      //LCOV_EXCL_LINE
             return false;         //LCOV_EXCL_LINE
@@ -264,7 +265,7 @@ void ThreadPool::wait_all_thrd()
     m_pool_signaled = true;
     m_pool_lock.unlock();
     for (int32 i = 0; i < m_max_thrd_num; ++i) {
-        if (m_thread_handle[i] > 0) {
+        if (m_thread_handle[i]) {
 #ifdef _WIN32
             WaitForSingleObject(m_thread_handle[i], INFINITE);
             CloseHandle(m_thread_handle[i]);
