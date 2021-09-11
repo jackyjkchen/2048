@@ -145,6 +145,7 @@ typedef struct {
 #if __cplusplus >= 201103L
 #include <unordered_map>
 typedef std::unordered_map<board_t, trans_table_entry_t> trans_table_t;
+#define STDCPP 1
 #else
 #if defined(__GNUC__) && __GNUC__ == 2 && __GNUC_MINOR__ <= 7
 #include <map.h>
@@ -155,6 +156,7 @@ typedef map<board_t, trans_table_entry_t, less<board_t>, allocator<trans_table_e
 #else
 #include <map>
 typedef std::map<board_t, trans_table_entry_t> trans_table_t;
+#define STDCPP 1
 #endif
 #endif
 
@@ -558,8 +560,17 @@ static float score_tilechoose_node(eval_state &state, board_t board, float cprob
         return score_heur_board(board);
     }
     if (state.curdepth < CACHE_DEPTH_LIMIT) {
-        if (state.trans_table.find(board) != state.trans_table.end()) {
+#if defined(__WATCOMC__)
+        trans_table_t::iterator &i = state.trans_table.find(board);
+#else
+        const trans_table_t::iterator &i = state.trans_table.find(board);
+#endif
+        if (i != state.trans_table.end()) {
+#ifdef STDCPP
+            trans_table_entry_t entry = i->second;
+#else
             trans_table_entry_t entry = state.trans_table[board];
+#endif
 
             if (entry.depth <= state.curdepth) {
                 state.cachehits++;
