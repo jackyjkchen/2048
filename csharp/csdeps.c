@@ -1,7 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
-
 
 #if defined(_WIN32)
 #define WIN32_LEAN_AND_MEAN
@@ -14,18 +12,7 @@
 #define DLLEXPORT
 #endif
 
-DLLEXPORT unsigned int c_rand_() {
-    static unsigned int seeded = 0;
-
-    if (!seeded) {
-        srand((unsigned int)time(NULL));
-        seeded = 1;
-    }
-
-    return rand();
-}
-
-DLLEXPORT void c_clear_screen_(void) {
+DLLEXPORT void c_clear_screen(void) {
 #if defined(_WIN32)
 #ifdef __TINYC__
     system("cls");
@@ -61,16 +48,16 @@ DLLEXPORT void c_clear_screen_(void) {
     SetConsoleCursorPosition(hStdOut, homeCoords);
 #endif
 #elif defined(__linux__) || defined(__unix__) || defined(__CYGWIN__) || defined(__MACH__)
-    printf("\033[2J\033[H");
+    system("clear");
 #endif
 }
 
 #if defined(_WIN32)
 
-DLLEXPORT void c_term_init_(void) {
+DLLEXPORT void c_term_init(void) {
 }
 
-DLLEXPORT void c_term_clear_(void) {
+DLLEXPORT void c_term_clear(void) {
 }
 
 #elif defined(__linux__) || defined(__unix__)|| defined(__CYGWIN__) || defined(__MACH__)
@@ -92,17 +79,17 @@ static void _term_set(int mode) {
     }
 }
 
-void c_term_init_(void) {
+void c_term_init(void) {
     _term_set(1);
 }
 
-void c_term_clear_(void) {
+void c_term_clear(void) {
     _term_set(0);
 }
 
 #endif
 
-DLLEXPORT int c_getch_(void) {
+DLLEXPORT int c_get_ch(void) {
 #if defined(_WIN32)
     return _getch();
 #else
@@ -110,10 +97,3 @@ DLLEXPORT int c_getch_(void) {
 #endif
 }
 
-DLLEXPORT void c_print_move_score_(int *moveno, int *current_score, int *last_score) {
-    printf("Move #%d, current score=%d(+%d)\n", *moveno, *current_score, *current_score - *last_score);
-}
-
-DLLEXPORT void c_print_final_score_(int *final_score) {
-    printf("Game over. Your score is %d.\n", *final_score);
-}

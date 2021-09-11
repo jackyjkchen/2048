@@ -7,12 +7,14 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <conio.h>
+#define DLLEXPORT __declspec(dllexport)
 #elif defined(__linux__) || defined(__unix__) || defined(__CYGWIN__) || defined(__MACH__)
 #include <unistd.h>
 #include <termios.h>
+#define DLLEXPORT
 #endif
 
-unsigned int c_rand__() {
+DLLEXPORT unsigned int c_rand__() {
     static unsigned int seeded = 0;
 
     if (!seeded) {
@@ -23,7 +25,7 @@ unsigned int c_rand__() {
     return rand();
 }
 
-void c_clear_screen__(void) {
+DLLEXPORT void c_clear_screen__(void) {
 #if defined(_WIN32)
 #ifdef __TINYC__
     system("cls");
@@ -65,10 +67,10 @@ void c_clear_screen__(void) {
 
 #if defined(_WIN32)
 
-void c_term_init__(void) {
+DLLEXPORT void c_term_init__(void) {
 }
 
-void c_term_clear__(void) {
+DLLEXPORT void c_term_clear__(void) {
 }
 
 #elif defined(__linux__) || defined(__unix__)|| defined(__CYGWIN__) || defined(__MACH__)
@@ -100,7 +102,7 @@ void c_term_clear__(void) {
 
 #endif
 
-int c_getch__(void) {
+DLLEXPORT int c_getch__(void) {
 #if defined(_WIN32)
     return _getch();
 #else
@@ -108,10 +110,10 @@ int c_getch__(void) {
 #endif
 }
 
-void c_print_move_score__(int *moveno, int *current_score, int *last_score) {
+DLLEXPORT void c_print_move_score__(int *moveno, int *current_score, int *last_score) {
     printf("Move #%d, current score=%d(+%d)\n", *moveno, *current_score, *current_score - *last_score);
 }
 
-void c_print_final_score__(int *final_score) {
+DLLEXPORT void c_print_final_score__(int *final_score) {
     printf("Game over. Your score is %d.\n", *final_score);
 }

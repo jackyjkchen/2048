@@ -5,12 +5,14 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <conio.h>
+#define DLLEXPORT __declspec(dllexport)
 #elif defined(__linux__) || defined(__unix__) || defined(__CYGWIN__) || defined(__MACH__)
 #include <unistd.h>
 #include <termios.h>
+#define DLLEXPORT
 #endif
 
-void clear_screen(void) {
+DLLEXPORT void clear_screen(void) {
 #if defined(_WIN32)
 #ifdef __TINYC__
     system("cls");
@@ -52,10 +54,10 @@ void clear_screen(void) {
 
 #if defined(_WIN32)
 
-void term_init(void) {
+DLLEXPORT void term_init(void) {
 }
 
-void term_clear(void) {
+DLLEXPORT void term_clear(void) {
 }
 
 #elif defined(__linux__) || defined(__unix__)|| defined(__CYGWIN__) || defined(__MACH__)
@@ -87,7 +89,7 @@ void term_clear(void) {
 
 #endif
 
-int get_ch(void) {
+DLLEXPORT int get_ch(void) {
 #if defined(_WIN32)
     return _getch();
 #else

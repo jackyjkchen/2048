@@ -142,6 +142,24 @@ mono 1.1.1+ (linux)
 ```
 
 
+## csharp/2048-old.cs + csharp/csdeps.c
+
+C# 1.0实现，查表法，兼容.net framework 1.0/1.1。由于.net 1.0/1.1缺少System.Console.ReadKey()和System.Console.Clear()，因此由csharp/csdeps.c提供跨平台实现
+
+已测试编译器和平台：
+```
+visual studio 2002+ (win32)
+mono 1.0+ (linux)
+```
+
+编译运行命令行示例：
+```
+gcc -O2 -fPIC -shared csharp/csdeps.c -o libcsdeps.so
+mcs csharp/2048-old.cs  -out:2048-old.exe
+mono 2048-old.exe
+```
+
+
 ## csharp/2048-ai.cs
 
 C# AI实现，查表法 + Dictionary + 多线程。需要.net framework 2.0+。
