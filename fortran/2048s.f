@@ -349,8 +349,7 @@
           if (movechar == 'q') then
             ret = -1
             exit
-          end if
-          if (movechar == 'r') then
+          else if (movechar == 'r') then
             ret = 5
             exit
           end if

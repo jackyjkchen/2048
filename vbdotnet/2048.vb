@@ -188,9 +188,7 @@ Public Module Class2048
 
             If movechar = "q"c Then
                 Return -1
-            End If
-
-            If movechar = "r"c Then
+            ElseIf movechar = "r"c Then
                 Return RETRACT
             End If
 

@@ -48,10 +48,8 @@ var
     i, j, power_val : integer;
 begin
     writeln('-----------------------------');
-    for i := 0 to 3 do
-    begin
-        for j := 0 to 3 do
-        begin
+    for i := 0 to 3 do begin
+        for j := 0 to 3 do begin
             power_val := board and $f;
             if power_val = 0 then
                 write(format('|%6c', [' ']))
@@ -122,8 +120,7 @@ begin
         row_line[2] := (row shr 8) and $f;
         row_line[3] := (row shr 12) and $f;
 
-        for i := 0 to 3 do
-        begin
+        for i := 0 to 3 do begin
             rank := row_line[i];
             if rank >= 2 then
                 score := score + ((rank - 1) * (1 shl rank));
@@ -131,24 +128,19 @@ begin
         score_table[row] := score;
 
         i := 0;
-        while i < 3 do
-        begin
+        while i < 3 do begin
             j := i + 1;
-            while j < 4 do
-            begin
+            while j < 4 do begin
                 if row_line[j] <> 0 then break;
                 j := j + 1;
             end;
             if j = 4 then break;
 
-            if row_line[i] = 0 then
-            begin
+            if row_line[i] = 0 then begin
                 row_line[i] := row_line[j];
                 row_line[j] := 0;
                 i := i - 1;
-            end
-            else if row_line[i] = row_line[j] then
-            begin
+            end else if row_line[i] = row_line[j] then begin
                 if row_line[i] <> $f then 
                     row_line[i] := row_line[i] + 1;
                 row_line[j] := 0;
@@ -219,24 +211,19 @@ begin
     row_line[3] := (row shr 12) and $f;
 
     i := 0;
-    while i < 3 do
-    begin
+    while i < 3 do begin
         j := i + 1;
-        while j < 4 do
-        begin
+        while j < 4 do begin
             if row_line[j] <> 0 then break;
             j := j + 1;
         end;
         if j = 4 then break;
 
-        if row_line[i] = 0 then
-        begin
+        if row_line[i] = 0 then begin
             row_line[i] := row_line[j];
             row_line[j] := 0;
             i := i - 1;
-        end
-        else if row_line[i] = row_line[j] then
-        begin
+        end else if row_line[i] = row_line[j] then begin
             if row_line[i] <> $f then
                 row_line[i] := row_line[i] + 1;
             row_line[j] := 0;
@@ -255,8 +242,7 @@ var
 begin
     ret := board;
     t := transpose(board);
-    for i := 0 to 3 do
-    begin
+    for i := 0 to 3 do begin
         row := (t shr (i shl 4)) and ROW_MASK;
         if _move = UP then begin
             ret := ret xor (unpack_col(row xor execute_move_helper(row)) shl (i shl 2));
@@ -275,8 +261,7 @@ var
     row, rev_row : row_t;
 begin
     ret := board;
-    for i := 0 to 3 do
-    begin
+    for i := 0 to 3 do begin
         row := (board shr (i shl 4)) and ROW_MASK;
         if _move = LEFT then begin
             ret := ret xor (board_t(row xor execute_move_helper(row)) shl (i shl 4));
@@ -296,11 +281,9 @@ var
     rank : byte;
 begin
     score := 0;
-    for j := 0 to 3 do
-    begin
+    for j := 0 to 3 do begin
         row := (board shr (j shl 4)) and ROW_MASK;
-        for i := 0 to 3 do
-        begin
+        for i := 0 to 3 do begin
             rank := (row shr (i shl 2)) and $f;
             if rank >= 2 then
                 score := score + ((rank - 1) * (1 shl rank));
@@ -336,12 +319,11 @@ const
     allmoves : pchar = 'wsadkjhl';
 begin
     print_board(board);
-    while true do
-    begin
+    while true do begin
         movechar := get_ch;
         if movechar = 'q' then
-            exit(-1);
-        if movechar = 'r' then 
+            exit(-1)
+        else if movechar = 'r' then 
             exit(RETRACT);
         _pos := strscan(allmoves, movechar);
         if _pos <> nil then
@@ -368,10 +350,8 @@ var
 begin
     index := unif_random(count_empty(board));
     tmp := board;
-    while true do
-    begin
-        while (tmp and $f) <> 0 do
-        begin
+    while true do begin
+        while (tmp and $f) <> 0 do begin
             tmp := tmp shr 4;
             tile := tile shl 4;
         end;
@@ -421,12 +401,10 @@ begin
     retract_pos := 0;
     retract_num := 0;
 
-    while true do
-    begin
+    while true do begin
         clear_screen;
         _move := 0;
-        while _move < 4 do
-        begin
+        while _move < 4 do begin
             if execute_move(_move, board) <> board then
                 break;
             _move := _move + 1;
@@ -441,10 +419,8 @@ begin
         _move := get_move(board);
         if _move < 0 then break;
 
-        if _move = RETRACT then
-        begin
-            if (moveno <= 1) or (retract_num <= 0) then
-            begin
+        if _move = RETRACT then begin
+            if (moveno <= 1) or (retract_num <= 0) then begin
                 moveno := moveno - 1;
                 continue;
             end;
@@ -459,8 +435,7 @@ begin
         end;
 
         newboard := execute_move(_move, board);
-        if newboard = board then
-        begin
+        if newboard = board then begin
             moveno := moveno - 1;
             continue;
         end;

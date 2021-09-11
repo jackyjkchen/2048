@@ -180,8 +180,7 @@ function ask_for_move(board)
 
         if (movechar == 'q') then
             return -1
-        end
-        if (movechar == 'r') then
+        elseif (movechar == 'r') then
             return RETRACT
         end
         pos = string.find(allmoves, movechar)

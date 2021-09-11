@@ -233,8 +233,7 @@ function ask_for_move() {
         then
             echo -1
             return
-        fi
-        if [[ $movechar == 'r' ]]
+        elif [[ $movechar == 'r' ]]
         then
             echo 4
             return

@@ -213,8 +213,7 @@ func ask_for_move(board board_t) int {
 
 		if movechar == 'q' {
 			return -1
-		}
-		if movechar == 'r' {
+		} else if movechar == 'r' {
 			return RETRACT
 		}
 		pos = strings.IndexRune(allmoves, movechar)

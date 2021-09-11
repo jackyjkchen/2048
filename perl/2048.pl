@@ -200,8 +200,7 @@ sub ask_for_move {
 
         if ($movechar eq "q") {
             return -1;
-        }
-        if ($movechar eq "r") {
+        } elsif ($movechar eq "r") {
             return $RETRACT;
         }
         $pos = index($allmoves, $movechar);

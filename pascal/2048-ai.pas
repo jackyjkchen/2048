@@ -49,10 +49,8 @@ var
     i, j, power_val : integer;
 begin
     writeln('-----------------------------');
-    for i := 0 to 3 do
-    begin
-        for j := 0 to 3 do
-        begin
+    for i := 0 to 3 do begin
+        for j := 0 to 3 do begin
             power_val := board and $f;
             if power_val = 0 then
                 write(format('|%6c', [' ']))
@@ -154,8 +152,7 @@ begin
         row_line[2] := (row shr 8) and $f;
         row_line[3] := (row shr 12) and $f;
 
-        for i := 0 to 3 do
-        begin
+        for i := 0 to 3 do begin
             rank := row_line[i];
             if rank >= 2 then
                 score := score + ((rank - 1) * (1 shl rank));
@@ -168,22 +165,16 @@ begin
         prev := 0;
         counter := 0;
 
-        for i := 0 to 3 do
-        begin
+        for i := 0 to 3 do begin
             rank := row_line[i];
 
             sum := sum + power(rank, SCORE_SUM_POWER);
-            if rank = 0 then
-            begin
+            if rank = 0 then begin
                 empty := empty + 1;
-            end else
-            begin
-                if prev = rank then
-                begin
+            end else begin
+                if prev = rank then begin
                     counter := counter + 1;
-                end
-                else if counter > 0 then
-                begin
+                end else if counter > 0 then begin
                     merges := merges + 1 + counter;
                     counter := 0;
                 end;
@@ -196,8 +187,7 @@ begin
         monotonicity_left := 0.0;
         monotonicity_right := 0.0;
 
-        for i := 1 to 3 do
-        begin
+        for i := 1 to 3 do begin
             if row_line[i - 1] > row_line[i] then
                 monotonicity_left := monotonicity_left +
                     power(row_line[i - 1], SCORE_MONOTONICITY_POWER) - power(row_line[i], SCORE_MONOTONICITY_POWER)
@@ -210,24 +200,19 @@ begin
             SCORE_MONOTONICITY_WEIGHT * min(monotonicity_left, monotonicity_right) - SCORE_SUM_WEIGHT * sum;
 
         i := 0;
-        while i < 3 do
-        begin
+        while i < 3 do begin
             j := i + 1;
-            while j < 4 do
-            begin
+            while j < 4 do begin
                 if row_line[j] <> 0 then break;
                 j := j + 1;
             end;
             if j = 4 then break;
 
-            if row_line[i] = 0 then
-            begin
+            if row_line[i] = 0 then begin
                 row_line[i] := row_line[j];
                 row_line[j] := 0;
                 i := i - 1;
-            end
-            else if row_line[i] = row_line[j] then
-            begin
+            end else if row_line[i] = row_line[j] then begin
                 if row_line[i] <> $f then 
                     row_line[i] := row_line[i] + 1;
                 row_line[j] := 0;
@@ -304,24 +289,19 @@ begin
     row_line[3] := (row shr 12) and $f;
 
     i := 0;
-    while i < 3 do
-    begin
+    while i < 3 do begin
         j := i + 1;
-        while j < 4 do
-        begin
+        while j < 4 do begin
             if row_line[j] <> 0 then break;
             j := j + 1;
         end;
         if j = 4 then break;
 
-        if row_line[i] = 0 then
-        begin
+        if row_line[i] = 0 then begin
             row_line[i] := row_line[j];
             row_line[j] := 0;
             i := i - 1;
-        end
-        else if row_line[i] = row_line[j] then
-        begin
+        end else if row_line[i] = row_line[j] then begin
             if row_line[i] <> $f then
                 row_line[i] := row_line[i] + 1;
             row_line[j] := 0;
@@ -340,8 +320,7 @@ var
 begin
     ret := board;
     t := transpose(board);
-    for i := 0 to 3 do
-    begin
+    for i := 0 to 3 do begin
         row := (t shr (i shl 4)) and ROW_MASK;
         if _move = UP then begin
             ret := ret xor (unpack_col(row xor execute_move_helper(row)) shl (i shl 2));
@@ -360,8 +339,7 @@ var
     row, rev_row : row_t;
 begin
     ret := board;
-    for i := 0 to 3 do
-    begin
+    for i := 0 to 3 do begin
         row := (board shr (i shl 4)) and ROW_MASK;
         if _move = LEFT then begin
             ret := ret xor (board_t(row xor execute_move_helper(row)) shl (i shl 4));
@@ -381,11 +359,9 @@ var
     rank : byte;
 begin
     score := 0;
-    for j := 0 to 3 do
-    begin
+    for j := 0 to 3 do begin
         row := (board shr (j shl 4)) and ROW_MASK;
-        for i := 0 to 3 do
-        begin
+        for i := 0 to 3 do begin
             rank := (row shr (i shl 2)) and $f;
             if rank >= 2 then
                 score := score + ((rank - 1) * (1 shl rank));
@@ -404,8 +380,7 @@ var
     monotonicity_left, monotonicity_right : real;
 begin
     heur_score := 0.0;
-    for j := 0 to 3 do
-    begin
+    for j := 0 to 3 do begin
         sum := 0.0;
         empty := 0;
         merges := 0;
@@ -416,22 +391,16 @@ begin
         row_line[1] := (row shr 4) and $f;
         row_line[2] := (row shr 8) and $f;
         row_line[3] := (row shr 12) and $f;
-        for i := 0 to 3 do
-        begin
+        for i := 0 to 3 do begin
             rank := row_line[i];
 
             sum := sum + power(rank, SCORE_SUM_POWER);
-            if rank = 0 then
-            begin
+            if rank = 0 then begin
                 empty := empty + 1;
-            end else
-            begin
-                if prev = rank then
-                begin
+            end else begin
+                if prev = rank then begin
                     counter := counter + 1;
-                end
-                else if counter > 0 then
-                begin
+                end else if counter > 0 then begin
                     merges := merges + 1 + counter;
                     counter := 0;
                 end;
@@ -444,8 +413,7 @@ begin
         monotonicity_left := 0.0;
         monotonicity_right := 0.0;
 
-        for i := 1 to 3 do
-        begin
+        for i := 1 to 3 do begin
             if row_line[i - 1] > row_line[i] then
                 monotonicity_left := monotonicity_left +
                     power(row_line[i - 1], SCORE_MONOTONICITY_POWER) - power(row_line[i], SCORE_MONOTONICITY_POWER)
@@ -490,16 +458,14 @@ var
     count  : integer;
 begin
     bitset := 0;
-    while board <> 0 do
-    begin
+    while board <> 0 do begin
         bitset := bitset or (1 shl (board and $f));
         board := board shr 4;
     end;
 
     bitset := bitset shr 1;
     count := 0;
-    while bitset <> 0 do
-    begin
+    while bitset <> 0 do begin
         bitset := bitset and (bitset - 1);
         count := count + 1;
     end;
@@ -515,18 +481,14 @@ var
     tile_2, tmp : board_t;
     num_open    : integer;
 begin
-    if (cprob < CPROB_THRESH_BASE) or (state.curdepth >= state.depth_limit) then
-    begin
+    if (cprob < CPROB_THRESH_BASE) or (state.curdepth >= state.depth_limit) then begin
         state.maxdepth := max(state.curdepth, state.maxdepth);
         exit(score_heur_board(board));
     end;
-    if state.curdepth < CACHE_DEPTH_LIMIT then
-    begin
-        if state.trans_table.ContainsKey(board) then
-        begin
+    if state.curdepth < CACHE_DEPTH_LIMIT then begin
+        if state.trans_table.ContainsKey(board) then begin
             entry := state.trans_table[board];
-            if entry.depth <= state.curdepth then
-            begin
+            if entry.depth <= state.curdepth then begin
                 state.cachehits := state.cachehits + 1;
                 exit(entry.heuristic);
             end;
@@ -539,10 +501,8 @@ begin
     tmp := board;
     tile_2 := 1;
 
-    while tile_2 <> 0 do
-    begin
-        if (tmp and $f) = 0 then
-        begin
+    while tile_2 <> 0 do begin
+        if (tmp and $f) = 0 then begin
             res := res + score_move_node(state, board or tile_2, cprob * 0.9) * 0.9;
             res := res + score_move_node(state, board or (tile_2 shl 1), cprob * 0.1) * 0.1;
         end;
@@ -551,8 +511,7 @@ begin
     end;
     res := res / num_open;
 
-    if state.curdepth < CACHE_DEPTH_LIMIT then
-    begin
+    if state.curdepth < CACHE_DEPTH_LIMIT then begin
         entry.depth := state.curdepth;
         entry.heuristic := res;
         state.trans_table.AddOrSetValue(board, entry);
@@ -570,13 +529,11 @@ begin
     best := 0.0;
 
     state.curdepth := state.curdepth + 1;
-    for _move := 0 to 3 do
-    begin
+    for _move := 0 to 3 do begin
         newboard := execute_move(_move, board);
         state.moves_evaled := state.moves_evaled + 1;
 
-        if board <> newboard then
-        begin
+        if board <> newboard then begin
             tmp := score_tilechoose_node(state, newboard, cprob);
             if best < tmp then
                 best := tmp;
@@ -655,8 +612,7 @@ begin
     print_board(board);
     writeln(format('Current scores: heur %d, actual %d', [round(score_heur_board(board)), score_board(board)]));
 
-    for _move := 0 to 3 do
-    begin
+    for _move := 0 to 3 do begin
         context[_move].board := board;
         context[_move]._move := _move;
         context[_move].res := 0.0;
@@ -667,14 +623,12 @@ begin
 {$endif}
     end;
 
-    for _move := 0 to 3 do
-    begin
+    for _move := 0 to 3 do begin
 {$ifdef MULTI_THREAD}
         WaitForThreadTerminate(thrd_ids[_move], 2147483647);
 {$endif}
         writeln(context[_move].msg);
-        if context[_move].res > best then
-        begin
+        if context[_move].res > best then begin
             best := context[_move].res;
             bestmove := _move;
         end;
@@ -703,10 +657,8 @@ var
 begin
     index := unif_random(count_empty(board));
     tmp := board;
-    while true do
-    begin
-        while (tmp and $f) <> 0 do
-        begin
+    while true do begin
+        while (tmp and $f) <> 0 do begin
             tmp := tmp shr 4;
             tile := tile shl 4;
         end;
@@ -746,12 +698,10 @@ begin
     last_score := 0;
     moveno := 0;
 
-    while true do
-    begin
+    while true do begin
         clear_screen;
         _move := 0;
-        while _move < 4 do
-        begin
+        while _move < 4 do begin
             if execute_move(_move, board) <> board then
                 break;
             _move := _move + 1;
@@ -767,8 +717,7 @@ begin
         if _move < 0 then break;
 
         newboard := execute_move(_move, board);
-        if newboard = board then
-        begin
+        if newboard = board then begin
             moveno := moveno - 1;
             continue;
         end;

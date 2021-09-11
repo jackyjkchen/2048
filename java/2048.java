@@ -194,8 +194,7 @@ class Class2048
 
             if (movechar == 'q') {
                 return -1;
-            }
-            if (movechar == 'r') {
+            } else if (movechar == 'r') {
                 return RETRACT;
             }
             pos = allmoves.indexOf(movechar);

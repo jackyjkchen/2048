@@ -188,7 +188,7 @@ def ask_for_move(board):
 
         if movechar == 'q':
             return -1
-        if movechar == 'r':
+        elif movechar == 'r':
             return RETRACT
         pos = allmoves.find(movechar)
         if pos != -1:

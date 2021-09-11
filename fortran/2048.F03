@@ -432,8 +432,7 @@ function ask_for_move(board)
         if (movechar == 'q') then
             ret = -1
             exit
-        end if
-        if (movechar == 'r') then
+        else if (movechar == 'r') then
             ret = RETRACT
             exit
         end if

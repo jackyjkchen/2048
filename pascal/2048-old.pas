@@ -46,10 +46,8 @@ var
     i, j, power_val : integer;
 begin
     writeln('-----------------------------');
-    for i := 0 to 3 do
-    begin
-        for j := 0 to 3 do
-        begin
+    for i := 0 to 3 do begin
+        for j := 0 to 3 do begin
             power_val := board[3-i] and $f;
             if power_val = 0 then
                 write('|', ' ':6)
@@ -98,8 +96,7 @@ var
 begin
     sum := 0;
     x := 0;
-    for i := 0 to 3 do
-    begin
+    for i := 0 to 3 do begin
         x := board[i];
         x := x or ((x shr 2) and $3333);
         x := x or ((x shr 1));
@@ -123,24 +120,19 @@ begin
     row_line[3] := (row shr 12) and $f;
 
     i := 0;
-    while i < 3 do
-    begin
+    while i < 3 do begin
         j := i + 1;
-        while j < 4 do
-        begin
+        while j < 4 do begin
             if row_line[j] <> 0 then goto 1;
             j := j + 1;
         end;
         1:
         if j = 4 then goto 2;
-        if row_line[i] = 0 then
-        begin
+        if row_line[i] = 0 then begin
             row_line[i] := row_line[j];
             row_line[j] := 0;
             i := i - 1;
-        end
-        else if row_line[i] = row_line[j] then
-        begin
+        end else if row_line[i] = row_line[j] then begin
             if row_line[i] <> $f then
                 row_line[i] := row_line[i] + 1;
             row_line[j] := 0;
@@ -159,8 +151,7 @@ var
 begin
     move(board, tran, sizeof(board_t));
     transpose(tran);
-    for i := 0 to 3 do
-    begin
+    for i := 0 to 3 do begin
         row := tran[3-i];
         if _move = UP then begin
             unpack_col(row xor execute_move_helper(row), tmp);
@@ -180,8 +171,7 @@ var
   i : integer;
   row, rev_row : row_t;
 begin
-    for i := 0 to 3 do
-    begin
+    for i := 0 to 3 do begin
         row := board[3-i];
         if _move = LEFT then begin
             board[3-i] := board[3-i] xor (row xor execute_move_helper(row));
@@ -208,11 +198,9 @@ var
   rank : byte;
 begin
     score := 0;
-    for j := 0 to 3 do
-    begin
+    for j := 0 to 3 do begin
         row := board[3-j];
-        for i := 0 to 3 do
-        begin
+        for i := 0 to 3 do begin
             rank := (row shr (i shl 2)) and $f;
             if rank >= 2 then
                 score := score + ((rank - 1) * (1 shl rank));
@@ -231,8 +219,7 @@ var
     i : integer;
 label 1;
 begin
-    for i := 1 to length(_str) do
-    begin
+    for i := 1 to length(_str) do begin
         if _str[i] = _chr then goto 1;
     end;
     i := 0;
@@ -250,16 +237,12 @@ const
 label 1;
 begin
     print_board(board);
-    while true do
-    begin
+    while true do begin
         movechar := get_ch;
-        if movechar = 'q' then
-        begin
+        if movechar = 'q' then begin
             ret := -1;
             goto 1;
-        end;
-        if movechar = 'r' then
-        begin
+        end else if movechar = 'r' then begin
             ret :=RETRACT;
             goto 1;
         end;
@@ -296,15 +279,12 @@ begin
     shift := 0;
     tmp := board[3];
     orig_tile := tile;
-    while true do
-    begin
-        while (tmp and $f) <> 0 do
-        begin
+    while true do begin
+        while (tmp and $f) <> 0 do begin
             tmp := tmp shr 4;
             tile := tile shl 4;
             shift := shift + 4;
-            if (shift mod 16) = 0 then
-            begin
+            if (shift mod 16) = 0 then begin
                 tmp := board[3 - (shift shr 4)];
                 tile := orig_tile;
             end;
@@ -314,8 +294,7 @@ begin
         tmp := tmp shr 4;
         tile := tile shl 4;
         shift := shift + 4;
-        if (shift mod 16) = 0 then
-        begin
+        if (shift mod 16) = 0 then begin
             tmp := board[3 - (shift shr 4)];
             tile := orig_tile;
         end;
@@ -341,10 +320,8 @@ var
 label 1;
 begin
     ret := true;
-    for i := 0 to 3 do
-    begin
-        if b1[i] <>  b2[i] then
-        begin
+    for i := 0 to 3 do begin
+        if b1[i] <>  b2[i] then begin
             ret := false;
             goto 1;
         end;
@@ -381,13 +358,11 @@ begin
     retract_pos := 0;
     retract_num := 0;
 
-    while true do
-    begin
+    while true do begin
         1:
         clear_screen;
         _move := 0;
-        while _move < 4 do
-        begin
+        while _move < 4 do begin
             move(board, newboard, sizeof(board_t));
             execute_move(_move, newboard);
             if not compare_board(board, newboard) then
@@ -405,10 +380,8 @@ begin
         _move := ask_for_move(board);
         if _move < 0 then goto 3;
 
-        if _move = RETRACT then
-        begin
-            if (moveno <= 1) or (retract_num <= 0) then
-            begin
+        if _move = RETRACT then begin
+            if (moveno <= 1) or (retract_num <= 0) then begin
                 moveno := moveno - 1;
                 goto 1;
             end;
@@ -424,8 +397,7 @@ begin
 
         move(board, newboard, sizeof(board_t));
         execute_move(_move, newboard);
-        if compare_board(board, newboard) then
-        begin
+        if compare_board(board, newboard) then begin
             moveno := moveno - 1;
             goto 1;
         end;
