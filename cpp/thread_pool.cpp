@@ -98,7 +98,7 @@ void ThreadLock::broadcast()
 }
 
 #ifdef _WIN32
-#if defined(WINVER) && WINVER >= 0x0502
+#if defined(WINVER) && WINVER >= 0x0501
 DWORD ThreadPool::_count_set_bits(ULONG_PTR bitMask)
 {
     DWORD LSHIFT = sizeof(ULONG_PTR) * 8 - 1;
@@ -134,7 +134,7 @@ int32 ThreadPool::get_cpu_num()
 {
     int32 cpu_num = 0;
 #ifdef _WIN32
-#if defined(WINVER) && WINVER >= 0x0502
+#if defined(WINVER) && WINVER >= 0x0501
     DWORD length = 0;
     PSYSTEM_LOGICAL_PROCESSOR_INFORMATION buf = NULL, ptr = NULL;
     BOOL ret = FALSE;

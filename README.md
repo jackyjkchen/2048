@@ -228,6 +228,16 @@ java -Djava.library.path=. Class2048
 ```
 
 
+## java/2048-old.java + java/javadeps.c
+
+兼容Java 1.0的实现，其余同上。
+
+已测试Java版本和平台：
+```
+jdk 1.1+ (linux, win32)
+```
+
+
 ## java/2048-ai.java + java/javadeps.c
 
 Java AI实现，查表法 + HashMap + 多线程，由于Java标准库不支持清除屏幕，由JNI方式——java/javadeps.c实现。
