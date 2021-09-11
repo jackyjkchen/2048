@@ -146,12 +146,14 @@ typedef struct {
 #include <unordered_map>
 typedef std::unordered_map<board_t, trans_table_entry_t> trans_table_t;
 #else
-#include <map>
-#if defined(__GNUC__) && __GNUC__ == 2 && __GNUC_MINOR__ == 7
+#if defined(__GNUC__) && __GNUC__ == 2 && __GNUC_MINOR__ <= 7
+#include <map.h>
 typedef map<board_t, trans_table_entry_t, less<board_t> > trans_table_t;
-#elif defined(_MSC_VER) && _MSC_VER < 1100
+#elif defined(_MSC_VER) && _MSC_VER <= 1020
+#include <map>
 typedef map<board_t, trans_table_entry_t, less<board_t>, allocator<trans_table_entry_t> > trans_table_t;
 #else
+#include <map>
 typedef std::map<board_t, trans_table_entry_t> trans_table_t;
 #endif
 #endif

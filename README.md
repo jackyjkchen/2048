@@ -30,7 +30,7 @@ tcc 0.9.27 (linux, win32)
 lcc 4.0 (win32)
 ```
 
-* msvc 2.0不能使用优化。
+* msvc 2.x都不能使用优化，包括最新的2.2。其他版本msvc测试的是补丁打满的版本。
 
 * gcc低版本需要大量补丁用于支持现代化系统，[参见](https://github.com/jackyjkchen/legacy-gcc)。
 
@@ -85,7 +85,7 @@ AI版本，ISO C++98实现，可选支持多线程（预处理MULTI_THREAD或OPE
 
 不启用MULTI_THREAD时（默认），无须依赖thread_pool.cpp，已测试编译器和平台：
 ```
-gcc 2.7+ (linux, freebsd, macos, mingw, mingw-w64, cygwin, djgpp)
+gcc 2.6+ (linux, freebsd, macos, mingw, mingw-w64, cygwin, djgpp)
 clang 3.0+ (linux, macos, freebsd, win32)
 msvc 4.2+ (win32)
 openwatcom 1.9 (win32, win386, dos32 pmode, dos4gw)
@@ -93,6 +93,11 @@ borland c++ 5.5+ (win32)
 ```
 
 * msvc 5.0必须应用SP3，否则优化选项会生成错误代码或者编译失败，其他版本msvc也都测试的是补丁打满的版本。
+
+* libg++-2.6.x中的STL非常原始，问题很多，默认是不会安装stl头文件的，[legacy-gcc](https://github.com/jackyjkchen/legacy-gcc)的libg++-2.6.2调整后会安装，但不在默认搜索路径。编译示例：
+```
+g++-2.6.3 -I/usr/lib/gcc-lib/i686-legacy-linux-gnu/2.6.3/include/g++/stl -O2 cpp/2048-ai.cpp -lstdc++ -lm -o 2048
+```
 
 
 本实现支持多线程，由预处理MULTI_THREAD控制，编译示例如下，以gcc为例：
@@ -133,7 +138,7 @@ C#实现，查表法。需要.net framework 2.0+。
 已测试编译器和平台：
 ```
 visual studio 2005+ (win32)
-mono 1.1+ (linux)
+mono 1.1.1+ (linux)
 ```
 
 
@@ -144,7 +149,7 @@ C# AI实现，查表法 + Dictionary + 多线程。需要.net framework 2.0+。
 已测试编译器和平台：
 ```
 visual studio 2005+ (win32)
-mono 1.1+ (linux)
+mono 1.1.1+ (linux)
 ```
 
 
