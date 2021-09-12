@@ -1,7 +1,6 @@
-#!/bin/bash
+#!/bin/sh
 
 ROW_MASK=$((0xFFFF))
-COL_MASK=$((0x000F000F000F000F))
 
 function unif_random() {
     local n=$1
@@ -15,7 +14,12 @@ function unif_random() {
 
 function unpack_col() {
     local row=$1
-    echo $(((row | (row << 12) | (row << 24) | (row << 36)) & COL_MASK))
+    local board=( 0 0 0 0 )
+    board[0]=$(((row & 0xF000) >> 12))
+    board[1]=$(((row & 0x0F00) >> 8))
+    board[2]=$(((row & 0x00F0) >> 4))
+    board[3]=$((row & 0x000F))
+    echo ${board[@]}
 }
 
 function reverse_row() {
@@ -24,7 +28,7 @@ function reverse_row() {
 }
 
 function print_board() {
-    local board=$1
+    local board=( $1 $2 $3 $4 )
     local i=0
     local j=0
     echo '-----------------------------'
@@ -33,14 +37,14 @@ function print_board() {
         j=0
         while [ $((j)) -lt 4 ]
         do
-            local power_val=$((board & 0xf))
+            local power_val=$((board[3-i] & 0xf))
             if [ $((power_val)) -eq 0 ]
             then
                 printf '|%6s' ' '
             else
                 printf '|%6d'  $((1 << power_val))
             fi
-            board=$((board >> 4))
+            board[3-$((i))]=$((board[3-i] >> 4))
             j=$((j + 1))
         done
         echo '|'
@@ -50,28 +54,55 @@ function print_board() {
 }
 
 function transpose() {
-    local x=$1
-    local a
-    local a1=$((x & 0xF0F00F0FF0F00F0F))
-    local a2=$((x & 0x0000F0F00000F0F0))
-    local a3=$((x & 0x0F0F00000F0F0000))
-    a=$((a1 | (a2 << 12) | (a3 >> 12)))
-    local b1=$((a & 0xFF00FF0000FF00FF))
-    local b2=$((a & 0x00FF00FF00000000))
-    local b3=$((a & 0x00000000FF00FF00))
-    echo $((b1 | (b2 >> 24) | (b3 << 24)))
+    local x=( $1 $2 $3 $4 )
+    local r0=0
+    local r1=0
+    local r2=0
+    local r3=0
+    local a1_0=$((x[0] & 0xF0F0))
+    local a1_1=$((x[1] & 0x0F0F))
+    local a1_2=$((x[2] & 0xF0F0))
+    local a1_3=$((x[3] & 0x0F0F))
+    local a2_1=$((x[1] & 0xF0F0))
+    local a2_3=$((x[3] & 0xF0F0))
+    local a3_0=$((x[0] & 0x0F0F))
+    local a3_2=$((x[2] & 0x0F0F))
+    r0=$((a1_0 | (a2_1 >> 4)))
+    r1=$((a1_1 | (a3_0 << 4)))
+    r2=$((a1_2 | (a2_3 >> 4)))
+    r3=$((a1_3 | (a3_2 << 4)))
+    local b1_0=$((r0 & 0xFF00))
+    local b1_1=$((r1 & 0xFF00))
+    local b1_2=$((r2 & 0x00FF))
+    local b1_3=$((r3 & 0x00FF))
+    local b2_0=$((r0 & 0x00FF))
+    local b2_1=$((r1 & 0x00FF))
+    local b3_2=$((r2 & 0xFF00))
+    local b3_3=$((r3 & 0xFF00))
+    x[0]=$((b1_0 | (b3_2 >> 8)))
+    x[1]=$((b1_1 | (b3_3 >> 8)))
+    x[2]=$((b1_2 | (b2_0 << 8)))
+    x[3]=$((b1_3 | (b2_1 << 8)))
+    echo ${x[@]}
 }
 
 function count_empty() {
-    local x=$1
-    x=$((x | ((x >> 2) & 0x3333333333333333)))
-    x=$((x | (x >> 1)))
-    x=$((~x & 0x1111111111111111))
-    x=$((x + (x >> 32)))
-    x=$((x + (x >> 16)))
-    x=$((x + (x >> 8)))
-    x=$((x + (x >> 4)))
-    echo $((x & 0xf))
+    local board=( $1 $2 $3 $4 )
+    local x=0
+    local sum=0
+    local i=0
+    while [ $((i)) -lt 4 ]
+    do
+        x=${board[i]}
+        x=$((x | (x >> 2) & 0x3333))
+        x=$((x | (x >> 1)))
+        x=$((~x & 0x1111))
+        x=$((x + (x >> 8)))
+        x=$((x + (x >> 4)))
+        sum=$((sum + x))
+        i=$((i + 1))
+    done
+    echo $((sum & 0xf))
 }
 
 function execute_move_helper() {
@@ -116,9 +147,9 @@ function execute_move_helper() {
 }
 
 function execute_move_col() {
-    local board=$1
-    local move=$2
-    local ret=$((board))
+    local board=( $1 $2 $3 $4 )
+    local move=$5
+    local ret=${board[@]}
     local t=$(transpose $((board)))
     local row
     local rev_row
@@ -141,9 +172,9 @@ function execute_move_col() {
 }
 
 function execute_move_row() {
-    local board=$1
-    local move=$2
-    local ret=$((board))
+    local board=( $1 $2 $3 $4 )
+    local move=$5
+    local ret=${board[@]}
     local row
     local rev_row
     local tmp
@@ -167,24 +198,24 @@ function execute_move_row() {
 
 function execute_move() {
     local move=$1
-    local board=$2
+    local board=( $2 $3 $4 $5 )
 
     if [[ ($((move)) -eq 0) || ($((move)) -eq 1) ]]
     then
-        echo $(execute_move_col $((board)) $((move)))
+        echo $(execute_move_col ${board[@]} $((move)))
         return
     elif [[ ($((move)) -eq 2) || ($((move)) -eq 3) ]]
     then
-        echo $(execute_move_row $((board)) $((move)))
+        echo $(execute_move_row ${board[@]} $((move)))
         return
     else
-        echo $((0xFFFFFFFFFFFFFFFF))
+        echo -1
         return
     fi
 }
 
 function score_helper() {
-    local board=$1
+    local board=( $1 $2 $3 $4 )
     local score=0
     local row
     local rank
@@ -210,8 +241,8 @@ function score_helper() {
 }
 
 function score_board() {
-    local board=$1
-    echo $(score_helper $((board)))
+    local board=( $1 $2 $3 $4 )
+    echo $(score_helper ${board[@]})
 }
 
 function strindex() { 
@@ -257,9 +288,9 @@ function draw_tile() {
 }
 
 function insert_tile_rand() {
-    local board=$1
-    local tile=$2
-    local index=$(unif_random $(count_empty $((board))))
+    local board=( $1 $2 $3 $4 )
+    local tile=$5
+    local index=$(unif_random $(count_empty ${board[@]}))
     local tmp=board
 
     while true
