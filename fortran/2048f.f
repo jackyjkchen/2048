@@ -8,13 +8,10 @@
         integer*8 :: ZF0F00F0F
         integer*8 :: ZFF00FF00
         integer*8 :: t8_1, t8_2
-
         integer*8 :: ROW_MASK, COL_MASK
         common /MASK_NUM/ ROW_MASK, COL_MASK
-
         integer*2 :: Z000F, Z00F0, Z0F00
         common /CONST_NUM/  Z000F, Z00F0, Z0F00
-
         integer*8 :: ZF0F00F0FF0F00F0F, Z0000F0F00000F0F0,
      & Z0F0F00000F0F0000, ZFF00FF0000FF00FF
         integer*8 :: Z00FF00FF00000000, Z00000000FF00FF00,
@@ -25,7 +22,6 @@
      & Z3333333333333333, Z1111111111111111
 
         ROW_MASK = 65535
-
         t8_1 = 983055
         COL_MASK = ior(ishft(t8_1, 32), t8_1)
 
@@ -36,29 +32,21 @@
         t8_1 = 61680
         t8_2 = 3855
         ZF0F00F0F = ior(ishft(t8_1, 16), t8_2)
-
         t8_1 = 65280
         ZFF00FF00 = ior(ishft(t8_1, 16), t8_1) 
 
         ZF0F00F0FF0F00F0F = ior(ishft(ZF0F00F0F, 32), ZF0F00F0F)
-
         t8_1 = 61680
         Z0000F0F00000F0F0 = ior(ishft(t8_1, 32), t8_1)
-
         t8_1 = 252641280
         Z0F0F00000F0F0000 = ior(ishft(t8_1, 32), t8_1)
-
         t8_1 = 16711935
         ZFF00FF0000FF00FF = ior(ishft(ZFF00FF00, 32), t8_1)
-
         t8_1 = 16711935
         Z00FF00FF00000000 = ishft(t8_1, 32)
-
         Z00000000FF00FF00 = ZFF00FF00
-
         t8_1 = 858993459
         Z3333333333333333 = ior(ishft(t8_1, 32), t8_1)
-
         t8_1 = 286331153
         Z1111111111111111 = ior(ishft(t8_1, 32), t8_1)
       end
@@ -75,7 +63,6 @@
       integer*8 function unpack_col(row)
         integer*2 :: row
         integer*8 :: t0, t1, t2, t3
-
         integer*8 :: ROW_MASK, COL_MASK
         common /MASK_NUM/ ROW_MASK, COL_MASK
 
@@ -92,7 +79,6 @@
       integer*2 function reverse_row(row)
         integer*2 :: row
         integer*2 :: t0, t1, t2, t3
-
         integer*2 :: Z000F, Z00F0, Z0F00
         common /CONST_NUM/  Z000F, Z00F0, Z0F00
 
@@ -109,7 +95,6 @@
         integer*8 :: board
         integer*8 :: board_, t_
         integer*2 :: i, j, power_val
-
         integer*2 :: Z000F, Z00F0, Z0F00
         common /CONST_NUM/  Z000F, Z00F0, Z0F00
 
@@ -137,7 +122,6 @@
       integer*8 function transpose_board(x)
         integer*8 :: x
         integer*8 :: a1, a2, a3, a, b1, b2, b3
-
         integer*8 :: ZF0F00F0FF0F00F0F, Z0000F0F00000F0F0,
      & Z0F0F00000F0F0000, ZFF00FF0000FF00FF
         integer*8 :: Z00FF00FF00000000, Z00000000FF00FF00,
@@ -162,7 +146,6 @@
       integer*4 function count_empty(x)
         integer*8 :: x
         integer*8 :: x_, t_
-
         integer*2 :: Z000F, Z00F0, Z0F00
         common /CONST_NUM/  Z000F, Z00F0, Z0F00
         integer*8 :: Z00FF00FF00000000, Z00000000FF00FF00,
@@ -188,13 +171,10 @@
         integer*2 :: i, j, rank, t0, t1, t2, t3
         integer*2 :: row_line(0:3)
         integer*4 :: score
-
         integer*2 :: reverse_row
-
         integer*2 :: row_table(-32768:32767)
         integer*4 :: score_table(-32768:32767)
         common /TABLE/ row_table, score_table
-
         integer*2 :: Z000F, Z00F0, Z0F00
         common /CONST_NUM/  Z000F, Z00F0, Z0F00
 
@@ -227,7 +207,6 @@
             if (j == 4) then
               exit
             end if
-
             if (row_line(i) == 0) then
               row_line(i) = row_line(j)
               row_line(j) = 0
@@ -260,10 +239,8 @@
         integer*8 :: board
         integer*4 :: move
         integer*8 :: ret, t
-
         integer*8 :: transpose_board, unpack_col
         integer*2 :: reverse_row, t_
-
         integer*8 :: ROW_MASK, COL_MASK
         common /MASK_NUM/ ROW_MASK, COL_MASK
         integer*2 :: row_table(-32768:32767)
@@ -303,9 +280,7 @@
         integer*8 :: board
         integer*4 :: move
         integer*8 :: ret
-
         integer*2 :: reverse_row, t_
-
         integer*8 :: ROW_MASK, COL_MASK
         common /MASK_NUM/ ROW_MASK, COL_MASK
         integer*2 :: row_table(-32768:32767)
@@ -344,7 +319,6 @@
         integer*4 :: move
         integer*8 :: board
         integer*8 :: ret
-
         integer*8 :: execute_move_col, execute_move_row
 
         if ((move == 0) .or. (move == 1)) then
@@ -362,7 +336,6 @@
         integer*8 :: board
         integer*4 :: table(-32768:32767)
         integer*4 :: t0, t1, t2, t3
-
         integer*8 :: ROW_MASK, COL_MASK
         common /MASK_NUM/ ROW_MASK, COL_MASK
         integer*2 :: row_table(-32768:32767)
@@ -379,7 +352,6 @@
 
       integer*4 function score_board(board)
         integer*8 :: board
-
         integer*4 :: score_helper
 
         score_board = score_helper(board)
@@ -392,7 +364,6 @@
         character :: movechar
         integer :: pos
         character(len=9) :: allmoves = 'wsadkjhl'
-
         external c_getch
         integer :: c_getch
 
@@ -419,7 +390,6 @@
 
       integer*8 function draw_tile()
         integer*4 :: ret
-
         integer*4 :: unif_random
 
         ret = unif_random(10)
@@ -438,9 +408,7 @@
         integer*8 :: tile_
         integer*8 :: tmp, t_
         integer*4 :: pos
-
         integer*4 :: unif_random, count_empty
-
         integer*2 :: Z000F, Z00F0, Z0F00
         common /CONST_NUM/  Z000F, Z00F0, Z0F00
 
@@ -468,7 +436,6 @@
         integer*8 :: board
         integer*4 :: rd
         integer*8 :: tile
-
         integer*4 :: unif_random
         integer*8 :: draw_tile, insert_tile_rand
 
@@ -486,7 +453,6 @@
         integer*8 :: retract_vec(0:63)
         integer*1 :: retract_penalty_vec(0:63)
         integer*4 :: retract_pos, retract_num, move
-
         external c_clear_screen, c_print_move_score, c_print_final_score
         integer*8 :: initial_board, execute_move
         integer*8 :: draw_tile, insert_tile_rand

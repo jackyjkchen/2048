@@ -11,25 +11,20 @@ integer(4) :: score_table(-32768:32767)
 #endif
 
 integer(4), parameter :: UP = 0, DOWN = 1, LEFT = 2, RIGHT = 3, RETRACT = 4
-
 integer(8), parameter :: ROW_MASK = int(65535, kind=8)
 integer(8), parameter :: COL_MASK = ior(ishft(int(983055, kind=8), 32), int(983055, kind=8))
-
 integer(2), parameter :: Z000F    = int(15, kind=2)
 integer(2), parameter :: Z00F0    = int(240, kind=2)
 integer(2), parameter :: Z0F00    = int(3840, kind=2)
-
 ! workaround for -frange-check
 integer(8), parameter :: ZF0F00F0F = ior(ishft(int(61680, kind=8), 16), int(3855,  kind=8))
 integer(8), parameter :: ZFF00FF00 = ior(ishft(int(65280, kind=8), 16), int(65280, kind=8))
-
 integer(8), parameter :: ZF0F00F0FF0F00F0F = ior(ishft(int(ZF0F00F0F,  kind=8), 32), int(ZF0F00F0F,  kind=8))
 integer(8), parameter :: Z0000F0F00000F0F0 = ior(ishft(int(61680,      kind=8), 32), int(61680,      kind=8))
 integer(8), parameter :: Z0F0F00000F0F0000 = ior(ishft(int(252641280,  kind=8), 32), int(252641280,  kind=8))
 integer(8), parameter :: ZFF00FF0000FF00FF = ior(ishft(int(ZFF00FF00,  kind=8), 32), int(16711935,   kind=8))
 integer(8), parameter :: Z00FF00FF00000000 = ior(ishft(int(16711935,   kind=8), 32), int(0,          kind=8))
 integer(8), parameter :: Z00000000FF00FF00 = ior(ishft(int(0,          kind=8), 32), int(ZFF00FF00,  kind=8))
-
 integer(8), parameter :: Z3333333333333333 = ior(ishft(int(858993459,  kind=8), 32), int(858993459,  kind=8))
 integer(8), parameter :: Z1111111111111111 = ior(ishft(int(286331153,  kind=8), 32), int(286331153,  kind=8))
 
@@ -161,7 +156,6 @@ subroutine init_tables()
             if (j == 4) then
                 exit
             end if
-
             if (row_line(i) == 0) then
                 row_line(i) = row_line(j)
                 row_line(j) = 0
@@ -268,7 +262,6 @@ function execute_move_helper(row)
         if (j == 4) then
             exit
         end if
-
         if (row_line(i) == 0) then
             row_line(i) = row_line(j)
             row_line(j) = 0

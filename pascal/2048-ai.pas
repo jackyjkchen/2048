@@ -22,7 +22,6 @@ end;
 type
     board_t = qword;
     row_t   = word;
-
 const
     ROW_MASK : row_t   = $FFFF;
     COL_MASK : board_t = $000F000F000F000F;
@@ -127,7 +126,6 @@ type
     row_table_t   =  array[0..(TABLESIZE)-1] of word;
     score_table_t =  array[0..(TABLESIZE)-1] of dword;
     heur_table_t  =  array[0..(TABLESIZE)-1] of real;
-
 var
     row_table        : row_table_t;
     score_table      : score_table_t;

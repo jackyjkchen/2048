@@ -20,7 +20,6 @@ end;
 type
     board_t = qword;
     row_t   = word;
-
 const
     ROW_MASK : row_t   = $FFFF;
     COL_MASK : board_t = $000F000F000F000F;

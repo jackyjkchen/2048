@@ -20,7 +20,6 @@ end;
 type
     board_t = array[0..3] of word;
     row_t   = word;
-
 const
     UP       : integer = 0;
     DOWN     : integer = 1;

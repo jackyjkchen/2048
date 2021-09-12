@@ -45,7 +45,6 @@ Public Module Class2048
                 Else
                     Console.Write("|{0,6}", 1 << power_val)
                 End If
-
                 board >>= 4
             Next
             Console.WriteLine("|")
@@ -104,7 +103,6 @@ Public Module Class2048
                     If line(j) <> 0 Then Exit While
                     j += 1
                 End While
-
                 If j = 4 Then Exit While
 
                 If line(i) = 0 Then
@@ -119,7 +117,6 @@ Public Module Class2048
                 End If
                 i += 1
             End While
-
             result = line(0) Or (line(1) << 4) Or (line(2) << 8) Or (line(3) << 12)
             row_table(row) = row Xor result
 
@@ -193,7 +190,6 @@ Public Module Class2048
             End If
 
             pos = allmoves.IndexOf(movechar)
-
             If pos <> -1 Then
                 Return pos Mod 4
             End If
@@ -214,12 +210,10 @@ Public Module Class2048
         Dim tmp As ULong = board
 
         While True
-
             While (tmp And &HFUL) <> 0
                 tmp >>= 4
                 tile <<= 4
             End While
-
             If index = 0 Then Exit While
             index -= 1
             tmp >>= 4
@@ -262,12 +256,10 @@ Public Module Class2048
             If _move < 0 Then Exit While
 
             If _move = RETRACT Then
-
                 If moveno <= 1 OrElse retract_num <= 0 Then
                     moveno -= 1
                     Continue While
                 End If
-
                 moveno -= 2
                 If retract_pos = 0 AndAlso retract_num > 0 Then retract_pos = MAX_RETRACT
                 retract_pos -= 1
@@ -278,14 +270,12 @@ Public Module Class2048
             End If
 
             newboard = execute_move(_move, board)
-
             If newboard = board Then
                 moveno -= 1
                 Continue While
             End If
 
             tile = draw_tile()
-
             If tile = 2 Then
                 scorepenalty += 4
                 retract_penalty_vec(retract_pos) = 4

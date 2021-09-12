@@ -57,14 +57,11 @@ integer(4) :: score_table(-32768:32767)
 #endif
 
 integer(4), parameter :: UP = 0, DOWN = 1, LEFT = 2, RIGHT = 3, RETRACT = 4
-
 integer(8), parameter :: ROW_MASK = int(Z'FFFF', kind=8)
 integer(8), parameter :: COL_MASK = int(Z'000F000F000F000F', kind=8)
-
 integer(2), parameter :: Z000F    = int(z'000F', kind=2)
 integer(2), parameter :: Z00F0    = int(z'00F0', kind=2)
 integer(2), parameter :: Z0F00    = int(z'0F00', kind=2)
-
 ! workaround for -frange-check
 integer(8), parameter :: ZF0F00F0FF0F00F0F = ior(ishft(int(z'F0F00F0F', kind=8), 32), int(z'F0F00F0F', kind=8))
 integer(8), parameter :: Z0000F0F00000F0F0 = int(z'0000F0F00000F0F0', kind=8)
@@ -72,7 +69,6 @@ integer(8), parameter :: Z0F0F00000F0F0000 = int(z'0F0F00000F0F0000', kind=8)
 integer(8), parameter :: ZFF00FF0000FF00FF = ior(ishft(int(z'FF00FF00', kind=8), 32), int(z'00FF00FF', kind=8))
 integer(8), parameter :: Z00FF00FF00000000 = int(z'00FF00FF00000000', kind=8)
 integer(8), parameter :: Z00000000FF00FF00 = int(z'00000000FF00FF00', kind=8)
-
 integer(8), parameter :: Z3333333333333333 = int(z'3333333333333333', kind=8)
 integer(8), parameter :: Z1111111111111111 = int(z'1111111111111111', kind=8)
 
@@ -206,7 +202,6 @@ subroutine init_tables()
             if (j == 4) then
                 exit
             end if
-
             if (row_line(i) == 0) then
                 row_line(i) = row_line(j)
                 row_line(j) = 0
@@ -313,7 +308,6 @@ function execute_move_helper(row)
         if (j == 4) then
             exit
         end if
-
         if (row_line(i) == 0) then
             row_line(i) = row_line(j)
             row_line(j) = 0

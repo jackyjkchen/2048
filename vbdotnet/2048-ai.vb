@@ -72,7 +72,6 @@ Public Module Class2048
                 Else
                     Console.Write("|{0,6}", 1 << power_val)
                 End If
-
                 board >>= 4
             Next
             Console.WriteLine("|")
@@ -130,7 +129,6 @@ Public Module Class2048
             Dim prev As Integer = 0
             Dim counter As Integer = 0
             i = 0
-
             While i < 4
                 Dim rank As Integer = line(i)
                 sum += Math.Pow(rank, SCORE_SUM_POWER)
@@ -149,7 +147,6 @@ Public Module Class2048
 
                 i += 1
             End While
-
             If counter > 0 Then
                 merges += 1 + counter
             End If
@@ -157,7 +154,6 @@ Public Module Class2048
             Dim monotonicity_left As Double = 0.0F
             Dim monotonicity_right As Double = 0.0F
             i = 1
-
             While i < 4
                 If line(i - 1) > line(i) Then
                     monotonicity_left += Math.Pow(line(i - 1), SCORE_MONOTONICITY_POWER) - Math.Pow(line(i), SCORE_MONOTONICITY_POWER)
@@ -166,8 +162,8 @@ Public Module Class2048
                 End If
                 i += 1
             End While
-
             score_heur_table(row) = SCORE_LOST_PENALTY + SCORE_EMPTY_WEIGHT * empty + SCORE_MERGES_WEIGHT * merges - SCORE_MONOTONICITY_WEIGHT * Math.Min(monotonicity_left, monotonicity_right) - SCORE_SUM_WEIGHT * sum
+
             i = 0
             While i < 3
                 j = i + 1
@@ -190,7 +186,6 @@ Public Module Class2048
                 End If
                 i += 1
             End While
-
             result = line(0) Or (line(1) << 4) Or (line(2) << 8) Or (line(3) << 12)
             row_table(row) = row Xor result
 
@@ -307,7 +302,6 @@ Public Module Class2048
         End While
 
         res = res / num_open
-
         If state.curdepth < CACHE_DEPTH_LIMIT Then
             Dim entry As trans_table_entry_t = New trans_table_entry_t(state.curdepth, res)
             state.trans_table(board) = entry
@@ -405,7 +399,6 @@ Public Module Class2048
                 tmp >>= 4
                 tile <<= 4
             End While
-
             If index = 0 Then Exit While
             index -= 1
             tmp >>= 4
@@ -444,14 +437,12 @@ Public Module Class2048
             If _move < 0 Then Exit While
 
             newboard = execute_move(_move, board)
-
             If newboard = board Then
                 moveno -= 1
                 Continue While
             End If
 
             tile = draw_tile()
-
             If tile = 2 Then
                 scorepenalty += 4
             End If
