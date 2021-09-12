@@ -185,6 +185,16 @@ mono 1.2.3+ (linux)
 ```
 
 
+## vbdotnet/2048-old.vb
+
+vb.net 1.0实现，查表法。兼容.net framework 1.0/1.1，仅支持Win32。
+
+已测试编译器和平台：
+```
+visual studio 2002+ (win32)
+```
+
+
 ## vbdotnet/2048-ai.vb
 
 vb.net AI实现，查表法 + Dictionary + 多线程。需要.net framework 2.0+。
