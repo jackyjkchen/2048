@@ -146,7 +146,6 @@ function execute_move_row() {
     local ret=$((board))
     local row
     local rev_row
-    local tmp
     local i=0
 
     while [ $((i)) -lt 4 ]
@@ -214,7 +213,7 @@ function score_board() {
     echo $(score_helper $((board)))
 }
 
-function strindex() { 
+function strindex() {
   local x="${1%%$2*}"
   [[ $x = $1 ]] && echo -1 || echo $((${#x} + 1))
 }
@@ -260,7 +259,7 @@ function insert_tile_rand() {
     local board=$1
     local tile=$2
     local index=$(unif_random $(count_empty $((board))))
-    local tmp=board
+    local tmp=$board
 
     while true
     do

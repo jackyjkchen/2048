@@ -1,8 +1,6 @@
-#!/bin/sh
+#!/bin/bash
 
-ROW_MASK=$((0xFFFF))
-
-function unif_random() {
+unif_random() {
     local n=$1
     if [ $((n)) -ne 0 ]
     then
@@ -12,7 +10,7 @@ function unif_random() {
     fi
 }
 
-function unpack_col() {
+unpack_col() {
     local row=$1
     local board=( 0 0 0 0 )
     board[0]=$(((row & 0xF000) >> 12))
@@ -22,12 +20,12 @@ function unpack_col() {
     echo ${board[@]}
 }
 
-function reverse_row() {
+reverse_row() {
     local row=$1
-    echo $((((row >> 12) | ((row >> 4) & 0x00F0)  | ((row << 4) & 0x0F00) | (row << 12)) & $ROW_MASK ))
+    echo $(((row >> 12) | ((row >> 4) & 0x00F0)  | ((row << 4) & 0x0F00) | (row << 12)))
 }
 
-function print_board() {
+print_board() {
     local board=( $1 $2 $3 $4 )
     local i=0
     local j=0
@@ -44,7 +42,7 @@ function print_board() {
             else
                 printf '|%6d'  $((1 << power_val))
             fi
-            board[3-$((i))]=$((board[3-i] >> 4))
+            board[$((3-i))]=$((board[3-i] >> 4))
             j=$((j + 1))
         done
         echo '|'
@@ -53,7 +51,7 @@ function print_board() {
     echo '-----------------------------'
 }
 
-function transpose() {
+transpose() {
     local x=( $1 $2 $3 $4 )
     local r0=0
     local r1=0
@@ -86,14 +84,14 @@ function transpose() {
     echo ${x[@]}
 }
 
-function count_empty() {
+count_empty() {
     local board=( $1 $2 $3 $4 )
     local x=0
     local sum=0
     local i=0
     while [ $((i)) -lt 4 ]
     do
-        x=${board[i]}
+        x=$((board[i]))
         x=$((x | (x >> 2) & 0x3333))
         x=$((x | (x >> 1)))
         x=$((~x & 0x1111))
@@ -105,7 +103,7 @@ function count_empty() {
     echo $((sum & 0xf))
 }
 
-function execute_move_helper() {
+execute_move_helper() {
     local row=$1
     local line=( $((row & 0xf)) $(((row >> 4) & 0xf)) $(((row >> 8) & 0xf)) $(((row >> 12) & 0xf)) )
     local i=0
@@ -146,57 +144,60 @@ function execute_move_helper() {
     echo $((line[0] | (line[1] << 4) | (line[2] << 8) | (line[3] << 12)))
 }
 
-function execute_move_col() {
+execute_move_col() {
     local board=( $1 $2 $3 $4 )
     local move=$5
-    local ret=${board[@]}
-    local t=$(transpose $((board)))
+    local ret=( ${board[@]} )
+    local t=( $(transpose ${board[@]}) )
     local row
     local rev_row
     local i=0
+    local tmp
 
     while [ $((i)) -lt 4 ]
     do
-        row=$(((t >> (i << 4)) & ROW_MASK))
+        row=$((t[3-i]))
         if [ $((move)) -eq 0 ]
         then
-            ret=$((ret ^ ($(unpack_col $((row ^ $(execute_move_helper $((row)))))) << (i << 2))))
+            tmp=( $(unpack_col $((row ^ $(execute_move_helper $((row)))))) )
         elif [ $((move)) -eq 1 ]
         then
             rev_row=$(reverse_row $((row)))
-            ret=$((ret ^ ($(unpack_col $((row ^ $(reverse_row $(execute_move_helper $((rev_row))))))) << (i << 2))))
+            tmp=( $(unpack_col $((row ^ $(reverse_row $(execute_move_helper $((rev_row))))))) )
         fi
+        ret[0]=$((ret[0] ^ (tmp[0] << (i << 2))))
+        ret[1]=$((ret[1] ^ (tmp[1] << (i << 2))))
+        ret[2]=$((ret[2] ^ (tmp[2] << (i << 2))))
+        ret[3]=$((ret[3] ^ (tmp[3] << (i << 2))))
         i=$((i + 1))
     done
-    echo $((ret))
+    echo ${ret[@]}
 }
 
-function execute_move_row() {
-    local board=( $1 $2 $3 $4 )
+execute_move_row() {
+    local ret=( $1 $2 $3 $4 )
     local move=$5
-    local ret=${board[@]}
     local row
     local rev_row
-    local tmp
     local i=0
 
     while [ $((i)) -lt 4 ]
     do
-        row=$(((board >> (i << 4)) & ROW_MASK))
+        row=$((ret[3-i]))
         if [ $((move)) -eq 2 ]
         then
-            ret=$((ret ^ ((row ^ $(execute_move_helper $((row)))) << (i << 4))))
+            ret[$((3-i))]=$((ret[3-i] ^ (row ^ $(execute_move_helper $((row))))))
         elif [ $((move)) -eq 3 ]
         then
             rev_row=$(reverse_row $((row)))
-            ret=$((ret ^ ((row ^ $(reverse_row $(execute_move_helper $((rev_row))))) << (i << 4))))
+            ret[$((3-i))]=$((ret[3-i] ^ (row ^ $(reverse_row $(execute_move_helper $((rev_row)))))))
         fi
         i=$((i + 1))
     done
-    echo $((ret))
+    echo ${ret[@]}
 }
 
-function execute_move() {
+execute_move() {
     local move=$1
     local board=( $2 $3 $4 $5 )
 
@@ -214,7 +215,7 @@ function execute_move() {
     fi
 }
 
-function score_helper() {
+score_helper() {
     local board=( $1 $2 $3 $4 )
     local score=0
     local row
@@ -224,7 +225,7 @@ function score_helper() {
 
     while [ $((j)) -lt 4 ]
     do
-        row=$(((board >> (j << 4)) & ROW_MASK))
+        row=$((board[3-j]))
         i=0
         while [ $((i)) -lt 4 ]
         do
@@ -240,17 +241,17 @@ function score_helper() {
     echo $((score))
 }
 
-function score_board() {
+score_board() {
     local board=( $1 $2 $3 $4 )
     echo $(score_helper ${board[@]})
 }
 
-function strindex() { 
+strindex() {
   local x="${1%%$2*}"
   [[ $x = $1 ]] && echo -1 || echo $((${#x} + 1))
 }
 
-function ask_for_move() {
+ask_for_move() {
     local allmoves="wsadkjhl"
     local movechar
     local pos=0
@@ -263,10 +264,6 @@ function ask_for_move() {
         then
             echo -1
             return
-        elif [[ $movechar == 'r' ]]
-        then
-            echo 4
-            return
         fi
         pos=$(strindex $allmoves $movechar)
         if [ $((pos)) -ne -1 ]
@@ -277,7 +274,7 @@ function ask_for_move() {
     done
 }
 
-function draw_tile() {
+draw_tile() {
     local rd=$(unif_random 10)
     if [ $((rd)) -lt 9 ]
     then
@@ -287,11 +284,13 @@ function draw_tile() {
     fi
 }
 
-function insert_tile_rand() {
+insert_tile_rand() {
     local board=( $1 $2 $3 $4 )
     local tile=$5
+    local orig_tile=$tile
     local index=$(unif_random $(count_empty ${board[@]}))
-    local tmp=board
+    local tmp=${board[3]}
+    local shift=0
 
     while true
     do
@@ -299,6 +298,12 @@ function insert_tile_rand() {
         do
             tmp=$((tmp >> 4))
             tile=$((tile << 4))
+            shift=$((shift + 4))
+            if [ $((shift % 16)) -eq 0 ]
+            then
+                tmp=$((board[3-(shift>>4)]))
+                tile=$orig_tile
+            fi
         done
         if [ $((index)) -eq 0 ]
         then
@@ -307,30 +312,35 @@ function insert_tile_rand() {
         index=$((index - 1))
         tmp=$((tmp >> 4))
         tile=$((tile << 4))
+        shift=$((shift + 4))
+        if [ $((shift % 16)) -eq 0 ]
+        then
+            tmp=$((board[3-(shift>>4)]))
+            tile=$orig_tile
+        fi
     done
-    echo $((board | tile))
+    board[$((3-(shift>>4)))]=$((board[3-(shift>>4)] | tile))
+    echo ${board[@]}
 }
 
-function initial_board() {
-    local board
-    board=$(($(draw_tile) << ($(unif_random 10) << 2)))
-    echo $(insert_tile_rand $((board)) $(draw_tile))
+initial_board() {
+    local board=( 0 0 0 0 )
+    local shift=0
+    shift=$(($(unif_random 10) << 2))
+    board[$((3-(shift>>4)))]=$(($(draw_tile) << (shift % 16)))
+    echo $(insert_tile_rand ${board[@]} $(draw_tile))
 }
 
-function play_game() {
-    local board=$(initial_board)
+play_game() {
+    local board=( $(initial_board) )
     local scorepenalty=0
     local last_score=0
     local current_score=0
     local moveno=0
     local move=0
     local newboard=0
-
-    local MAX_RETRACT=64
-    local retract_vec=()
-    local retract_penalty_vec=()
-    local retract_pos=0
-    local retract_num=0
+    local i=0
+    local tmp
 
     while true
     do
@@ -338,7 +348,17 @@ function play_game() {
         move=0
         while [ $((move)) -lt 4 ]
         do
-            if [ $(($(execute_move $move $board))) -ne $((board)) ]
+            tmp=( $(execute_move $move ${board[@]}) )
+            i=0
+            while [ $((i)) -lt 4 ]
+            do
+                if [ $((tmp[i])) -ne $((board[i])) ]
+                then
+                    break
+                fi
+                i=$((i + 1))
+            done
+            if [ $((i)) -ne 4 ]
             then
                 break
             fi
@@ -349,39 +369,29 @@ function play_game() {
             break
         fi
 
-        current_score=$(($(score_board $((board))) - scorepenalty))
+        current_score=$(($(score_board ${board[@]}) - scorepenalty))
         moveno=$((moveno + 1))
         printf 'Move #%d, current score=%d(+%d)\n' $((moveno)) $((current_score)) $((current_score - last_score))
         last_score=$((current_score))
 
-        print_board $((board))
+        print_board ${board[@]}
         move=$(ask_for_move)
         if [ $((move)) -lt 0 ]
         then
             break
         fi
 
-        if [ $((move)) -eq 4 ]
-        then
-            if [[ ($((moveno)) -le 1) || ($((retract_num)) -le 0) ]]
+        newboard=( $(execute_move $((move)) ${board[@]}) )
+        i=0
+        while [ $((i)) -lt 4 ]
+        do
+            if [ $((newboard[i])) -ne $((board[i])) ]
             then
-                moveno=$((moveno - 1))
-                continue
+                break
             fi
-            moveno=$((moveno - 2))
-            if [[ ($((retract_pos)) -eq 0) && ($((retract_num)) -gt 0) ]]
-            then
-                retract_pos=64
-            fi
-            retract_pos=$((retract_pos - 1))
-            board=$((retract_vec[retract_pos]))
-            scorepenalty=$((scorepenalty - retract_penalty_vec[retract_pos]))
-            retract_num=$((retract_num - 1))
-            continue
-        fi
-
-        newboard=$(execute_move $((move)) $((board)))
-        if [ $((newboard)) -eq $((board)) ]
+            i=$((i + 1))
+        done
+        if [ $((i)) -eq 4 ]
         then
             moveno=$((moveno - 1))
             continue
@@ -391,24 +401,11 @@ function play_game() {
         if [ $((tile)) -eq 2 ]
         then
             scorepenalty=$((scorepenalty + 4))
-            retract_penalty_vec[$((retract_pos))]=4
-        else
-            retract_penalty_vec[$((retract_pos))]=0
-        fi
-        retract_vec[$((retract_pos))]=$((board))
-        retract_pos=$((retract_pos + 1))
-        if [ $((retract_pos)) -eq 64 ]
-        then
-            retract_pos=0
-        fi
-        if [ $((retract_num)) -lt 64 ]
-        then
-            retract_num=$((retract_num + 1))
         fi
 
-        board=$(insert_tile_rand $((newboard)) $((tile)))
+        board=( $(insert_tile_rand ${newboard[@]} $((tile))) )
     done
-    print_board $((board))
+    print_board ${board[@]}
     printf 'Game over. Your score is %d.\n' $((current_score))
 }
 
