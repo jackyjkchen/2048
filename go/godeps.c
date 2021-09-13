@@ -96,4 +96,3 @@ DLLEXPORT int get_ch(void) {
     return getchar();
 #endif
 }
-

@@ -347,7 +347,7 @@ int ask_for_move(board_t board) {
 
         if (movechar == 'q') {
             return -1;
-        } else  if (movechar == 'r') {
+        } else if (movechar == 'r') {
             return RETRACT;
         }
         pos = strchr(allmoves, movechar);
