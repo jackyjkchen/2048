@@ -62,7 +62,7 @@ lcc 4.0 (win32)
 dmc 8.57 (win32)
 msvc 1.52 (dos16)
 msc 5.1/6.0/7.0 (dos16)
-quickc 2.0/2.51 (dos16)
+quickc 2.01/2.51 (dos16)
 borland c++ 3.1 (dos16)
 turbo c++ 1.01/3.0 (dos16)
 turbo c 1.5/2.01 (dos16)
@@ -70,7 +70,7 @@ turbo c 1.5/2.01 (dos16)
 
 * 因该版本不使用64位整数，msvc 2.x和dmc 8.57可以开启优化。
 
-* msc 5.1不能使用优化
+* msc 5.1不能使用QC IDE上的优化选项，命令行中/Os /Ot /Ox /O都可以使用。
 
 
 ## c/2048-kr.c
@@ -81,8 +81,10 @@ turbo c 1.5/2.01 (dos16)
 
 已测试编译器和平台：
 ```
-msc 3.0 (dos16)
+msc 3.0/4.0 (dos16)
 ```
+
+* msc 3.0产出的程序无法在Windows 2000以上系统运行。
 
 
 ## cpp/2048-ai.cpp + cpp/thread_pool.cpp + cpp/thread_pool.h
