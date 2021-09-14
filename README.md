@@ -25,16 +25,19 @@ gcc 2.0+ (linux, freebsd, macos, mingw, mingw-w64, cygwin, djgpp)
 clang 3.0+ (linux, macos, freebsd, win32)
 msvc 2.0+ (win32)
 openwatcom 1.9 (win32, win386, dos32 pmode, dos4gw)
-borland c++ 5.5+ (win32)
+borland c++ 5.5 (win32)
 tcc 0.9.27 (linux, win32)
 lcc 4.0 (win32)
+dmc 8.57 (win32)
 ```
 
-* msvc 2.x都不能使用优化，包括最新的2.2。其他版本msvc测试的是补丁打满的版本。
+* msvc 2.x都不能使用优化，否则编译器直接crash，包括最新的2.2。其他版本msvc测试的是补丁打满的版本。
 
-* gcc低版本需要大量补丁用于支持现代化系统，[参见](https://github.com/jackyjkchen/legacy-gcc)。
+* gcc 3.1以下版本需要大量补丁用于支持现代化系统和修复一些bug，[参见](https://github.com/jackyjkchen/legacy-gcc)。
 
-* win64、windows for arm等均为win32的不同硬件架构，不单独说明，类似的linux、bsd等也不针对特定硬件架构。
+* dmc不能使用优化，其64位整数运算优化有bug，产生错误代码。
+
+* win64、windows for arm等均为win32的不同硬件架构，不单独说明，类似的linux、bsd等也不针对特定硬件架构，默认跨平台。
 
 使用FASTMODE=0预处理，代码和数据段可控制在64KiB以内，额外支持：
 ```
@@ -51,9 +54,10 @@ gcc 2.0+ (linux, freebsd, macos, mingw, mingw-w64, cygwin, djgpp)
 clang 3.0+ (linux, macos, freebsd, win32)
 msvc 2.0+ (win32)
 openwatcom 1.9 (win32, win386, dos32 pmode, dos4gw, dos16, win16)
-borland c++ 5.5+ (win32)
+borland c++ 5.5 (win32)
 tcc 0.9.27 (linux, win32)
 lcc 4.0 (win32)
+dmc 8.57 (win32)
 msvc 1.52 (dos16)
 msc 5.1/6.0/7.0 (dos16)
 quickc 2.0/2.51 (dos16)
@@ -61,6 +65,8 @@ borland c++ 3.1 (dos16)
 turbo c++ 1.01/3.0 (dos16)
 turbo c 1.5/2.01 (dos16)
 ```
+
+* 因该版本不使用64位整数，msvc 2.x和dmc 8.57可以开启优化。
 
 * msc 5.1不能使用优化
 
@@ -89,10 +95,13 @@ gcc 2.6+ (linux, freebsd, macos, mingw, mingw-w64, cygwin, djgpp)
 clang 3.0+ (linux, macos, freebsd, win32)
 msvc 4.2+ (win32)
 openwatcom 1.9 (win32, win386, dos32 pmode, dos4gw)
-borland c++ 5.5+ (win32)
+borland c++ 5.5 (win32)
+dmc 8.57 (win32)
 ```
 
 * msvc 5.0必须应用SP3，否则优化选项会生成错误代码或者编译失败，其他版本msvc也都测试的是补丁打满的版本。
+
+* dmc不能使用优化，其64位整数运算优化有bug，产生错误代码。
 
 * libg++-2.6.x中的STL非常原始，问题很多，默认是不会安装stl头文件的，[legacy-gcc](https://github.com/jackyjkchen/legacy-gcc)的libg++-2.6.2调整后会安装，但不在默认搜索路径。编译示例：
 ```
@@ -111,7 +120,7 @@ gcc 2.8+ (linux, freebsd, macos, mingw, mingw-w64, cygwin)
 clang 3.0+ (linux, macos, freebsd, win32)
 msvc 4.2+ (win32)
 openwatcom 1.9 (win32)
-borland c++ 5.5+ (win32)
+borland c++ 5.5 (win32)
 ```
 
 本实现亦支持openmp多线程，由预处理OPENMP_THREAD控制，编译示例如下，以gcc为例：
