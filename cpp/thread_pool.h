@@ -46,6 +46,7 @@ struct ThrdCallback {
 };
 
 #if defined(WINVER) && WINVER < 0x0600
+template<class LOCK>
 class ConditionVariable
 {
 public:
@@ -88,7 +89,7 @@ public:
     }
 
 private:
-    ThreadLock &m_lock;
+    LOCK &m_lock;
     HANDLE m_semphore;
     int32 m_wait_num;
 };

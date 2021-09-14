@@ -3,7 +3,7 @@
 #include <string.h>
 #include <time.h>
 
-#if defined(__MSDOS__) || defined(_MSDOS)
+#if defined(__MSDOS__) || defined(_MSDOS) || defined(__DOS__)
 #ifndef MSDOS
 #define MSDOS
 #endif

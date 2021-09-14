@@ -24,6 +24,7 @@
 gcc 2.0+ (linux, freebsd, macos, mingw, mingw-w64, cygwin, djgpp)
 clang 3.0+ (linux, macos, freebsd, win32)
 msvc 2.0+ (win32)
+icc 9.0+ (win32, linux)
 openwatcom 1.9 (win32, win386, dos32 pmode, dos4gw)
 borland c++ 5.5 (win32)
 tcc 0.9.27 (linux, win32)
@@ -53,6 +54,7 @@ openwatcom c++ 1.9 (dos16, win16)
 gcc 2.0+ (linux, freebsd, macos, mingw, mingw-w64, cygwin, djgpp)
 clang 3.0+ (linux, macos, freebsd, win32)
 msvc 2.0+ (win32)
+icc 9.0+ (win32, linux)
 openwatcom 1.9 (win32, win386, dos32 pmode, dos4gw, dos16, win16)
 borland c++ 5.5 (win32)
 tcc 0.9.27 (linux, win32)
@@ -94,6 +96,7 @@ AI版本，ISO C++98实现，可选支持多线程（预处理MULTI_THREAD或OPE
 gcc 2.6+ (linux, freebsd, macos, mingw, mingw-w64, cygwin, djgpp)
 clang 3.0+ (linux, macos, freebsd, win32)
 msvc 4.2+ (win32)
+icc 9.0+ (win32, linux)
 openwatcom 1.9 (win32, win386, dos32 pmode, dos4gw)
 borland c++ 5.5 (win32)
 dmc 8.57 (win32)
@@ -119,6 +122,7 @@ g++ -DMULTI_THREAD -O2 cpp/2048-ai.cpp cpp/thread_pool.cpp -pthread -o 2048
 gcc 2.8+ (linux, freebsd, macos, mingw, mingw-w64, cygwin)
 clang 3.0+ (linux, macos, freebsd, win32)
 msvc 4.2+ (win32)
+icc 9.0+ (win32, linux)
 openwatcom 1.9 (win32)
 borland c++ 5.5 (win32)
 ```
@@ -134,6 +138,7 @@ openmp多线程不依赖thread_pool.cpp，但编译器和平台更为受限，�
 gcc 4.2+ (linux, freebsd, macos)
 clang 3.5+ (linux, freebsd，macos)
 msvc 8.0+ (win32)
+icc 9.0+ (win32, linux)
 ```
 
 
