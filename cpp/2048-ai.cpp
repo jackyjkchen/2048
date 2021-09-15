@@ -35,7 +35,11 @@ typedef unsigned __int64 uint64;
 #else
 typedef unsigned long long uint64;
 
+#ifdef __WATCOMC__
+#define W64LIT(x) x
+#else
 #define W64LIT(x) x##ULL
+#endif
 #endif
 
 #if defined(_WIN32)
@@ -145,7 +149,7 @@ typedef struct {
 #if __cplusplus >= 201103L
 #include <unordered_map>
 typedef std::unordered_map<board_t, trans_table_entry_t> trans_table_t;
-#define STDCPP 1
+#define STDCXX 1
 #else
 #if defined(__GNUC__) && __GNUC__ == 2 && __GNUC_MINOR__ <= 7
 #include <map.h>
@@ -153,10 +157,14 @@ typedef map<board_t, trans_table_entry_t, less<board_t> > trans_table_t;
 #elif defined(_MSC_VER) && _MSC_VER <= 1020
 #include <map>
 typedef map<board_t, trans_table_entry_t, less<board_t>, allocator<trans_table_entry_t> > trans_table_t;
+#elif defined(__WATCOMC__) && __WATCOMC__ < 1200
+#include <map>
+typedef std::map<board_t, trans_table_entry_t, less<board_t> > trans_table_t;
+#define STDCXX 1
 #else
 #include <map>
 typedef std::map<board_t, trans_table_entry_t> trans_table_t;
-#define STDCPP 1
+#define STDCXX 1
 #endif
 #endif
 
@@ -566,7 +574,7 @@ static float score_tilechoose_node(eval_state &state, board_t board, float cprob
         const trans_table_t::iterator &i = state.trans_table.find(board);
 #endif
         if (i != state.trans_table.end()) {
-#ifdef STDCPP
+#ifdef STDCXX
             trans_table_entry_t entry = i->second;
 #else
             trans_table_entry_t entry = state.trans_table[board];

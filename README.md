@@ -24,8 +24,9 @@
 gcc 2.0+ (linux, freebsd, macos, mingw, mingw-w64, cygwin, djgpp)
 clang 3.0+ (linux, macos, freebsd, win32)
 msvc 2.0+ (win32)
-icc 9.0+ (win32, linux)
-openwatcom 1.9 (win32, win386, dos32 pmode, dos4gw)
+icc 8.1+ (win32, linux)
+openwatcom c++ 1.9 (win32, dos32)
+watcom c++ 11.0 (win32, dos32)
 borland c++ 5.5 (win32)
 tcc 0.9.27 (linux, win32)
 pcc 1.2.0 (linux, freebsd)
@@ -33,19 +34,24 @@ lcc 4.0 (win32)
 dmc 8.57 (win32)
 ```
 
-* msvc 2.x都不能使用优化，否则编译器直接crash，包括最新的2.2。其他版本msvc测试的是补丁打满的版本。
-
 * gcc 3.1以下版本需要大量补丁用于支持现代化系统和修复一些bug，[参见](https://github.com/jackyjkchen/legacy-gcc)。
 
-* dmc不能使用优化，其64位整数运算优化有bug，产生错误代码。
+* msvc 2.x都不能使用优化，否则编译器直接crash，包括最新的2.2。其他版本msvc测试的是补丁打满的版本。
+
+* openwatcom c++ 1.9的dos32扩展，已测试CauseWay、DOS/4GW、DOS32/A、PMODE/W可用，其余不可用，后面涉及openwatcom的dos32目标均以此为准。
+
+* watcom c++ 11.0的dos32扩展，已测试DOS/4GW可用，其余不可用。后面涉及watcom 11.0的dos32目标均以此为准。
 
 * pcc在较新版本的glibc上，需要使用-D__GNUC__=4 -D__GNUC_MINOR__=2将自己模拟成gcc 4.2。
+
+* dmc不能使用优化，其64位整数运算优化有bug，产生错误代码。
 
 * win64、windows for arm等均为win32的不同硬件架构，不单独说明，类似的linux、bsd等也不针对特定硬件架构，默认跨平台。
 
 使用FASTMODE=0预处理，代码和数据段可控制在64KiB以内，额外支持：
 ```
-openwatcom c++ 1.9 (dos16, win16)
+openwatcom c++ 1.9 (dos16)
+watcom c++ 11.0 (dos16)
 ```
 
 ## c/2048-16b.c
@@ -57,8 +63,9 @@ openwatcom c++ 1.9 (dos16, win16)
 gcc 2.0+ (linux, freebsd, macos, mingw, mingw-w64, cygwin, djgpp)
 clang 3.0+ (linux, macos, freebsd, win32)
 msvc 2.0+ (win32)
-icc 9.0+ (win32, linux)
-openwatcom 1.9 (win32, win386, dos32 pmode, dos4gw, dos16, win16)
+icc 8.1+ (win32, linux)
+openwatcom c++ 1.9 (win32, dos32, dos16)
+watcom c++ 11.0 (win32, dos32, dos16)
 borland c++ 5.5 (win32)
 tcc 0.9.27 (linux, win32)
 pcc 1.2.0 (linux, freebsd)
@@ -99,20 +106,23 @@ msc 3.0/4.0 (dos16)
 
 AI版本，ISO C++98实现，可选支持多线程（预处理MULTI_THREAD或OPENMP_THREAD）。
 
-由于使用std::map且动态增长内存（可能超过1MiB），因此不支持dos16/win16，无论是否启用FASTMODE预处理（默认启用，增加640KiB内存占用），编译器和平台支持均一致。
+由于使用std::map且动态增长内存（可能超过1MiB），因此不支持dos16，无论是否启用FASTMODE预处理（默认启用，增加640KiB内存占用），编译器和平台支持均一致。
 
 不启用MULTI_THREAD时（默认），无须依赖thread_pool.cpp，已测试编译器和平台：
 ```
 gcc 2.6+ (linux, freebsd, macos, mingw, mingw-w64, cygwin, djgpp)
 clang 3.0+ (linux, macos, freebsd, win32)
 msvc 4.2+ (win32)
-icc 9.0+ (win32, linux)
-openwatcom 1.9 (win32, win386, dos32 pmode, dos4gw)
+icc 8.1+ (win32, linux)
+openwatcom c++ 1.9 (win32, dos32)
+watcom c++ 11.0 (win32, dos32)
 borland c++ 5.5 (win32)
 dmc 8.57 (win32)
 ```
 
 * msvc 5.0必须应用SP3，否则优化选项会生成错误代码或者编译失败，其他版本msvc也都测试的是补丁打满的版本。
+
+* watcom c++ 11.0未包含STL，需要使用[经过修改的STLPort-4.5.3](http://assa.4ip.ru/watcom/stlport.html)，下文多线程场景一样。
 
 * dmc不能使用优化，其64位整数运算优化有bug，产生错误代码。
 
@@ -127,28 +137,29 @@ g++-2.6.3 -I/usr/lib/gcc-lib/i686-legacy-linux-gnu/2.6.3/include/g++/stl -O2 cpp
 g++ -DMULTI_THREAD -O2 cpp/2048-ai.cpp cpp/thread_pool.cpp -pthread -o 2048
 ```
 
-多线程版本依赖操作系统原生线程，因此win16，dos等都不支持，已测试编译器和平台：
+多线程版本依赖操作系统原生线程，因此dos等都不支持，已测试编译器和平台：
 ```
 gcc 2.8+ (linux, freebsd, macos, mingw, mingw-w64, cygwin)
 clang 3.0+ (linux, macos, freebsd, win32)
 msvc 4.2+ (win32)
-icc 9.0+ (win32, linux)
-openwatcom 1.9 (win32)
+icc 8.1+ (win32, linux)
+openwatcom c++ 1.9 (win32)
+watcom c++ 11.0 (win32, dos32)
 borland c++ 5.5 (win32)
 ```
 
-本实现亦支持openmp多线程，由预处理OPENMP_THREAD控制，编译示例如下，以gcc为例：
+本实现亦支持OpenMP多线程，由预处理OPENMP_THREAD控制，编译示例如下，以gcc为例：
 ```
 g++ -DOPENMP_THREAD -O2 -fopenmp cpp/2048-ai.cpp -o 2048
 ```
 
-openmp多线程不依赖thread_pool.cpp，但编译器和平台更为受限，已测试编译器和平台：
+OpenMP多线程不依赖thread_pool.cpp，但编译器和平台更为受限，已测试编译器和平台：
 
 ```
 gcc 4.2+ (linux, freebsd, macos)
 clang 3.5+ (linux, freebsd，macos)
 msvc 8.0+ (win32)
-icc 9.0+ (win32, linux)
+icc 8.1+ (win32, linux)
 ```
 
 

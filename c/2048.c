@@ -34,7 +34,11 @@ typedef unsigned __int64 uint64;
 #else
 typedef unsigned long long uint64;
 
+#ifdef __WATCOMC__
+#define W64LIT(x) x
+#else
 #define W64LIT(x) x##ULL
+#endif
 #endif
 
 #if defined(_WIN32)
