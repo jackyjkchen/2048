@@ -28,6 +28,7 @@ icc 9.0+ (win32, linux)
 openwatcom 1.9 (win32, win386, dos32 pmode, dos4gw)
 borland c++ 5.5 (win32)
 tcc 0.9.27 (linux, win32)
+pcc 1.2.0 (linux, freebsd)
 lcc 4.0 (win32)
 dmc 8.57 (win32)
 ```
@@ -37,6 +38,8 @@ dmc 8.57 (win32)
 * gcc 3.1以下版本需要大量补丁用于支持现代化系统和修复一些bug，[参见](https://github.com/jackyjkchen/legacy-gcc)。
 
 * dmc不能使用优化，其64位整数运算优化有bug，产生错误代码。
+
+* pcc在较新版本的glibc上，需要使用-D__GNUC__=4 -D__GNUC_MINOR__=2将自己模拟成gcc 4.2。
 
 * win64、windows for arm等均为win32的不同硬件架构，不单独说明，类似的linux、bsd等也不针对特定硬件架构，默认跨平台。
 
@@ -58,12 +61,13 @@ icc 9.0+ (win32, linux)
 openwatcom 1.9 (win32, win386, dos32 pmode, dos4gw, dos16, win16)
 borland c++ 5.5 (win32)
 tcc 0.9.27 (linux, win32)
+pcc 1.2.0 (linux, freebsd)
 lcc 4.0 (win32)
 dmc 8.57 (win32)
 msvc 1.52 (dos16)
 msc 5.1/6.0/7.0 (dos16)
 quickc 2.01/2.51 (dos16)
-borland c++ 3.1 (dos16)
+borland c++ 2.0/3.1 (dos16)
 turbo c++ 1.01/3.0 (dos16)
 turbo c 1.5/2.01 (dos16)
 ```
@@ -71,6 +75,8 @@ turbo c 1.5/2.01 (dos16)
 * 因该版本不使用64位整数，msvc 2.x和dmc 8.57可以开启优化。
 
 * msc 5.1不能使用QC IDE上的优化选项，命令行中/Os /Ot /Ox /O都可以使用。
+
+* quickc 1.0语法兼容msc 5.1，但是编译直接crash，原因尚不清楚，不列入兼容列表。
 
 
 ## c/2048-kr.c
@@ -85,6 +91,8 @@ msc 3.0/4.0 (dos16)
 ```
 
 * msc 3.0产出的程序无法在Windows 2000以上系统运行。
+
+* msc 2.0或以下版本支持的C格式是某种C方言，既不是ANSI C也不是K&R C，因此无法兼容。
 
 
 ## cpp/2048-ai.cpp + cpp/thread_pool.cpp + cpp/thread_pool.h
@@ -108,7 +116,7 @@ dmc 8.57 (win32)
 
 * dmc不能使用优化，其64位整数运算优化有bug，产生错误代码。
 
-* libg++-2.6.x中的STL非常原始，问题很多，默认是不会安装stl头文件的，[legacy-gcc](https://github.com/jackyjkchen/legacy-gcc)的libg++-2.6.2调整后会安装，但不在默认搜索路径。编译示例：
+* libg++-2.6.x中的STL非常原始，问题很多，默认是不会安装stl头文件的，legacy-gc的libg++-2.6.2[调整](https://github.com/jackyjkchen/legacy-gcc/commit/354b366f60bb37359adbcb7307ab70039b5a3829#diff-ef832efd837dd21850a4ae1c9b95e0e353ce653288d1de797d24a5178f130031)后会安装，但不在默认搜索路径。编译示例：
 ```
 g++-2.6.3 -I/usr/lib/gcc-lib/i686-legacy-linux-gnu/2.6.3/include/g++/stl -O2 cpp/2048-ai.cpp -lstdc++ -lm -o 2048
 ```
@@ -119,7 +127,7 @@ g++-2.6.3 -I/usr/lib/gcc-lib/i686-legacy-linux-gnu/2.6.3/include/g++/stl -O2 cpp
 g++ -DMULTI_THREAD -O2 cpp/2048-ai.cpp cpp/thread_pool.cpp -pthread -o 2048
 ```
 
-多线程版本依赖操作系统原生线程，因此djgpp，win386，dos32等都不支持，已测试编译器和平台：
+多线程版本依赖操作系统原生线程，因此win16，dos等都不支持，已测试编译器和平台：
 ```
 gcc 2.8+ (linux, freebsd, macos, mingw, mingw-w64, cygwin)
 clang 3.0+ (linux, macos, freebsd, win32)
@@ -154,7 +162,7 @@ C#实现，查表法。需要.net framework 2.0+。
 已测试编译器和平台：
 ```
 visual studio 2005+ (win32)
-mono 1.1.1+ (linux)
+mono 1.1.1+ (linux, freebsd, macos)
 ```
 
 
@@ -165,7 +173,7 @@ C# 1.0实现，查表法，兼容.net framework 1.0/1.1。由于.net 1.0/1.1缺�
 已测试编译器和平台：
 ```
 visual studio 2002+ (win32)
-mono 1.0+ (linux)
+mono 1.0+ (linux, freebsd, macos)
 ```
 
 编译运行命令行示例：
@@ -183,7 +191,7 @@ C# AI实现，查表法 + Dictionary + 多线程。需要.net framework 2.0+。
 已测试编译器和平台：
 ```
 visual studio 2005+ (win32)
-mono 1.1.1+ (linux)
+mono 1.1.1+ (linux, freebsd, macos)
 ```
 
 
@@ -197,7 +205,7 @@ vb.net实现，查表法。需要.net framework 2.0+。
 已测试编译器和平台：
 ```
 visual studio 2005+ (win32)
-mono 1.2.3+ (linux)
+mono 1.2.3+ (linux, freebsd, macos)
 ```
 
 
@@ -218,7 +226,7 @@ vb.net AI实现，查表法 + Dictionary + 多线程。需要.net framework 2.0+
 已测试编译器和平台：
 ```
 visual studio 2005+ (win32)
-mono 1.2.3+ (linux)
+mono 1.2.3+ (linux, freebsd, macos)
 ```
 
 
@@ -286,7 +294,10 @@ jdk 1.1+ (linux, win32)
 
 Java AI实现，查表法 + HashMap + 多线程，由于Java标准库不支持清除屏幕，由JNI方式——java/javadeps.c实现。
 
-Java版本和平台支持同上。
+已测试Java版本和平台：
+```
+jdk 1.5+ (linux, win32, freebsd, macos)
+```
 
 
 
@@ -294,17 +305,11 @@ Java版本和平台支持同上。
 
 ## pascal/2048.pas
 
-现代Pascal实现，使用uint64，由预处理FASTMODE决定是否使用查表法（默认）。
+现代Pascal实现，使用uint64，由预处理FASTMODE决定是否使用查表法（默认查表）。
 
 已测试编译器和平台：
 ```
 free pascal 2.2+ (linux, win32, freebsd, macos, dos32)
-```
-
-编译命令行示例：
-```
-fpc -O2 pascal/2048.pas
-fpc -dFASTMODE=0 -O2 pascal/2048.pas
 ```
 
 
@@ -328,6 +333,8 @@ turbo pascal 7.1 (dos16)
 free pascal 2.2+ (linux, win32, freebsd, macos, dos32)
 turbo pascal 4.0/5.5/6.0/7.1 (dos16)
 ```
+
+* turbo pascal 3.0或以下版本不支持uses，因此无法兼容。
 
 
 ## pascal/2048-ai.pas
@@ -354,7 +361,7 @@ fpc -dMULTI_THREAD -O2 pascal/2048-ai.pas
 
 已测试编译器和平台：
 ```
-gcc 4.3+ (linux, mingw, mingw-w64, cygwin, freebsd, macos, djgpp)
+gcc 4.3+ (linux, mingw, mingw-w64, cygwin, freebsd, macos)
 ```
 
 * gfortran不感知_WIN32等C语言预处理器，WIN32平台要在命令行显式指定-D_WIN32。
@@ -363,11 +370,11 @@ gcc 4.3+ (linux, mingw, mingw-w64, cygwin, freebsd, macos, djgpp)
 
 ## fortran/2048.F90 + fortran/f90deps.c
 
-现代Fortran90实现，使用FSASTMODE预处理判定是否使用查表法（默认）。由于f90没有提供iso_c_binding，所以系统相关功能（无回显输入，清除屏幕），由fortran/f90deps.c提供。
+现代Fortran90实现，使用FASTMODE预处理判定是否使用查表法（默认）。由于f90没有提供iso_c_binding，所以系统相关功能（无回显输入，清除屏幕），由fortran/f90deps.c提供。
 
 已测试编译器和平台：
 ```
-gcc 4.0+ (linux, mingw, mingw-w64, cygwin, freebsd, macos, djgpp)
+gcc 4.0+ (linux, mingw, mingw-w64, cygwin, freebsd, macos)
 ```
 
 编译命令行示例：
@@ -383,8 +390,8 @@ gfortran -std=f95 -O2 fortran/2048.F90 f90deps.o -o 2048
 
 已测试编译器和平台：
 ```
-g77 2.9-3.4 (linux, mingw, cygwin, freebsd, djgpp)
-gfortran 4.0+ (linux, mingw, mingw-w64, cygwin, freebsd, djgpp)
+g77 2.9-3.4 (linux, mingw, cygwin, freebsd)
+gfortran 4.0+ (linux, mingw, mingw-w64, cygwin, freebsd)
 ```
 
 编译命令行示例：
@@ -497,5 +504,5 @@ Bash实现，不使用64位整数运算，仅能用于Posix兼容系统（依赖
 bash 3.1+ (linux, freebsd, macos)
 ```
 
-* 不支持悔棋，shell兼容性仅支持bash
+* 不支持悔棋
 
