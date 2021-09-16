@@ -4,11 +4,13 @@
 
 而且跨平台部分的算法，分支、循环、数学运算、逻辑运算、位运算、数组查表等都有，涵盖了一门结构化编程语言大多数基本特性，实现过程中我们还测出并修复了多个老编译器的bug，比如[gcc 2.0-2.2生成错误的移位代码](https://github.com/jackyjkchen/legacy-gcc/commit/03651dd3439f7b2df3a6205a85e7f28b9a86283b)。
 
-绝大部分的可跨平台的功能+两个平台相关功能，因此它非常适合作为跨平台跨编译器测试。
+AI实现需要关联容器做cache以提升性能，考验编译器标准库能力，且算法天然支持四路并发(四路数据无关，不需要锁)，考验并发能力。
+
+综上，它非常适合作为跨平台跨编译器测试。
 
 本项目中所有实现的手工版本2048，其输出的格式完全一致（精确到字节），其输入游戏体验完全一致。
 
-本项目中所有实现的AI版本2048，其输出格式完全一致。不同编译器和平台浮点精度可能有差异。
+本项目中所有实现的AI版本2048，其输出格式完全一致。不同编译器和平台浮点精度可能有差异。多线程版本输出可能有预期内的乱序。
 
 
 # C&C++
@@ -28,6 +30,7 @@ icc 8.1+ (win32, linux)
 openwatcom c++ 1.9 (win32, dos32)
 watcom c++ 11.0 (win32, dos32)
 borland c++ 5.5 (win32)
+visualage c++ 3.5 (win32)
 tcc 0.9.27 (linux, win32)
 pcc 1.2.0 (linux, freebsd)
 lcc 4.0 (win32)
@@ -36,7 +39,7 @@ dmc 8.57 (win32)
 
 * gcc 3.1以下版本需要大量补丁用于支持现代化系统和修复一些bug，[参见](https://github.com/jackyjkchen/legacy-gcc)。
 
-* msvc 2.x都不能使用优化，否则编译器直接crash，包括最新的2.2。其他版本msvc测试的是补丁打满的版本。
+* msvc 2.x都不能使用优化，否则编译器直接crash，包括最新的2.2。其他版本msvc测试的都是补丁打满的版本。
 
 * openwatcom c++ 1.9的dos32扩展，已测试CauseWay、DOS/4GW、DOS32/A、PMODE/W可用，其余不可用，后面涉及openwatcom的dos32目标均以此为准。
 
@@ -67,6 +70,7 @@ icc 8.1+ (win32, linux)
 openwatcom c++ 1.9 (win32, dos32, dos16)
 watcom c++ 11.0 (win32, dos32, dos16)
 borland c++ 5.5 (win32)
+visualage c++ 3.5 (win32)
 tcc 0.9.27 (linux, win32)
 pcc 1.2.0 (linux, freebsd)
 lcc 4.0 (win32)
@@ -86,13 +90,12 @@ turbo c 1.5/2.01 (dos16)
 * quickc 1.0语法兼容msc 5.1，但是编译直接crash，原因尚不清楚，不列入兼容列表。
 
 
-## c/2048-kr.c
+## c/2048_kr.c
 
-在c/2048-16b.c基础上改用K&R格式，用于兼容一些老编译器，由于目标是老编译器，因此去掉了查表法部分的代码。
+在c/2048-16b.c基础上改用K&R格式。
 
-因为大部分现代编译器仍然支持K&R格式，能编译c/2048-16b.c的编译器应该也能编译c/2048-kr.c，因此只列出新增编译器支持。
+因为大部分现代编译器仍然支持K&R格式，能编译c/2048-16b.c的编译器应该也能编译c/2048_kr.c，因此只列出新增编译器支持：
 
-已测试编译器和平台：
 ```
 msc 3.0/4.0 (dos16)
 ```
@@ -122,11 +125,11 @@ dmc 8.57 (win32)
 
 * msvc 5.0必须应用SP3，否则优化选项会生成错误代码或者编译失败，其他版本msvc也都测试的是补丁打满的版本。
 
-* watcom c++ 11.0未包含STL，需要使用[经过修改的STLPort-4.5.3](http://assa.4ip.ru/watcom/stlport.html)，下文多线程场景一样。
+* watcom c++ 11.0未包含STL，需要使用[经过修改的STLport-4.5.3](http://assa.4ip.ru/watcom/stlport.html)，下文多线程场景一样。其他只要有内置STL的编译器尽量使用内置STL而非STLport。
 
 * dmc不能使用优化，其64位整数运算优化有bug，产生错误代码。
 
-* libg++-2.6.x中的STL非常原始，问题很多，默认是不会安装stl头文件的，legacy-gc的libg++-2.6.2[调整](https://github.com/jackyjkchen/legacy-gcc/commit/354b366f60bb37359adbcb7307ab70039b5a3829#diff-ef832efd837dd21850a4ae1c9b95e0e353ce653288d1de797d24a5178f130031)后会安装，但不在默认搜索路径。编译示例：
+* libg++-2.6.x中的STL非常原始，问题很多，默认是不会安装stl头文件的，legacy-gcc的libg++-2.6.2[调整](https://github.com/jackyjkchen/legacy-gcc/commit/354b366f60bb37359adbcb7307ab70039b5a3829#diff-ef832efd837dd21850a4ae1c9b95e0e353ce653288d1de797d24a5178f130031)后会安装，但不在默认搜索路径。编译示例：
 ```
 g++-2.6.3 -I/usr/lib/gcc-lib/i686-legacy-linux-gnu/2.6.3/include/g++/stl -O2 cpp/2048-ai.cpp -lstdc++ -lm -o 2048
 ```
@@ -147,6 +150,8 @@ openwatcom c++ 1.9 (win32)
 watcom c++ 11.0 (win32, dos32)
 borland c++ 5.5 (win32)
 ```
+
+* gcc 2.7.2可编译，但STL在多线程场景下会coredump，不列入兼容列表。
 
 本实现亦支持OpenMP多线程，由预处理OPENMP_THREAD控制，编译示例如下，以gcc为例：
 ```

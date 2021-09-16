@@ -152,7 +152,9 @@ public:
     int32 get_max_thrd_num();
     static int32 get_cpu_num();
 
-#if defined(_MSC_VER) && _MSC_VER < 1100
+#if defined(__GNUC__) && __GNUC__ == 2 && __GNUC_MINOR__ < 8
+    deque<ThrdCallback> m_queue;
+#elif defined(_MSC_VER) && _MSC_VER < 1100
     deque<ThrdCallback, allocator<ThrdCallback> > m_queue;
 #else
     std::deque<ThrdCallback> m_queue;

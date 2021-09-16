@@ -130,7 +130,7 @@ typedef struct {
 } trans_table_entry_t;
 
 #if defined(MULTI_THREAD) && defined(OPENMP_THREAD)
-#error "MULTI_THREAD and OPENMP_THREAD cannot define at the same time."
+#error "MULTI_THREAD and OPENMP_THREAD cannot be defined at the same time."
 #endif
 
 #if defined(MULTI_THREAD)
@@ -149,22 +149,22 @@ typedef struct {
 #if __cplusplus >= 201103L
 #include <unordered_map>
 typedef std::unordered_map<board_t, trans_table_entry_t> trans_table_t;
-#define STDCXX 1
+#define MAP_HAVE_SECOND 1
 #else
-#if defined(__GNUC__) && __GNUC__ == 2 && __GNUC_MINOR__ <= 7
+#if defined(__GNUC__) && __GNUC__ == 2 && __GNUC_MINOR__ < 8
 #include <map.h>
 typedef map<board_t, trans_table_entry_t, less<board_t> > trans_table_t;
-#elif defined(_MSC_VER) && _MSC_VER <= 1020
+#elif defined(_MSC_VER) && _MSC_VER < 1100
 #include <map>
 typedef map<board_t, trans_table_entry_t, less<board_t>, allocator<trans_table_entry_t> > trans_table_t;
 #elif defined(__WATCOMC__) && __WATCOMC__ < 1200
 #include <map>
 typedef std::map<board_t, trans_table_entry_t, less<board_t> > trans_table_t;
-#define STDCXX 1
+#define MAP_HAVE_SECOND 1
 #else
 #include <map>
 typedef std::map<board_t, trans_table_entry_t> trans_table_t;
-#define STDCXX 1
+#define MAP_HAVE_SECOND 1
 #endif
 #endif
 
@@ -574,7 +574,7 @@ static float score_tilechoose_node(eval_state &state, board_t board, float cprob
         const trans_table_t::iterator &i = state.trans_table.find(board);
 #endif
         if (i != state.trans_table.end()) {
-#ifdef STDCXX
+#ifdef MAP_HAVE_SECOND
             trans_table_entry_t entry = i->second;
 #else
             trans_table_entry_t entry = state.trans_table[board];
@@ -606,7 +606,7 @@ static float score_tilechoose_node(eval_state &state, board_t board, float cprob
     res = res / num_open;
 
     if (state.curdepth < CACHE_DEPTH_LIMIT) {
-        trans_table_entry_t entry = { static_cast<uint8>(state.curdepth), res };
+        trans_table_entry_t entry = { (uint8)(state.curdepth), res };
         state.trans_table[board] = entry;
     }
 
