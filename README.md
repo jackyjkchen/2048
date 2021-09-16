@@ -153,6 +153,8 @@ borland c++ 5.5 (win32)
 
 * gcc 2.7.2可编译，但STL在多线程场景下会coredump，不列入兼容列表。
 
+* dmc 8.57可编译，但无法运行，不列入兼容列表。
+
 本实现亦支持OpenMP多线程，由预处理OPENMP_THREAD控制，编译示例如下，以gcc为例：
 ```
 g++ -DOPENMP_THREAD -O2 -fopenmp cpp/2048-ai.cpp -o 2048

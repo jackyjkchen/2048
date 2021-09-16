@@ -278,7 +278,7 @@ void ThreadPool::wait_all_thrd()
     m_thrd_num = 0;
 }
 
-int ThreadPool::get_max_thrd_num()
+int32 ThreadPool::get_max_thrd_num()
 {
     LockScope(this->m_ctrl_lock);
     return m_max_thrd_num;
