@@ -81,6 +81,7 @@ quickc 2.01/2.51 (dos16)
 borland c++ 2.0/3.1 (dos16)
 turbo c++ 1.01/3.0 (dos16)
 turbo c 1.5/2.01 (dos16)
+power c 2.2.2 (dos16)
 ```
 
 * 因该版本不使用64位整数，msvc 2.x和dmc 8.57可以开启优化。
