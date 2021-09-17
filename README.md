@@ -220,7 +220,7 @@ mono 1.1.1+ (linux, freebsd, macos)
 
 ## vbdotnet/2048.vb
 
-vb.net实现，查表法。需要.net framework 2.0+。
+VB.net实现，查表法。需要.net framework 2.0+。
 
 已测试编译器和平台：
 ```
@@ -231,7 +231,7 @@ mono 1.2.3+ (linux, freebsd, macos)
 
 ## vbdotnet/2048-old.vb
 
-vb.net 1.0实现，查表法。兼容.net framework 1.0/1.1，仅支持Win32。
+VB.net 1.0实现，查表法。兼容.net framework 1.0/1.1，仅支持Win32。
 
 已测试编译器和平台：
 ```
@@ -241,7 +241,7 @@ visual studio 2002+ (win32)
 
 ## vbdotnet/2048-ai.vb
 
-vb.net AI实现，查表法 + Dictionary + 多线程。需要.net framework 2.0+。
+VB.net AI实现，查表法 + Dictionary + 多线程。需要.net framework 2.0+。
 
 已测试编译器和平台：
 ```
@@ -325,7 +325,7 @@ jdk 1.5+ (linux, win32, freebsd, macos)
 
 ## pascal/2048.pas
 
-现代Pascal实现，使用uint64，由预处理FASTMODE决定是否使用查表法（默认查表）。
+现代Pascal实现，使用uint64，由预处理FASTMODE决定是否使用查表法（默认）。
 
 已测试编译器和平台：
 ```
