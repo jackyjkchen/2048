@@ -114,7 +114,7 @@ AI版本，ISO C++98实现，可选支持多线程（预处理MULTI_THREAD或OPE
 
 不启用MULTI_THREAD时（默认），无须依赖thread_pool.cpp，已测试编译器和平台：
 ```
-gcc 2.6+ (linux, freebsd, macos, mingw, mingw-w64, cygwin, djgpp)
+gcc 2.6.3+ (linux, freebsd, macos, mingw, mingw-w64, cygwin, djgpp)
 clang 3.0+ (linux, macos, freebsd, win32)
 msvc 4.2+ (win32)
 icc 8.1+ (win32, linux)
@@ -143,7 +143,7 @@ g++ -DMULTI_THREAD -O2 cpp/2048-ai.cpp cpp/thread_pool.cpp -pthread -o 2048
 
 多线程版本依赖操作系统原生线程，因此dos等都不支持，已测试编译器和平台：
 ```
-gcc 2.8+ (linux, freebsd, macos, mingw, mingw-w64, cygwin)
+gcc 2.7.2+ (linux, freebsd, macos, mingw, mingw-w64, cygwin)
 clang 3.0+ (linux, macos, freebsd, win32)
 msvc 4.2+ (win32)
 icc 8.1+ (win32, linux)
@@ -152,9 +152,10 @@ watcom c++ 11.0 (win32, dos32)
 borland c++ 5.5 (win32)
 ```
 
-* gcc 2.7.2可编译，但STL在多线程场景下会coredump，不列入兼容列表。
-
-* dmc 8.57可编译，但无法运行，不列入兼容列表。
+* gcc 2.7.2需要使用[经过修改的STLPort-3.12.2](https://github.com/jackyjkchen/legacy-gcc/blob/master/dev-libs/stlport/files/3.12.2/00_stlport-3.12.2.patch)，在legacy-gcc中已提供，否则libg++-2.7.x的STL在多线程场景下会coredump，编译示例：
+```
+g++-2.7.2 -DMULTI_THREAD -O2 -I/usr/lib/gcc-lib/i686-legacy-linux-gnu/2.7.2.3/include/stlport/ cpp/2048-ai.cpp cpp/thread_pool.cpp -pthread -o 2048
+```
 
 本实现亦支持OpenMP多线程，由预处理OPENMP_THREAD控制，编译示例如下，以gcc为例：
 ```
@@ -409,7 +410,7 @@ gfortran -std=f95 -O2 fortran/2048.F90 f90deps.o -o 2048
 
 已测试编译器和平台：
 ```
-g77 2.9-3.4 (linux, mingw, cygwin, freebsd)
+g77 2.91.66-3.4.6 (linux, mingw, cygwin, freebsd)
 gfortran 4.0+ (linux, mingw, mingw-w64, cygwin, freebsd)
 ```
 

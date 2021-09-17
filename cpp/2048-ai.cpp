@@ -150,8 +150,7 @@ typedef struct {
 #include <unordered_map>
 typedef std::unordered_map<board_t, trans_table_entry_t> trans_table_t;
 #define MAP_HAVE_SECOND 1
-#else
-#if defined(__GNUC__) && __GNUC__ == 2 && __GNUC_MINOR__ < 8
+#elif defined(__GNUC__) && __GNUC__ == 2 && __GNUC_MINOR__ < 8
 #include <map.h>
 typedef map<board_t, trans_table_entry_t, less<board_t> > trans_table_t;
 #elif defined(_MSC_VER) && _MSC_VER < 1100
@@ -165,7 +164,6 @@ typedef std::map<board_t, trans_table_entry_t, less<board_t> > trans_table_t;
 #include <map>
 typedef std::map<board_t, trans_table_entry_t> trans_table_t;
 #define MAP_HAVE_SECOND 1
-#endif
 #endif
 
 #define max(a,b) ( ((a)>(b)) ? (a):(b) )
