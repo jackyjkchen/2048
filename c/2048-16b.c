@@ -342,7 +342,7 @@ int ask_for_move(board_t board) {
     print_board(board);
 
     while (1) {
-        const char *allmoves = "wsadkjhl", *pos = 0;
+        char *allmoves = "wsadkjhl", *pos = 0;
         char movechar = get_ch();
 
         if (movechar == 'q') {

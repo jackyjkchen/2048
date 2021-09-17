@@ -23,10 +23,6 @@ typedef long int32;
 typedef int int32;
 #endif
 
-#ifdef __cplusplus
-}
-#endif
-
 #if defined(__WATCOMC__)
 #if defined(max)
 #undef max
@@ -36,14 +32,27 @@ typedef int int32;
 #endif
 #endif
 
-#include <deque>
-
 typedef void (*thrd_callback)(void *param);
 
-struct ThrdCallback {
+typedef struct {
     thrd_callback func;
     void *param;
-};
+} ThrdCallback;
+
+#ifdef __cplusplus
+}
+#endif
+
+#if defined(__GNUC__) && __GNUC__ == 2 && __GNUC_MINOR__ < 8
+#include <deque.h>
+typedef deque<ThrdCallback> ThreadQueue;
+#elif defined(_MSC_VER) && _MSC_VER < 1100
+#include <deque>
+typedef deque<ThrdCallback, allocator<ThrdCallback> > ThreadQueue;
+#else
+#include <deque>
+typedef std::deque<ThrdCallback> ThreadQueue;
+#endif
 
 #if defined(WINVER) && WINVER < 0x0600
 template<class LOCK>
@@ -134,6 +143,7 @@ public:
         m_lock.unlock();
     }
 private:
+    LockScope();
     LockScope(const LockScope&);
     LockScope& operator=(LockScope&);
     ThreadLock &m_lock;
@@ -152,15 +162,9 @@ public:
     int32 get_max_thrd_num();
     static int32 get_cpu_num();
 
-#if defined(__GNUC__) && __GNUC__ == 2 && __GNUC_MINOR__ < 8
-    deque<ThrdCallback> m_queue;
-#elif defined(_MSC_VER) && _MSC_VER < 1100
-    deque<ThrdCallback, allocator<ThrdCallback> > m_queue;
-#else
-    std::deque<ThrdCallback> m_queue;
-#endif
 private:
     static void thread_instance(void *param);
+    ThreadQueue m_queue;
     ThrdCallback m_thrd;
     ThreadLock m_pool_lock;
     ThreadLock m_ctrl_lock;
