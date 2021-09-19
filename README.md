@@ -29,7 +29,7 @@ msvc 2.0+ (win32)
 icc 8.1+ (win32, linux)
 aocc 1.0+ (linux)
 nvhpc/pgi 20.11/21.7 (linux)
-open64 4.5.2.1 (linux)
+open64 4.2.4/4.5.2.1/5.0 (linux)
 openwatcom c++ 1.9 (win32, dos32)
 watcom c++ 11.0 (win32, dos32)
 borland c++ 5.5 (win32)
@@ -44,7 +44,7 @@ dmc 8.57 (win32)
 
 * msvc 2.x都不能使用优化，否则编译器直接crash，包括最新的2.2。其他版本msvc测试的都是补丁打满的版本。
 
-* open64为AMD的二进制发布，open64官方并没有4.5.2.1版本。
+* open64 4.5.2.1为AMD的二进制发布，open64官方并没有4.5.2.1版本。
 
 * openwatcom c++ 1.9的dos32扩展，已测试CauseWay、DOS/4GW、DOS32/A、PMODE/W可用，其余不可用，后面涉及openwatcom的dos32目标均以此为准。
 
@@ -74,7 +74,7 @@ msvc 2.0+ (win32)
 icc 8.1+ (win32, linux)
 aocc 1.0+ (linux)
 nvhpc/pgi 20.11/21.7 (linux)
-open64 4.5.2.1 (linux)
+open64 4.2.4/4.5.2.1/5.0 (linux)
 openwatcom c++ 1.9 (win32, dos32, dos16)
 watcom c++ 11.0 (win32, dos32, dos16)
 borland c++ 5.5 (win32)
@@ -128,7 +128,7 @@ msvc 4.2+ (win32)
 icc 8.1+ (win32, linux)
 aocc 1.0+ (linux)
 nvhpc/pgi 20.11/21.7 (linux)
-open64 4.5.2.1 (linux)
+open64 4.2.4/4.5.2.1/5.0 (linux)
 openwatcom c++ 1.9 (win32, dos32)
 watcom c++ 11.0 (win32, dos32)
 borland c++ 5.5 (win32)
@@ -160,7 +160,7 @@ msvc 4.2+ (win32)
 icc 8.1+ (win32, linux)
 aocc 1.0+ (linux)
 nvhpc/pgi 20.11/21.7 (linux)
-open64 4.5.2.1 (linux)
+open64 4.2.4/4.5.2.1/5.0 (linux)
 openwatcom c++ 1.9 (win32)
 watcom c++ 11.0 (win32, dos32)
 borland c++ 5.5 (win32)
@@ -185,7 +185,7 @@ msvc 8.0+ (win32)
 icc 8.1+ (win32, linux)
 aocc 1.0+ (linux)
 nvhpc/pgi 20.11/21.7 (linux)
-open64 4.5.2.1 (linux)
+open64 4.2.4/4.5.2.1/5.0 (linux)
 ```
 
 

@@ -60,7 +60,7 @@ bool ThreadLock::wait(int32 timeout_ms/* = -1*/)
 #else
     int ret = 0;
     if (timeout_ms >= 0) {
-        timeval now = { 0 };
+        timeval now = { 0, 0 };
         gettimeofday(&now, NULL);
         const timespec timeout = {now.tv_sec + timeout_ms / 1000, now.tv_usec * 1000 + (timeout_ms % 1000) * 1000 * 1000};
         ret = pthread_cond_timedwait(&m_cond, &m_mutex, &timeout);
