@@ -57,7 +57,6 @@
         integer*4 :: c_rand
 
         unif_random = mod(c_rand(), n)
-        return
       end
 
       integer*8 function unpack_col(row)
@@ -73,7 +72,6 @@
         t3 = ishft(t0, 36)
 
         unpack_col = iand(ior(ior(ior(t0, t1), t2), t3), COL_MASK)
-        return
       end
 
       integer*2 function reverse_row(row)
@@ -88,7 +86,6 @@
         t3 = ishft(row, 12)
 
         reverse_row = ior(ior(ior(t0, t1), t2), t3)
-        return
       end
 
       subroutine print_board(board)
@@ -104,7 +101,6 @@
         do i = 0, 3
           do j = 0, 3
             power_val = iand(board_, t_)
-
             if (power_val == 0) then
               write(*, '(a, "      ", $)') '|'
             else
@@ -116,7 +112,6 @@
           write(*, '(a)') '|'
         end do
         write(*, *) '-----------------------------'
-        return
       end
 
       integer*8 function transpose_board(x)
@@ -140,7 +135,6 @@
         b3 = iand(a, Z00000000FF00FF00)
 
         transpose_board = ior(ior(b1, ishft(b2, -24)), ishft(b3, 24))
-        return
       end function transpose_board
 
       integer*4 function count_empty(x)
@@ -163,7 +157,6 @@
         x_ = x_ + ishft(x_, -4)
         t_ = Z000F
         count_empty = iand(x_, t_)
-        return
       end
 
       integer*2 function execute_move_helper(row)
@@ -206,7 +199,6 @@
         t2 = ishft(row_line(2), 8)
         t3 = ishft(row_line(3), 12)
         execute_move_helper = ior(ior(ior(t0, t1), t2), t3)
-        return
       end
 
       integer*8 function execute_move_col(board, move)
@@ -274,7 +266,6 @@
           ret = -1
         end if
         execute_move = ret
-        return
       end
 
       integer*4 function score_helper(board)
@@ -333,7 +324,6 @@
           end if
         end do
         ask_for_move = ret
-        return
       end
 
       integer*8 function draw_tile()
@@ -347,7 +337,6 @@
           ret = 2
         end if
         draw_tile = ret
-        return
       end
 
       integer*8 function insert_tile_rand(board, tile)
@@ -377,7 +366,6 @@
           tile_ = ishft(tile_, 4)
         end do
         insert_tile_rand = ior(board, tile_)
-        return
       end
 
       integer*8 function initial_board()
@@ -392,7 +380,6 @@
         board = ishft(tile, ishft(rd, 2))
         tile = draw_tile()
         initial_board = insert_tile_rand(board, tile)
-        return
       end
 
       subroutine play_game()
@@ -479,7 +466,6 @@
         end do
         call print_board(board)
         call c_print_final_score(current_score)
-        return
       end
 
       subroutine main()
@@ -489,6 +475,5 @@
         call init_num()
         call play_game()
         call c_term_clear()
-        return
       end
 

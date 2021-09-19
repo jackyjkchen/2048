@@ -246,8 +246,7 @@ begin
             goto 1;
         end;
         _pos := strchr(allmoves, movechar);
-        if _pos <> -1 then
-        begin
+        if _pos <> -1 then begin
             ret := _pos mod 4;
             goto 1;
         end;

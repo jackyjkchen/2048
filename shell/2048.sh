@@ -293,7 +293,6 @@ function play_game() {
     local moveno=0
     local move=0
     local newboard=0
-
     local MAX_RETRACT=64
     local retract_vec=()
     local retract_penalty_vec=()

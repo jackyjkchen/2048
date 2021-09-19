@@ -14,12 +14,6 @@
 #endif
 #endif
 
-#if defined(_Windows)
-#ifndef __WINDOWS__
-#define __WINDOWS__
-#endif
-#endif
-
 typedef unsigned char uint8;
 typedef unsigned short uint16;
 
@@ -132,7 +126,6 @@ typedef struct {
 #if defined(MULTI_THREAD) && defined(OPENMP_THREAD)
 #error "MULTI_THREAD and OPENMP_THREAD cannot be defined at the same time."
 #endif
-
 #if defined(MULTI_THREAD)
 #include "thread_pool.h"
 #elif defined(OPENMP_THREAD)

@@ -117,7 +117,6 @@ sub execute_move_helper {
             $line[$j] = 0;
         }
     }
-
     return $line[0] | ($line[1] << 4) | ($line[2] << 8) | ($line[3] << 12);
 }
 
@@ -208,7 +207,6 @@ sub ask_for_move {
             return $pos % 4;
         }
     }
-    return -1;
 }
 
 sub draw_tile {

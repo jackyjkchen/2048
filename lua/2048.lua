@@ -167,7 +167,6 @@ function ask_for_move(board)
     while true do
         local allmoves = "wsadkjhl"
         local pos = 0
-
         local movechar = string.char(luadeps.c_getch())
 
         if (movechar == 'q') then
@@ -184,6 +183,7 @@ end
 
 function draw_tile()
     local rd = unif_random(10)
+
     if (rd < 9) then
        return 1
     else
@@ -194,6 +194,7 @@ end
 function insert_tile_rand(board, tile)
     local index = unif_random(count_empty(board))
     local tmp = board
+
     while true do
         while ((tmp & 0xf) ~= 0) do
             tmp = tmp >> 4
@@ -220,7 +221,6 @@ function play_game(get_move)
     local last_score = 0
     local current_score = 0
     local moveno = 0
-
     local MAX_RETRACT = 64
     local retract_vec = {}
     local retract_penalty_vec = {}

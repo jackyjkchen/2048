@@ -76,7 +76,6 @@ subroutine print_board(board)
     do i = 0, 3
         do j = 0, 3
             power_val = iand(board_, int(Z000F, kind=8))
-
             if (power_val == 0) then
                 write(*, fmt='(a, 6x)', advance='no') '|'
             else

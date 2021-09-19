@@ -179,7 +179,6 @@ Public Module Class2048
 
     Private Function ask_for_move(ByVal board As Long) As Integer
         print_board(board)
-
         While True
             Const allmoves As String = "wsadkjhl"
             Dim pos As Integer = 0
@@ -190,13 +189,11 @@ Public Module Class2048
             ElseIf movechar = "r"c Then
                 Return RETRACT
             End If
-
             pos = allmoves.IndexOf(movechar)
             If pos <> -1 Then
                 Return pos Mod 4
             End If
         End While
-        Return -1
     End Function
 
     Private Function draw_tile() As Long
@@ -285,7 +282,6 @@ Public Module Class2048
                 Else
                     retract_penalty_vec(retract_pos) = 0
                 End If
-
                 retract_vec(retract_pos) = board
                 retract_pos += 1
                 If retract_pos = MAX_RETRACT Then retract_pos = 0

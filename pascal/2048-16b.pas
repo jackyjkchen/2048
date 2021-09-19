@@ -372,8 +372,7 @@ begin
 
         move(board, newboard, sizeof(board_t));
         execute_move(_move, newboard);
-        if compare_board(board, newboard) then
-        begin
+        if compare_board(board, newboard) then begin
             moveno := moveno - 1;
             continue;
         end;
