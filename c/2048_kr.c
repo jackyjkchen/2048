@@ -9,12 +9,6 @@
 #endif
 #endif
 
-#if defined(_Windows)
-#ifndef __WINDOWS__
-#define __WINDOWS__
-#endif
-#endif
-
 typedef unsigned char uint8;
 typedef unsigned short uint16;
 
@@ -28,7 +22,7 @@ typedef unsigned int uint32;
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <conio.h>
-#elif defined(MSDOS) || defined(__WINDOWS__)
+#elif defined(MSDOS)
 #include <conio.h>
 #elif defined(__linux__) || defined(__unix__) || defined(__CYGWIN__) || defined(__MACH__)
 #include <unistd.h>
@@ -99,7 +93,7 @@ static void clear_screen() {
 #define clear_screen()
 #endif
 
-#if defined(_WIN32) || defined(MSDOS) || defined(__WINDOWS__)
+#if defined(_WIN32) || defined(MSDOS)
 #define TERM_INIT
 #define TERM_CLEAR
 #elif defined(__linux__) || defined(__unix__) || defined(__CYGWIN__) || defined(__MACH__)
@@ -126,10 +120,16 @@ static void term_clear(s)
 #define TERM_CLEAR term_clear(&s);
 #endif
 
-static int get_ch() {
-#if defined(_WIN32) || (defined(_MSC_VER) && _MSC_VER >= 700 && defined(__STDC__))
+#if defined(_MSC_VER) && _MSC_VER >= 700 && defined(__STDC__)
+#define _GETCH_USE
+#elif defined(__WATCOMC__) && __WATCOMC__ < 1100
+#define GETCH_USE
+#endif
+
+static int get_ch(void) {
+#if (defined(_WIN32) && !defined(GETCH_USE)) || defined(_GETCH_USE)
     return _getch();
-#elif defined(MSDOS) || defined(__WINDOWS__)
+#elif defined(MSDOS) || defined(GETCH_USE)
     return getch();
 #else
     return getchar();

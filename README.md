@@ -76,7 +76,7 @@ aocc 1.0+ (linux)
 nvhpc/pgi 20.11/21.7 (linux)
 open64 4.2.4/4.5.2.1/5.0 (linux)
 openwatcom c++ 1.9 (win32, dos32, dos16)
-watcom c++ 11.0 (win32, dos32, dos16)
+watcom c++ 10.6/11.0 (win32, dos32, dos16)
 borland c++ 5.5 (win32)
 visualage c++ 3.5 (win32)
 tcc 0.9.27 (linux, win32)
@@ -89,15 +89,19 @@ quickc 2.01/2.51 (dos16)
 borland c++ 2.0/3.1 (dos16)
 turbo c++ 1.01/3.0 (dos16)
 turbo c 1.5/2.01 (dos16)
+symantec c++ 7.5 (dos16)
 power c 2.2.2 (dos16)
 ```
 
 * 因该版本不使用64位整数，msvc 2.x和dmc 8.57可以开启优化。
 
+* watcom c++ 10.6的dos32扩展，已测试DOS/4GW可用，其余不可用。win32目标需要手动添加-D_WIN32。
+
 * msc 5.1不能使用QC IDE上的优化选项，命令行中/Os /Ot /Ox /O都可以使用。
 
 * quickc 1.0语法兼容msc 5.1，但是编译直接crash，原因尚不清楚，不列入兼容列表。
 
+* symantec c++ 7.5支持win32目标，但产出程序无法运行，原因未知。
 
 ## c/2048_kr.c
 
@@ -369,6 +373,7 @@ turbo pascal 7.1 (dos16)
 ```
 free pascal 2.2+ (linux, win32, freebsd, macos, dos32)
 turbo pascal 4.0/5.5/6.0/7.1 (dos16)
+quick pascal 1.0 (dos16)
 ```
 
 * turbo pascal 3.0或以下版本不支持uses，因此无法兼容。
@@ -398,7 +403,7 @@ fpc -dMULTI_THREAD -O2 pascal/2048-ai.pas
 
 已测试编译器和平台：
 ```
-gcc 4.3+ (linux, mingw, mingw-w64, cygwin, freebsd, macos)
+gfortran 4.3+ (linux, mingw, mingw-w64, cygwin, freebsd, macos)
 ```
 
 * gfortran不感知_WIN32等C语言预处理器，WIN32平台要在命令行显式指定-D_WIN32。
@@ -411,7 +416,7 @@ gcc 4.3+ (linux, mingw, mingw-w64, cygwin, freebsd, macos)
 
 已测试编译器和平台：
 ```
-gcc 4.0+ (linux, mingw, mingw-w64, cygwin, freebsd, macos)
+gfortran 4.0+ (linux, mingw, mingw-w64, cygwin, freebsd, macos)
 ```
 
 编译命令行示例：
