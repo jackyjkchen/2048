@@ -16,7 +16,6 @@
 
 typedef unsigned char uint8;
 typedef unsigned short uint16;
-
 #ifdef _M_I86
 typedef unsigned long uint32;
 #else
@@ -24,11 +23,9 @@ typedef unsigned int uint32;
 #endif
 #if defined(_MSC_VER) || defined(__BORLANDC__)
 typedef unsigned __int64 uint64;
-
 #define W64LIT(x) x##ui64
 #else
 typedef unsigned long long uint64;
-
 #ifdef __WATCOMC__
 #define W64LIT(x) x
 #else
