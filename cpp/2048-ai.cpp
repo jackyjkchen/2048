@@ -150,6 +150,10 @@ typedef struct {
 #include <unordered_map>
 typedef std::unordered_map<board_t, trans_table_entry_t> trans_table_t;
 #define MAP_HAVE_SECOND 1
+#elif (defined(__GNUC__) && (__GNUC__ >= 5 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 2))) || (defined(_MSC_VER) && _MSC_VER >= 1600)
+#include <tr1/unordered_map>
+typedef std::tr1::unordered_map<board_t, trans_table_entry_t> trans_table_t;
+#define MAP_HAVE_SECOND 1
 #elif defined(__GNUC__) && __GNUC__ == 2 && __GNUC_MINOR__ < 8
 #include <map.h>
 typedef map<board_t, trans_table_entry_t, less<board_t> > trans_table_t;
