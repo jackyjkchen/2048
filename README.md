@@ -426,9 +426,9 @@ gfortran -std=f95 -O2 fortran/2048.F90 f90deps.o -o 2048
 ```
 
 
-## (fortran/2048f.f or fortran/2048s.f) + fortran/f77deps.c
+## fortran/2048.f + fortran/f77deps.c
 
-传统Fortran77实现，固定模式源码格式，2048f.f使用查表法，2048s.f不使用，由于f77没有提供iso_c_binding，所以系统相关功能（无回显输入，清除屏幕），由fortran/f77deps.c提供。
+传统Fortran77实现，固定模式源码格式，不使用查表法，由于f77没有提供iso_c_binding，所以系统相关功能（无回显输入，清除屏幕），由fortran/f77deps.c提供。
 
 已测试编译器和平台：
 ```
@@ -439,13 +439,13 @@ gfortran 4.0+ (linux, mingw, mingw-w64, cygwin, freebsd)
 编译命令行示例：
 ```
 gcc-3.4.6 -O2 -c fortran/f77deps.c -o f77deps.o
-g77-3.4.6 -O2 fortran/2048f.f f77deps.o -o 2048
+g77-3.4.6 -O2 fortran/2048.f f77deps.o -o 2048
 ```
 
 使用-std=gnu，也可使用gfortran编译器：
 ```
 gcc -std=c90 -O2 -c fortran/f90deps.c -o f90deps.o
-gfortran -std=gnu -O2 fortran/2048f.f f90deps.o -o 2048
+gfortran -std=gnu -O2 fortran/2048.f f90deps.o -o 2048
 ```
 
 
