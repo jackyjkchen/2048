@@ -536,15 +536,3 @@ bash 3.1+ (linux, freebsd, macos)
 
 * 声称兼容bash语法的zsh不支持64位无符号整数，因此无法运行。
 
-
-## shell/2048-16b.sh
-
-Bash实现，不使用64位整数运算，仅能用于Posix兼容系统（依赖tty设备），由于bash数组性能很差，因此使用非查表实现。
-
-测试Shell和平台：
-```
-bash 3.1+ (linux, freebsd, macos)
-```
-
-* 不支持悔棋
-
