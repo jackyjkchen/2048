@@ -355,7 +355,6 @@ int ask_for_move(board_t board) {
             return (pos - allmoves) % 4;
         }
     }
-    return -1;
 }
 
 static uint16 draw_tile(void) {

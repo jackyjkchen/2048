@@ -126,7 +126,7 @@ static void term_clear(s)
 #define GETCH_USE
 #endif
 
-static int get_ch(void) {
+static int get_ch() {
 #if (defined(_WIN32) && !defined(GETCH_USE)) || defined(_GETCH_USE)
     return _getch();
 #elif defined(MSDOS) || defined(GETCH_USE)
@@ -384,7 +384,6 @@ int ask_for_move(board)
             return (pos - allmoves) % 4;
         }
     }
-    return -1;
 }
 
 static uint16 draw_tile() {
