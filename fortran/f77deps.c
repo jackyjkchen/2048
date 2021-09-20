@@ -2,13 +2,16 @@
 #include <stdlib.h>
 #include <time.h>
 
+#if defined(__linux__) || defined(__unix__) || defined(__CYGWIN__) || defined(__MACH__) || defined(unix)
+#define UNIX_LIKE 1
+#endif
 
 #if defined(_WIN32)
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <conio.h>
 #define DLLEXPORT __declspec(dllexport)
-#elif defined(__linux__) || defined(__unix__) || defined(__CYGWIN__) || defined(__MACH__)
+#elif defined(UNIX_LIKE)
 #include <unistd.h>
 #include <termios.h>
 #define DLLEXPORT
@@ -60,12 +63,12 @@ DLLEXPORT void c_clear_screen__(void) {
 
     SetConsoleCursorPosition(hStdOut, homeCoords);
 #endif
-#elif defined(__linux__) || defined(__unix__) || defined(__CYGWIN__) || defined(__MACH__)
+#elif defined(UNIX_LIKE)
     printf("\033[2J\033[H");
 #endif
 }
 
-#if defined(__linux__) || defined(__unix__)|| defined(__CYGWIN__) || defined(__MACH__)
+#if defined(UNIX_LIKE)
 static int posix_getch(void) {
     struct termios old_termios, new_termios;
     int error;
@@ -104,7 +107,7 @@ static int posix_getch(void) {
 DLLEXPORT int c_getch__(void) {
 #if defined(_WIN32)
     return _getch();
-#elif defined(__linux__) || defined(__unix__) || defined(__CYGWIN__) || defined(__MACH__)
+#elif defined(UNIX_LIKE)
     return posix_getch();
 #else
     return getchar();

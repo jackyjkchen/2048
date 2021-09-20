@@ -1,13 +1,16 @@
 #include <stdio.h>
 #include <stdlib.h>
-
 #include <lauxlib.h>
+
+#if defined(__linux__) || defined(__unix__) || defined(__CYGWIN__) || defined(__MACH__) || defined(unix)
+#define UNIX_LIKE 1
+#endif
 
 #if defined(_WIN32)
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <conio.h>
-#elif defined(__linux__) || defined(__unix__) || defined(__CYGWIN__) || defined(__MACH__)
+#elif defined(UNIX_LIKE)
 #include <unistd.h>
 #include <termios.h>
 #endif
@@ -47,13 +50,13 @@ int c_clear_screen(lua_State *L) {
 
     SetConsoleCursorPosition(hStdOut, homeCoords);
 #endif
-#elif defined(__linux__) || defined(__unix__) || defined(__CYGWIN__) || defined(__MACH__)
+#elif defined(UNIX_LIKE)
     printf("\033[2J\033[H");
 #endif
     return 1;
 }
 
-#if defined(__linux__) || defined(__unix__)|| defined(__CYGWIN__) || defined(__MACH__)
+#if defined(UNIX_LIKE)
 static int posix_getch(void) {
     struct termios old_termios, new_termios;
     int error;
@@ -94,7 +97,7 @@ int c_getch(lua_State *L) {
 
 #if defined(_WIN32)
     ret = _getch();
-#elif defined(__linux__) || defined(__unix__) || defined(__CYGWIN__) || defined(__MACH__)
+#elif defined(UNIX_LIKE)
     ret = posix_getch();
 #else
     ret = getchar();

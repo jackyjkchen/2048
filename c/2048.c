@@ -7,15 +7,13 @@
 #define FASTMODE 1
 #endif
 
-#if defined(__MSDOS__) || defined(_MSDOS) || defined(__DOS__)
-#ifndef MSDOS
-#define MSDOS
-#endif
+#if defined(__linux__) || defined(__unix__) || defined(__CYGWIN__) || defined(__MACH__) || defined(unix)
+#define UNIX_LIKE 1
 #endif
 
-#if defined(_Windows)
-#ifndef __WINDOWS__
-#define __WINDOWS__
+#if defined(__MSDOS__) || defined(_MSDOS) || defined(__DOS__)
+#ifndef MSDOS
+#define MSDOS 1
 #endif
 #endif
 
@@ -45,9 +43,9 @@ typedef unsigned long long uint64;
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <conio.h>
-#elif defined(MSDOS) || defined(__WINDOWS__)
+#elif defined(MSDOS)
 #include <conio.h>
-#elif defined(__linux__) || defined(__unix__) || defined(__CYGWIN__) || defined(__MACH__)
+#elif defined(UNIX_LIKE)
 #include <unistd.h>
 #include <termios.h>
 #endif
@@ -108,13 +106,13 @@ static void clear_screen(void) {
 #else
 #define clear_screen()  system("cls");
 #endif
-#elif defined(__linux__) || defined(__unix__) || defined(__CYGWIN__) || defined(__MACH__)
+#elif defined(UNIX_LIKE)
 #define clear_screen()  printf("\033[2J\033[H");
 #else
 #define clear_screen()
 #endif
 
-#if defined(__linux__) || defined(__unix__) || defined(__CYGWIN__) || defined(__MACH__)
+#if defined(UNIX_LIKE)
 static int posix_getch(void) {
     struct termios old_termios, new_termios;
     int error;
@@ -151,9 +149,9 @@ static int posix_getch(void) {
 #endif
 
 #if defined(_MSC_VER) && _MSC_VER >= 700 && defined(__STDC__)
-#define _GETCH_USE
+#define _GETCH_USE 1
 #elif defined(__WATCOMC__) && __WATCOMC__ < 1100
-#define GETCH_USE
+#define GETCH_USE 1
 #endif
 
 static int get_ch(void) {
@@ -161,7 +159,7 @@ static int get_ch(void) {
     return _getch();
 #elif defined(MSDOS) || defined(GETCH_USE)
     return getch();
-#elif defined(__linux__) || defined(__unix__) || defined(__CYGWIN__) || defined(__MACH__)
+#elif defined(UNIX_LIKE)
     return posix_getch();
 #else
     return getchar();

@@ -4,13 +4,17 @@
 #include <string.h>
 #include <time.h>
 
+#if defined(__linux__) || defined(__unix__) || defined(__CYGWIN__) || defined(__MACH__) || defined(unix)
+#define UNIX_LIKE 1
+#endif
+
 #if !defined(FASTMODE) || (defined(FASTMODE) && FASTMODE != 0)
 #define FASTMODE 1
 #endif
 
 #if defined(__MSDOS__) || defined(_MSDOS) || defined(__DOS__)
 #ifndef MSDOS
-#define MSDOS
+#define MSDOS 1
 #endif
 #endif
 
@@ -94,7 +98,7 @@ static void clear_screen(void) {
 #else
 #define clear_screen()  system("cls");
 #endif
-#elif defined(__linux__) || defined(__unix__) || defined(__CYGWIN__) || defined(__MACH__)
+#elif defined(UNIX_LIKE)
 #define clear_screen()  printf("\033[2J\033[H");
 #else
 #define clear_screen()

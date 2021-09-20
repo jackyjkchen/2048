@@ -23,7 +23,7 @@ AI实现需要关联容器做cache以提升性能，考验编译器标准库能�
 
 已测试编译器和平台：
 ```
-gcc 2.0+ (linux, freebsd, macos, mingw, mingw-w64, cygwin, djgpp, openbsd, netbsd, dragonflybsd, solaris)
+gcc 2.0+ (linux, freebsd, macos, mingw, mingw-w64, cygwin, djgpp, openbsd, netbsd, dragonflybsd, solaris, openserver, unixware)
 clang 3.0+ (linux, macos, freebsd, win32, openbsd, netbsd, dragonflybsd)
 msvc 2.0+ (win32)
 icc 8.1+ (win32, linux)
@@ -38,6 +38,7 @@ tcc 0.9.27 (linux, win32)
 pcc 1.1.0 (linux, freebsd)
 lcc 4.0 (win32)
 dmc 8.57 (win32)
+cc (openserver, unixware)
 ```
 
 * gcc 3.1以下版本需要大量补丁用于支持现代化系统和修复一些bug，[参见](https://github.com/jackyjkchen/legacy-gcc)。
@@ -68,7 +69,7 @@ watcom c++ 11.0 (dos16)
 
 已测试编译器和平台：
 ```
-gcc 2.0+ (linux, freebsd, macos, mingw, mingw-w64, cygwin, djgpp, openbsd, netbsd, dragonflybsd, solaris)
+gcc 2.0+ (linux, freebsd, macos, mingw, mingw-w64, cygwin, djgpp, openbsd, netbsd, dragonflybsd, solaris, openserver, unixware)
 clang 3.0+ (linux, macos, freebsd, win32, openbsd, netbsd, dragonflybsd)
 msvc 2.0+ (win32)
 icc 8.1+ (win32, linux)
@@ -83,6 +84,7 @@ tcc 0.9.27 (linux, win32)
 pcc 1.1.0 (linux, freebsd)
 lcc 4.0 (win32)
 dmc 8.57 (win32)
+cc (openserver, unixware)
 msvc 1.52 (dos16)
 msc 5.1/6.0/7.0 (dos16)
 quickc 2.01/2.51 (dos16)
@@ -126,7 +128,7 @@ AI版本，ISO C++98实现，可选支持多线程（预处理MULTI_THREAD或OPE
 
 不启用MULTI_THREAD时（默认），无须依赖thread_pool.cpp，已测试编译器和平台：
 ```
-gcc 2.6.3+ (linux, freebsd, macos, mingw, mingw-w64, cygwin, djgpp, openbsd, netbsd, dragonflybsd, solaris)
+gcc 2.6.3+ (linux, freebsd, macos, mingw, mingw-w64, cygwin, djgpp, openbsd, netbsd, dragonflybsd, solaris, openserver, unixware)
 clang 3.0+ (linux, macos, freebsd, win32, openbsd, netbsd, dragonflybsd)
 msvc 4.2+ (win32)
 icc 8.1+ (win32, linux)

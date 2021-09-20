@@ -3,9 +3,13 @@
 #include <string.h>
 #include <time.h>
 
+#if defined(__linux__) || defined(__unix__) || defined(__CYGWIN__) || defined(__MACH__) || defined(unix)
+#define UNIX_LIKE 1
+#endif
+
 #if defined(__MSDOS__) || defined(_MSDOS) || defined(__DOS__)
 #ifndef MSDOS
-#define MSDOS
+#define MSDOS 1
 #endif
 #endif
 
@@ -24,7 +28,7 @@ typedef unsigned int uint32;
 #include <conio.h>
 #elif defined(MSDOS)
 #include <conio.h>
-#elif defined(__linux__) || defined(__unix__) || defined(__CYGWIN__) || defined(__MACH__)
+#elif defined(UNIX_LIKE)
 #include <unistd.h>
 #include <termios.h>
 #endif
@@ -87,13 +91,13 @@ static void clear_screen() {
 #else
 #define clear_screen()  system("cls");
 #endif
-#elif defined(__linux__) || defined(__unix__) || defined(__CYGWIN__) || defined(__MACH__)
+#elif defined(UNIX_LIKE)
 #define clear_screen()  printf("\033[2J\033[H");
 #else
 #define clear_screen()
 #endif
 
-#if defined(__linux__) || defined(__unix__) || defined(__CYGWIN__) || defined(__MACH__)
+#if defined(UNIX_LIKE)
 static int posix_getch() {
     struct termios old_termios, new_termios;
     int error;
@@ -130,9 +134,9 @@ static int posix_getch() {
 #endif
 
 #if defined(_MSC_VER) && _MSC_VER >= 700 && defined(__STDC__)
-#define _GETCH_USE
+#define _GETCH_USE 1
 #elif defined(__WATCOMC__) && __WATCOMC__ < 1100
-#define GETCH_USE
+#define GETCH_USE 1
 #endif
 
 static int get_ch() {
@@ -140,7 +144,7 @@ static int get_ch() {
     return _getch();
 #elif defined(MSDOS) || defined(GETCH_USE)
     return getch();
-#elif defined(__linux__) || defined(__unix__) || defined(__CYGWIN__) || defined(__MACH__)
+#elif defined(UNIX_LIKE)
     return posix_getch();
 #else
     return getchar();
