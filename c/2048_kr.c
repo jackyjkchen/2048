@@ -93,31 +93,40 @@ static void clear_screen() {
 #define clear_screen()
 #endif
 
-#if defined(_WIN32) || defined(MSDOS)
-#define TERM_INIT
-#define TERM_CLEAR
-#elif defined(__linux__) || defined(__unix__) || defined(__CYGWIN__) || defined(__MACH__)
-typedef struct {
-    struct termios oldt, newt;
-} term_state;
+#if defined(__linux__) || defined(__unix__) || defined(__CYGWIN__) || defined(__MACH__)
+static int posix_getch() {
+    struct termios old_termios, new_termios;
+    int error;
+    char c;
 
-static void term_init(s)
-     term_state *s;
-{
-    tcgetattr(STDIN_FILENO, &s->oldt);
-    s->newt = s->oldt;
-    s->newt.c_lflag &= ~(ICANON | ECHO);
-    tcsetattr(STDIN_FILENO, TCSANOW, &s->newt);
+    fflush(stdout);
+    tcgetattr(0, &old_termios);
+    new_termios = old_termios;
+    new_termios.c_lflag &= ~ICANON;
+
+#ifdef TERMIOSECHO
+    new_termios.c_lflag |= ECHO;
+#else
+    new_termios.c_lflag &= ~ECHO;
+#endif
+
+#ifdef TERMIOSFLUSH
+#define OPTIONAL_ACTIONS TCSAFLUSH
+#else
+#define OPTIONAL_ACTIONS TCSANOW
+#endif
+    new_termios.c_cc[VMIN] = 1;
+    new_termios.c_cc[VTIME] = 1;
+
+    error = tcsetattr(0, OPTIONAL_ACTIONS, &new_termios);
+
+    if (0 == error) {
+        error = read(0, &c, 1);
+    }
+    error += tcsetattr(0, OPTIONAL_ACTIONS, &old_termios);
+
+    return (error == 1 ? (int)c : -1);
 }
-
-static void term_clear(s)
-     term_state *s;
-{
-    tcsetattr(STDIN_FILENO, TCSANOW, &s->oldt);
-}
-
-#define TERM_INIT term_state s;term_init(&s);
-#define TERM_CLEAR term_clear(&s);
 #endif
 
 #if defined(_MSC_VER) && _MSC_VER >= 700 && defined(__STDC__)
@@ -131,6 +140,8 @@ static int get_ch() {
     return _getch();
 #elif defined(MSDOS) || defined(GETCH_USE)
     return getch();
+#elif defined(__linux__) || defined(__unix__) || defined(__CYGWIN__) || defined(__MACH__)
+    return posix_getch();
 #else
     return getchar();
 #endif
@@ -513,9 +524,6 @@ void play_game() {
 }
 
 int main() {
-    TERM_INIT;
     play_game(ask_for_move);
-
-    TERM_CLEAR;
     return 0;
 }

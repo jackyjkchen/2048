@@ -23,8 +23,8 @@ AI实现需要关联容器做cache以提升性能，考验编译器标准库能�
 
 已测试编译器和平台：
 ```
-gcc 2.0+ (linux, freebsd, macos, mingw, mingw-w64, cygwin, djgpp)
-clang 3.0+ (linux, macos, freebsd, win32)
+gcc 2.0+ (linux, freebsd, macos, mingw, mingw-w64, cygwin, djgpp, openbsd, netbsd, dragonflybsd, solaris)
+clang 3.0+ (linux, macos, freebsd, win32, openbsd, netbsd, dragonflybsd)
 msvc 2.0+ (win32)
 icc 8.1+ (win32, linux)
 aocc 1.0+ (linux)
@@ -68,8 +68,8 @@ watcom c++ 11.0 (dos16)
 
 已测试编译器和平台：
 ```
-gcc 2.0+ (linux, freebsd, macos, mingw, mingw-w64, cygwin, djgpp)
-clang 3.0+ (linux, macos, freebsd, win32)
+gcc 2.0+ (linux, freebsd, macos, mingw, mingw-w64, cygwin, djgpp, openbsd, netbsd, dragonflybsd, solaris)
+clang 3.0+ (linux, macos, freebsd, win32, openbsd, netbsd, dragonflybsd)
 msvc 2.0+ (win32)
 icc 8.1+ (win32, linux)
 aocc 1.0+ (linux)
@@ -113,7 +113,7 @@ power c 2.2.2 (dos16)
 msc 3.0/4.0 (dos16)
 ```
 
-* msc 3.0产出的程序无法在Windows 2000以上系统运行。
+* msc 3.0产出的程序无法在Windows NT系统运行。只能用于DOS、Windows 3.x、Windows 9x、Windows Me。
 
 * msc 2.0或以下版本支持的C格式是某种C方言，既不是ANSI C也不是K&R C，因此无法兼容。
 
@@ -126,8 +126,8 @@ AI版本，ISO C++98实现，可选支持多线程（预处理MULTI_THREAD或OPE
 
 不启用MULTI_THREAD时（默认），无须依赖thread_pool.cpp，已测试编译器和平台：
 ```
-gcc 2.6.3+ (linux, freebsd, macos, mingw, mingw-w64, cygwin, djgpp)
-clang 3.0+ (linux, macos, freebsd, win32)
+gcc 2.6.3+ (linux, freebsd, macos, mingw, mingw-w64, cygwin, djgpp, openbsd, netbsd, dragonflybsd, solaris)
+clang 3.0+ (linux, macos, freebsd, win32, openbsd, netbsd, dragonflybsd)
 msvc 4.2+ (win32)
 icc 8.1+ (win32, linux)
 aocc 1.0+ (linux)
@@ -158,8 +158,8 @@ g++ -DMULTI_THREAD -O2 cpp/2048-ai.cpp cpp/thread_pool.cpp -pthread -o 2048
 
 多线程版本依赖操作系统原生线程，因此dos等都不支持，已测试编译器和平台：
 ```
-gcc 2.7.2+ (linux, freebsd, macos, mingw, mingw-w64, cygwin)
-clang 3.0+ (linux, macos, freebsd, win32)
+gcc 2.7.2+ (linux, freebsd, macos, mingw, mingw-w64, cygwin, openbsd, netbsd, dragonflybsd, solaris)
+clang 3.0+ (linux, macos, freebsd, win32, openbsd, netbsd, dragonflybsd)
 msvc 4.2+ (win32)
 icc 8.1+ (win32, linux)
 aocc 1.0+ (linux)
@@ -183,8 +183,8 @@ g++ -DOPENMP_THREAD -O2 -fopenmp cpp/2048-ai.cpp -o 2048
 OpenMP多线程不依赖thread_pool.cpp，但编译器和平台更为受限，已测试编译器和平台：
 
 ```
-gcc 4.2+ (linux, freebsd, macos)
-clang 3.5+ (linux, freebsd，macos)
+gcc 4.2+ (linux, freebsd, macos, openbsd, netbsd, dragonflybsd, solaris)
+clang 3.5+ (linux, freebsd，macos, openbsd, netbsd, dragonflybsd)
 msvc 8.0+ (win32)
 icc 8.1+ (win32, linux)
 aocc 1.0+ (linux)
@@ -309,7 +309,7 @@ Java实现，查表法，由于Java标准库不支持无回显输入和清除屏
 
 已测试Java版本和平台：
 ```
-jdk 1.5+ (linux, win32, freebsd, macos)
+jdk 1.5+ (linux, win32, freebsd, macos, openbsd, netbsd, dragonflybsd, solaris)
 ```
 
 编译运行命令行示例：
@@ -337,7 +337,7 @@ Java AI实现，查表法 + HashMap + 多线程，由于Java标准库不支持�
 
 已测试Java版本和平台：
 ```
-jdk 1.5+ (linux, win32, freebsd, macos)
+jdk 1.5+ (linux, win32, freebsd, macos, openbsd, netbsd, dragonflybsd, solaris)
 ```
 
 
@@ -399,20 +399,23 @@ fpc -dMULTI_THREAD -O2 pascal/2048-ai.pas
 
 ## fortran/2048.F03
 
-现代Fortran2003实现，使用FASTMODE预处理判定是否使用查表法（默认）。
+现代Fortran2003实现，使用FASTMODE预处理判定是否使用查表法（默认）。系统相关功能（无回显输入，清除屏幕），由fortran/f03deps.c提供。
 
 已测试编译器和平台：
 ```
 gfortran 4.3+ (linux, mingw, mingw-w64, cygwin, freebsd, macos)
 ```
 
-* gfortran不感知_WIN32等C语言预处理器，WIN32平台要在命令行显式指定-D_WIN32。
-
+编译命令行示例：
+```
+gcc -std=c90 -O2 -c fortran/f03deps.c -o f03deps.o
+gfortran -std=f2003 -O2 fortran/2048.F90 f03deps.o -o 2048
+```
 
 
 ## fortran/2048.F90 + fortran/f90deps.c
 
-现代Fortran90实现，使用FASTMODE预处理判定是否使用查表法（默认）。由于f90没有提供iso_c_binding，所以系统相关功能（无回显输入，清除屏幕），由fortran/f90deps.c提供。
+现代Fortran90实现，使用FASTMODE预处理判定是否使用查表法（默认）。系统相关功能（无回显输入，清除屏幕），由fortran/f90deps.c提供。
 
 已测试编译器和平台：
 ```
@@ -428,7 +431,7 @@ gfortran -std=f95 -O2 fortran/2048.F90 f90deps.o -o 2048
 
 ## fortran/2048.f + fortran/f77deps.c
 
-传统Fortran77实现，固定模式源码格式，不使用查表法，由于f77没有提供iso_c_binding，所以系统相关功能（无回显输入，清除屏幕），由fortran/f77deps.c提供。
+传统Fortran77实现，固定模式源码格式，不使用查表法。系统相关功能（无回显输入，清除屏幕），由fortran/f77deps.c提供。
 
 已测试编译器和平台：
 ```
@@ -458,8 +461,8 @@ Python实现，由于脚本语言初始化大数组较慢，因此不使用查�
 
 已测试Python版本和平台：
 ```
-python 2.4+ (linux, win32, freebsd, macos)
-python 3.0+ (linux, win32, freebsd, macos)
+python 2.4+ (linux, win32, freebsd, macos, openbsd, netbsd, dragonflybsd, solaris)
+python 3.0+ (linux, win32, freebsd, macos, openbsd, netbsd, dragonflybsd, solaris)
 pypy/pypy3 all (linux, win32, macos)
 ```
 
@@ -531,7 +534,7 @@ Bash实现，仅能用于Posix兼容系统（依赖tty设备），由于bash数�
 
 测试Shell和平台：
 ```
-bash 3.1+ (linux, freebsd, macos)
+bash 3.1+ (linux, freebsd, macos, openbsd, netbsd, dragonflybsd)
 ```
 
 * 声称兼容bash语法的zsh不支持64位无符号整数，因此无法运行。

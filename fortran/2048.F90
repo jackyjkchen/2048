@@ -531,14 +531,10 @@ subroutine play_game()
 end subroutine play_game
 
 subroutine main()
-    external c_term_init, c_term_clear
-
-    call c_term_init()
 #if FASTMODE != 0
     call init_tables()
 #endif
     call play_game()
-    call c_term_clear()
 end subroutine main
 
 end program main_2048

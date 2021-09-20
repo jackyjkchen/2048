@@ -4,14 +4,13 @@ implicit none
 
 interface
 
-#ifdef _WIN32
-function c_getch() bind(c, name='_getch')
-#else
-function c_getch() bind(c, name='getchar')
-#endif
+function c_getch() bind(c, name='c_getch_')
     import :: c_int
     integer(c_int) :: c_getch
 end function c_getch
+
+subroutine c_clear_screen() bind(c, name='c_clear_screen_')
+end subroutine c_clear_screen
 
 subroutine c_srand(seed) bind(c, name='srand')
     import :: c_int
@@ -29,24 +28,8 @@ function c_time(tloc) bind(c, name='time')
     integer(kind=c_long) :: c_time
 end function c_time
 
-function c_system(cmd) bind(c, name='system')
-    import :: c_int, c_char
-    character(c_char), intent(in) :: cmd(*)
-    integer(c_int) :: c_system
-end function c_system
-
 #if !defined(FASTMODE) || (defined(FASTMODE) && FASTMODE != 0)
 #define FASTMODE 1
-#endif
-
-#ifdef _WIN32
-#define TERM_INIT
-#define TERM_CLEAR
-#define CLEAR_SCREEN call exec_cmd(c_char_"cls"//c_null_char)
-#else
-#define TERM_INIT call exec_cmd(c_char_"stty -echo cbreak </dev/tty >/dev/tty 2>&1"//c_null_char)
-#define TERM_CLEAR call exec_cmd(c_char_"stty echo -cbreak </dev/tty >/dev/tty 2>&1"//c_null_char)
-#define CLEAR_SCREEN call exec_cmd(c_char_"clear"//c_null_char)
 #endif
 
 end interface
@@ -75,13 +58,6 @@ integer(8), parameter :: Z1111111111111111 = int(z'1111111111111111', kind=8)
 call main()
 
 contains
-
-subroutine exec_cmd(cmd)
-    character(c_char), intent(in) :: cmd(*)
-    integer(kind=c_int) :: ret
-
-    ret = c_system(cmd)
-end subroutine exec_cmd
 
 function unif_random(n)
     integer(4), value, intent(in) :: n
@@ -504,7 +480,7 @@ subroutine play_game()
     retract_num = 0
 
     do while (1 > 0)
-        CLEAR_SCREEN
+        call c_clear_screen()
         move = 0
         do while (move < 4)
             if (execute_move(move, board) /= board) then
@@ -570,13 +546,11 @@ subroutine play_game()
 end subroutine play_game
 
 subroutine main()
-    TERM_INIT
     call c_srand(int(c_time(int(0, kind=c_long)), kind=c_int))
 #if FASTMODE != 0
     call init_tables()
 #endif
     call play_game()
-    TERM_CLEAR
 end subroutine main
 
 end program main_2048

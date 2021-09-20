@@ -56,46 +56,47 @@ JNIEXPORT void JNICALL Java_Class2048_clear_1screen(JNIEnv *env, jobject obj) {
 #endif
 }
 
-#if defined(_WIN32)
+#if defined(__linux__) || defined(__unix__)|| defined(__CYGWIN__) || defined(__MACH__)
+static int posix_getch(void) {
+    struct termios old_termios, new_termios;
+    int error;
+    char c;
 
-JNIEXPORT void JNICALL Java_Class2048_term_1init(JNIEnv *env, jobject obj) {
-}
+    fflush(stdout);
+    tcgetattr(0, &old_termios);
+    new_termios = old_termios;
+    new_termios.c_lflag &= ~ICANON;
 
-JNIEXPORT void JNICALL Java_Class2048_term_1clear(JNIEnv *env, jobject obj) {
-}
+#ifdef TERMIOSECHO
+    new_termios.c_lflag |= ECHO;
+#else
+    new_termios.c_lflag &= ~ECHO;
+#endif
 
-#elif defined(__linux__) || defined(__unix__)|| defined(__CYGWIN__) || defined(__MACH__)
-typedef struct {
-    struct termios oldt, newt;
-} term_state;
+#ifdef TERMIOSFLUSH
+#define OPTIONAL_ACTIONS TCSAFLUSH
+#else
+#define OPTIONAL_ACTIONS TCSANOW
+#endif
+    new_termios.c_cc[VMIN] = 1;
+    new_termios.c_cc[VTIME] = 1;
 
+    error = tcsetattr(0, OPTIONAL_ACTIONS, &new_termios);
 
-static void _term_set(int mode) {
-    static term_state s;
-
-    if (mode == 1) {
-        tcgetattr(STDIN_FILENO, &s.oldt);
-        s.newt = s.oldt;
-        s.newt.c_lflag &= ~(ICANON | ECHO);
-        tcsetattr(STDIN_FILENO, TCSANOW, &s.newt);
-    } else {
-        tcsetattr(STDIN_FILENO, TCSANOW, &s.oldt);
+    if (0 == error) {
+        error = read(0, &c, 1);
     }
-}
+    error += tcsetattr(0, OPTIONAL_ACTIONS, &old_termios);
 
-JNIEXPORT void JNICALL Java_Class2048_term_1init(JNIEnv *env, jobject obj) {
-    _term_set(1);
+    return (error == 1 ? (int)c : -1);
 }
-
-JNIEXPORT void JNICALL Java_Class2048_term_1clear(JNIEnv *env, jobject obj) {
-    _term_set(0);
-}
-
 #endif
 
 JNIEXPORT jchar JNICALL Java_Class2048_get_1ch(JNIEnv *env, jobject obj) {
 #if defined(_WIN32)
     return _getch();
+#elif defined(__linux__) || defined(__unix__) || defined(__CYGWIN__) || defined(__MACH__)
+    return posix_getch();
 #else
     return getchar();
 #endif

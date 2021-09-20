@@ -336,16 +336,10 @@ class Class2048
         Console.WriteLine("Game over. Your score is {0}.", current_score);
     }
 
-    [DllImport("csdeps")]
-    public static extern void c_term_init();
-    [DllImport("csdeps")]
-    public static extern void c_term_clear();
     static void Main(string[] args)
     {
         Class2048 class_2048 = new Class2048();
-        c_term_init();
         class_2048.init_tables();
         class_2048.play_game();
-        c_term_clear();
     }
 }

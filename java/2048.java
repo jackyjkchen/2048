@@ -27,10 +27,6 @@ class Class2048
 
     private native char get_ch();
 
-    private native void term_init();
-
-    private native void term_clear();
-
     long unpack_col(int row) {
         long tmp = row & 0xFFFF;
         return (tmp | (tmp << 12) | (tmp << 24) | (tmp << 36)) & COL_MASK;
@@ -304,9 +300,7 @@ class Class2048
 
     public static void main(String[] args) {
         Class2048 class_2048 = new Class2048();
-        class_2048.term_init();
         class_2048.init_tables();
         class_2048.play_game();
-        class_2048.term_clear();
     }
 }

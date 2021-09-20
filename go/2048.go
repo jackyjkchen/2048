@@ -2,8 +2,6 @@ package main
 
 /*
 extern void clear_screen(void);
-extern void term_init(void);
-extern void term_clear(void);
 extern int get_ch(void);
 #cgo LDFLAGS: -L. -lgodeps
 */
@@ -340,8 +338,6 @@ func play_game(get_move get_move_func_t) {
 }
 
 func main() {
-	C.term_init()
 	init_tables()
 	play_game(ask_for_move)
-	C.term_clear()
 }
