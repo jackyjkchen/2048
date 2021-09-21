@@ -11,7 +11,11 @@
 #endif
 #endif
 
-#if defined(_WIN32) && !defined(__TINYC__)
+#if defined(__TINYC__)
+#define NOT_USE_WIN32_SDK 1
+#endif
+
+#if defined(_WIN32) && !defined(NOT_USE_WIN32_SDK)
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <conio.h>
@@ -29,7 +33,7 @@
 #endif
 
 DLLEXPORT void clear_screen(void) {
-#if defined(_WIN32) && !defined(__TINYC__)
+#if defined(_WIN32) && !defined(NOT_USE_WIN32_SDK)
     HANDLE hStdOut;
     DWORD count;
     DWORD cellCount;
@@ -61,7 +65,7 @@ DLLEXPORT void clear_screen(void) {
     _clearscreen(_GCLEARSCREEN);
 #elif defined(__BORLANDC__) || defined (__TURBOC__) || defined(__DJGPP__)
     clrscr();
-#elif (defined(_WIN32) && defined(__TINYC__)) || defined(MSDOS)
+#elif (defined(_WIN32) && defined(NOT_USE_WIN32_SDK)) || defined(MSDOS)
     system("cls");
 #endif
 }
