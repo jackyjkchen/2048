@@ -22,47 +22,31 @@ typedef unsigned long uint32;
 typedef unsigned int uint32;
 #endif
 
-#if defined(_WIN32)
+#if defined(_WIN32) && !defined(__TINYC__)
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
-#include <conio.h>
-#elif defined(MSDOS)
 #include <conio.h>
 #elif defined(UNIX_LIKE)
 #include <unistd.h>
 #include <termios.h>
+#elif defined(__WATCOMC__)
+#include <graph.h>
+#elif defined(__BORLANDC__) || defined (__TURBOC__) || defined(__DJGPP__) || defined(MSDOS)
+#include <conio.h>
 #endif
 
-static unsigned int unif_random(n)
-     unsigned int n;
-{
-    static unsigned int seeded = 0;
-
-    if (!seeded) {
-        srand((unsigned int)time(NULL));
-        seeded = 1;
-    }
-
-    return rand() % n;
-}
-
-#if defined(_WIN32)
 static void clear_screen() {
-#ifdef __TINYC__
-    system("cls");
-#else
+#if defined(_WIN32) && !defined(__TINYC__)
     HANDLE hStdOut;
     DWORD count;
     DWORD cellCount;
     COORD homeCoords = { 0, 0 };
-
     static CONSOLE_SCREEN_BUFFER_INFO csbi;
     static int full_clear = 1;
 
     hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
     if (hStdOut == INVALID_HANDLE_VALUE)
         return;
-
     if (full_clear == 1) {
         if (!GetConsoleScreenBufferInfo(hStdOut, &csbi))
             return;
@@ -75,30 +59,32 @@ static void clear_screen() {
 
     if (!FillConsoleOutputCharacter(hStdOut, (TCHAR) ' ', cellCount, homeCoords, &count))
         return;
-
     if (full_clear && !FillConsoleOutputAttribute(hStdOut, csbi.wAttributes, cellCount, homeCoords, &count))
         return;
-
     SetConsoleCursorPosition(hStdOut, homeCoords);
+#elif defined(UNIX_LIKE)
+    printf("\033[2J\033[H");
+#elif defined(__WATCOMC__)
+    _clearscreen(_GCLEARSCREEN);
+#elif defined(__BORLANDC__) || defined (__TURBOC__) || defined(__DJGPP__)
+    clrscr();
+#elif (defined(_WIN32) && defined(__TINYC__)) || defined(MSDOS)
+    system("cls");
 #endif
 }
-#elif defined(__BORLANDC__) || defined (__TURBOC__) || defined(__DJGPP__)
-#define clear_screen() clrscr()
-#elif defined(MSDOS)
-#if defined(__WATCOMC__)
-#include <graph.h>
-#define clear_screen()  _clearscreen(_GCLEARSCREEN);
-#else
-#define clear_screen()  system("cls");
-#endif
-#elif defined(UNIX_LIKE)
-#define clear_screen()  printf("\033[2J\033[H");
-#else
-#define clear_screen()
+
+#if defined(_MSC_VER) && _MSC_VER >= 700 && defined(__STDC__)
+#define _GETCH_USE 1
+#elif defined(__WATCOMC__) && __WATCOMC__ < 1100
+#define GETCH_USE 1
 #endif
 
-#if defined(UNIX_LIKE)
-static int posix_getch() {
+static int get_ch() {
+#if (defined(_WIN32) && !defined(GETCH_USE)) || defined(_GETCH_USE)
+    return _getch();
+#elif defined(MSDOS) || defined(GETCH_USE)
+    return getch();
+#elif defined(UNIX_LIKE)
     struct termios old_termios, new_termios;
     int error;
     char c;
@@ -126,22 +112,6 @@ static int posix_getch() {
     error += tcsetattr(0, OPTIONAL_ACTIONS, &old_termios);
 
     return (error == 1 ? (int)c : -1);
-}
-#endif
-
-#if defined(_MSC_VER) && _MSC_VER >= 700 && defined(__STDC__)
-#define _GETCH_USE 1
-#elif defined(__WATCOMC__) && __WATCOMC__ < 1100
-#define GETCH_USE 1
-#endif
-
-static int get_ch() {
-#if (defined(_WIN32) && !defined(GETCH_USE)) || defined(_GETCH_USE)
-    return _getch();
-#elif defined(MSDOS) || defined(GETCH_USE)
-    return getch();
-#elif defined(UNIX_LIKE)
-    return posix_getch();
 #else
     return getchar();
 #endif
@@ -160,6 +130,19 @@ typedef uint16 row_t;
 #define LEFT 2
 #define RIGHT 3
 #define RETRACT 4
+
+static unsigned int unif_random(n)
+     unsigned int n;
+{
+    static unsigned int seeded = 0;
+
+    if (!seeded) {
+        srand((unsigned int)time(NULL));
+        seeded = 1;
+    }
+
+    return rand() % n;
+}
 
 static board_t unpack_col(row)
      row_t row;

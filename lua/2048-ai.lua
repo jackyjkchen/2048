@@ -439,7 +439,5 @@ function play_game(get_move)
     print(string.format('Game over. Your score is %d.', current_score))
 end
 
-luadeps.c_term_init()
 init_tables()
 play_game(find_best_move)
-luadeps.c_term_clear()

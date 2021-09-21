@@ -469,11 +469,7 @@
       end
 
       subroutine main()
-        external c_term_init, c_term_clear
-
-        call c_term_init()
         call init_num()
         call play_game()
-        call c_term_clear()
       end
 
