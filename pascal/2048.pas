@@ -98,7 +98,6 @@ const
 type
     row_table_t   =  array[0..(TABLESIZE)-1] of word;
     score_table_t =  array[0..(TABLESIZE)-1] of dword;
-
 var
     row_table   : row_table_t;
     score_table : score_table_t;
@@ -217,7 +216,6 @@ begin
             j := j + 1;
         end;
         if j = 4 then break;
-
         if row_line[i] = 0 then begin
             row_line[i] := row_line[j];
             row_line[j] := 0;

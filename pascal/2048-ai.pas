@@ -294,7 +294,6 @@ begin
             j := j + 1;
         end;
         if j = 4 then break;
-
         if row_line[i] = 0 then begin
             row_line[i] := row_line[j];
             row_line[j] := 0;
@@ -410,7 +409,6 @@ begin
 
         monotonicity_left := 0.0;
         monotonicity_right := 0.0;
-
         for i := 1 to 3 do begin
             if row_line[i - 1] > row_line[i] then
                 monotonicity_left := monotonicity_left +
@@ -419,7 +417,6 @@ begin
                 monotonicity_right := monotonicity_right +
                     power(row_line[i], SCORE_MONOTONICITY_POWER) - power(row_line[i - 1], SCORE_MONOTONICITY_POWER);
         end;
-
         heur_score := heur_score + SCORE_LOST_PENALTY + SCORE_EMPTY_WEIGHT * empty + SCORE_MERGES_WEIGHT * merges -
             SCORE_MONOTONICITY_WEIGHT * min(monotonicity_left, monotonicity_right) - SCORE_SUM_WEIGHT * sum;
     end;
@@ -498,7 +495,6 @@ begin
     res := 0.0;
     tmp := board;
     tile_2 := 1;
-
     while tile_2 <> 0 do begin
         if (tmp and $f) = 0 then begin
             res := res + score_move_node(state, board or tile_2, cprob * 0.9) * 0.9;
@@ -508,7 +504,6 @@ begin
         tile_2 := tile_2 shl 4;
     end;
     res := res / num_open;
-
     if state.curdepth < CACHE_DEPTH_LIMIT then begin
         entry.depth := state.curdepth;
         entry.heuristic := res;
@@ -525,12 +520,10 @@ var
     newboard : board_t;
 begin
     best := 0.0;
-
     state.curdepth := state.curdepth + 1;
     for _move := 0 to 3 do begin
         newboard := execute_move(_move, board);
         state.moves_evaled := state.moves_evaled + 1;
-
         if board <> newboard then begin
             tmp := score_tilechoose_node(state, newboard, cprob);
             if best < tmp then
@@ -538,7 +531,6 @@ begin
         end;
     end;
     state.curdepth := state.curdepth - 1;
-
     score_move_node := best;
 end;
 
@@ -547,7 +539,6 @@ var
     newboard : board_t;
 begin
     newboard := execute_move(_move, board);
-
     if board = newboard then
         _score_toplevel_move := 0.0
     else
@@ -569,10 +560,8 @@ begin
         state.depth_limit := 3;
 
     res := _score_toplevel_move(state, board, _move);
-
     msg := format('Move %d: result %f: eval''d %d moves (%d cache hits, %d cache size) (maxdepth=%d)', [_move, res,
            state.moves_evaled, state.cachehits, state.trans_table.Count, state.maxdepth]);
-
     state.trans_table.Free();
     score_toplevel_move := res;
 end;

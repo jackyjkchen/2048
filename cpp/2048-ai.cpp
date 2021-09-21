@@ -25,16 +25,12 @@ typedef unsigned long uint32;
 #else
 typedef unsigned int uint32;
 #endif
-#if defined(_MSC_VER) || defined(__BORLANDC__)
+#if defined(_MSC_VER) || defined(__BORLANDC__) || defined(__WATCOMC__)
 typedef unsigned __int64 uint64;
 #define W64LIT(x) x##ui64
 #else
 typedef unsigned long long uint64;
-#ifdef __WATCOMC__
-#define W64LIT(x) x
-#else
 #define W64LIT(x) x##ULL
-#endif
 #endif
 
 #if defined(_WIN32)

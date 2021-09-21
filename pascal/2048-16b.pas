@@ -125,7 +125,6 @@ begin
             j := j + 1;
         end;
         if j = 4 then break;
-
         if row_line[i] = 0 then begin
             row_line[i] := row_line[j];
             row_line[j] := 0;

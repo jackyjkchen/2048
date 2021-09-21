@@ -25,18 +25,14 @@ typedef unsigned long uint32;
 #else
 typedef unsigned int uint32;
 #endif
-#if defined(_MSC_VER) || defined(__BORLANDC__)
+#if defined(_MSC_VER) || defined(__BORLANDC__) || defined(__WATCOMC__)
 typedef unsigned __int64 uint64;
 
 #define W64LIT(x) x##ui64
 #else
 typedef unsigned long long uint64;
 
-#ifdef __WATCOMC__
-#define W64LIT(x) x
-#else
 #define W64LIT(x) x##ULL
-#endif
 #endif
 
 #if defined(_WIN32)
@@ -122,13 +118,11 @@ static int posix_getch(void) {
     tcgetattr(0, &old_termios);
     new_termios = old_termios;
     new_termios.c_lflag &= ~ICANON;
-
 #ifdef TERMIOSECHO
     new_termios.c_lflag |= ECHO;
 #else
     new_termios.c_lflag &= ~ECHO;
 #endif
-
 #ifdef TERMIOSFLUSH
 #define OPTIONAL_ACTIONS TCSAFLUSH
 #else
@@ -136,9 +130,7 @@ static int posix_getch(void) {
 #endif
     new_termios.c_cc[VMIN] = 1;
     new_termios.c_cc[VTIME] = 1;
-
     error = tcsetattr(0, OPTIONAL_ACTIONS, &new_termios);
-
     if (0 == error) {
         error = read(0, &c, 1);
     }

@@ -5,8 +5,7 @@ COL_MASK=$((0x000F000F000F000F))
 
 function unif_random() {
     local n=$1
-    if [ $((n)) -ne 0 ]
-    then
+    if [ $((n)) -ne 0 ]; then
         echo $(($RANDOM % n))
     else
         echo 0
@@ -28,14 +27,11 @@ function print_board() {
     local i=0
     local j=0
     echo '-----------------------------'
-    while [ $((i)) -lt 4 ]
-    do
+    while [ $((i)) -lt 4 ]; do
         j=0
-        while [ $((j)) -lt 4 ]
-        do
+        while [ $((j)) -lt 4 ]; do
             local power_val=$((board & 0xf))
-            if [ $((power_val)) -eq 0 ]
-            then
+            if [ $((power_val)) -eq 0 ]; then
                 printf '|%6s' ' '
             else
                 printf '|%6d'  $((1 << power_val))
@@ -80,31 +76,24 @@ function execute_move_helper() {
     local i=0
     local j=0
 
-    while [ $((i)) -lt 3 ]
-    do
+    while [ $((i)) -lt 3 ]; do
         j=$((i + 1))
-        while [ $((j)) -lt 4 ]
-        do
-            if [ $((line[j])) -ne 0 ]
-            then
+        while [ $((j)) -lt 4 ]; do
+            if [ $((line[j])) -ne 0 ]; then
                 break
             fi
             j=$((j + 1))
         done
-        if [ $((j)) -eq 4 ]
-        then
+        if [ $((j)) -eq 4 ]; then
             break
         fi
 
-        if [ $((line[i])) -eq 0 ]
-        then
+        if [ $((line[i])) -eq 0 ]; then
             line[$((i))]=$((line[j]))
             line[$((j))]=0
             i=$((i - 1))
-        elif [ $((line[i])) -eq $((line[j])) ]
-        then
-            if [ $((line[i])) -ne $((0xf)) ]
-            then
+        elif [ $((line[i])) -eq $((line[j])) ]; then
+            if [ $((line[i])) -ne $((0xf)) ]; then
                 line[$((i))]=$((line[i] + 1))
             fi
             line[$((j))]=0
@@ -124,14 +113,11 @@ function execute_move_col() {
     local rev_row
     local i=0
 
-    while [ $((i)) -lt 4 ]
-    do
+    while [ $((i)) -lt 4 ]; do
         row=$(((t >> (i << 4)) & ROW_MASK))
-        if [ $((move)) -eq 0 ]
-        then
+        if [ $((move)) -eq 0 ]; then
             ret=$((ret ^ ($(unpack_col $((row ^ $(execute_move_helper $((row)))))) << (i << 2))))
-        elif [ $((move)) -eq 1 ]
-        then
+        elif [ $((move)) -eq 1 ]; then
             rev_row=$(reverse_row $((row)))
             ret=$((ret ^ ($(unpack_col $((row ^ $(reverse_row $(execute_move_helper $((rev_row))))))) << (i << 2))))
         fi
@@ -148,14 +134,11 @@ function execute_move_row() {
     local rev_row
     local i=0
 
-    while [ $((i)) -lt 4 ]
-    do
+    while [ $((i)) -lt 4 ]; do
         row=$(((board >> (i << 4)) & ROW_MASK))
-        if [ $((move)) -eq 2 ]
-        then
+        if [ $((move)) -eq 2 ]; then
             ret=$((ret ^ ((row ^ $(execute_move_helper $((row)))) << (i << 4))))
-        elif [ $((move)) -eq 3 ]
-        then
+        elif [ $((move)) -eq 3 ]; then
             rev_row=$(reverse_row $((row)))
             ret=$((ret ^ ((row ^ $(reverse_row $(execute_move_helper $((rev_row))))) << (i << 4))))
         fi
@@ -168,12 +151,10 @@ function execute_move() {
     local move=$1
     local board=$2
 
-    if [[ ($((move)) -eq 0) || ($((move)) -eq 1) ]]
-    then
+    if [[ ($((move)) -eq 0) || ($((move)) -eq 1) ]]; then
         echo $(execute_move_col $((board)) $((move)))
         return
-    elif [[ ($((move)) -eq 2) || ($((move)) -eq 3) ]]
-    then
+    elif [[ ($((move)) -eq 2) || ($((move)) -eq 3) ]]; then
         echo $(execute_move_row $((board)) $((move)))
         return
     else
@@ -190,15 +171,12 @@ function score_helper() {
     local i=0
     local j=0
 
-    while [ $((j)) -lt 4 ]
-    do
+    while [ $((j)) -lt 4 ]; do
         row=$(((board >> (j << 4)) & ROW_MASK))
         i=0
-        while [ $((i)) -lt 4 ]
-        do
+        while [ $((i)) -lt 4 ]; do
             rank=$(((row >> (i << 2)) & 0xf))
-            if [ $((rank)) -ge 2 ]
-            then
+            if [ $((rank)) -ge 2 ]; then
                 score=$((score + (rank - 1) * (1 << rank)))
             fi
             i=$((i + 1))
@@ -223,22 +201,18 @@ function ask_for_move() {
     local movechar
     local pos=0
 
-    while true
-    do
+    while true; do
         movechar=`dd if=/dev/tty bs=1 count=1 2>/dev/null`
 
-        if [[ $movechar == 'q' ]]
-        then
+        if [[ $movechar == 'q' ]]; then
             echo -1
             return
-        elif [[ $movechar == 'r' ]]
-        then
+        elif [[ $movechar == 'r' ]]; then
             echo 4
             return
         fi
         pos=$(strindex $allmoves $movechar)
-        if [ $((pos)) -ne -1 ]
-        then
+        if [ $((pos)) -ne -1 ]; then
             echo $(((pos - 1) % 4))
             return
         fi
@@ -247,8 +221,7 @@ function ask_for_move() {
 
 function draw_tile() {
     local rd=$(unif_random 10)
-    if [ $((rd)) -lt 9 ]
-    then
+    if [ $((rd)) -lt 9 ]; then
        echo 1
     else
        echo 2
@@ -261,15 +234,12 @@ function insert_tile_rand() {
     local index=$(unif_random $(count_empty $((board))))
     local tmp=$board
 
-    while true
-    do
-        while [ $((tmp & 0xf)) -ne 0 ]
-        do
+    while true; do
+        while [ $((tmp & 0xf)) -ne 0 ]; do
             tmp=$((tmp >> 4))
             tile=$((tile << 4))
         done
-        if [ $((index)) -eq 0 ]
-        then
+        if [ $((index)) -eq 0 ]; then
             break
         fi
         index=$((index - 1))
@@ -299,20 +269,16 @@ function play_game() {
     local retract_pos=0
     local retract_num=0
 
-    while true
-    do
+    while true; do
         printf "\033[2J\033[H"
         move=0
-        while [ $((move)) -lt 4 ]
-        do
-            if [ $(($(execute_move $move $board))) -ne $((board)) ]
-            then
+        while [ $((move)) -lt 4 ]; do
+            if [ $(($(execute_move $move $board))) -ne $((board)) ]; then
                 break
             fi
             move=$((move + 1))
         done
-        if [ $((move)) -eq 4 ]
-        then
+        if [ $((move)) -eq 4 ]; then
             break
         fi
 
@@ -323,21 +289,17 @@ function play_game() {
 
         print_board $((board))
         move=$(ask_for_move)
-        if [ $((move)) -lt 0 ]
-        then
+        if [ $((move)) -lt 0 ]; then
             break
         fi
 
-        if [ $((move)) -eq 4 ]
-        then
-            if [[ ($((moveno)) -le 1) || ($((retract_num)) -le 0) ]]
-            then
+        if [ $((move)) -eq 4 ]; then
+            if [[ ($((moveno)) -le 1) || ($((retract_num)) -le 0) ]]; then
                 moveno=$((moveno - 1))
                 continue
             fi
             moveno=$((moveno - 2))
-            if [[ ($((retract_pos)) -eq 0) && ($((retract_num)) -gt 0) ]]
-            then
+            if [[ ($((retract_pos)) -eq 0) && ($((retract_num)) -gt 0) ]]; then
                 retract_pos=64
             fi
             retract_pos=$((retract_pos - 1))
@@ -348,15 +310,13 @@ function play_game() {
         fi
 
         newboard=$(execute_move $((move)) $((board)))
-        if [ $((newboard)) -eq $((board)) ]
-        then
+        if [ $((newboard)) -eq $((board)) ]; then
             moveno=$((moveno - 1))
             continue
         fi
 
         tile=$(draw_tile)
-        if [ $((tile)) -eq 2 ]
-        then
+        if [ $((tile)) -eq 2 ]; then
             scorepenalty=$((scorepenalty + 4))
             retract_penalty_vec[$((retract_pos))]=4
         else
@@ -364,12 +324,10 @@ function play_game() {
         fi
         retract_vec[$((retract_pos))]=$((board))
         retract_pos=$((retract_pos + 1))
-        if [ $((retract_pos)) -eq 64 ]
-        then
+        if [ $((retract_pos)) -eq 64 ]; then
             retract_pos=0
         fi
-        if [ $((retract_num)) -lt 64 ]
-        then
+        if [ $((retract_num)) -lt 64 ]; then
             retract_num=$((retract_num + 1))
         fi
 

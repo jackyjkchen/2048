@@ -236,7 +236,6 @@ sub insert_tile_rand {
 
 sub initial_board {
     my $board = draw_tile() << (unif_random(16) << 2);
-
     return insert_tile_rand($board, draw_tile());
 }
 

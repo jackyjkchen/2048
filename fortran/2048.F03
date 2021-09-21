@@ -4,29 +4,18 @@ implicit none
 
 interface
 
-function c_getch() bind(c, name='c_getch_')
-    import :: c_int
-    integer(c_int) :: c_getch
-end function c_getch
-
-subroutine c_clear_screen() bind(c, name='c_clear_screen_')
-end subroutine c_clear_screen
-
-subroutine c_srand(seed) bind(c, name='srand')
-    import :: c_int
-    integer(c_int) :: seed
-end subroutine c_srand
-
-function c_rand() bind(c, name='rand')
+function c_rand() bind(c, name='c_rand_')
     import :: c_int
     integer(c_int) :: c_rand
 end function c_rand
 
-function c_time(tloc) bind(c, name='time')
-    import :: c_long
-    integer(kind=c_long), intent(in), value :: tloc
-    integer(kind=c_long) :: c_time
-end function c_time
+subroutine c_clear_screen() bind(c, name='c_clear_screen_')
+end subroutine c_clear_screen
+
+function c_getch() bind(c, name='c_getch_')
+    import :: c_int
+    integer(c_int) :: c_getch
+end function c_getch
 
 #if !defined(FASTMODE) || (defined(FASTMODE) && FASTMODE != 0)
 #define FASTMODE 1
@@ -62,10 +51,8 @@ contains
 function unif_random(n)
     integer(4), value, intent(in) :: n
     integer(4) :: unif_random
-    integer(4) :: rd
 
-    rd = c_rand()
-    unif_random = mod(rd, n)
+    unif_random = mod(c_rand(), n)
 end function unif_random
 
 function unpack_col(row)
@@ -167,12 +154,12 @@ subroutine init_tables()
 
         i = 0
         do while (i < 3)
-            j = i + 1
+            j = i + int(1, kind=2)
             do while (j < 4)
                 if (row_line(j) /= 0) then
                     exit
                 end if
-                j = j + 1
+                j = j + int(1, kind=2)
             end do
             if (j == 4) then
                 exit
@@ -180,14 +167,14 @@ subroutine init_tables()
             if (row_line(i) == 0) then
                 row_line(i) = row_line(j)
                 row_line(j) = 0
-                i = i - 1
+                i = i - int(1, kind=2)
             else if (row_line(i) == row_line(j)) then
                 if (row_line(i) /= 15) then
-                    row_line(i) = row_line(i) + 1
+                    row_line(i) = row_line(i) + int(1, kind=2)
                 end if
                 row_line(j) = 0
             end if
-            i = i + 1
+            i = i + int(1, kind=2)
         end do
 
         t0 = row_line(0)
@@ -546,7 +533,6 @@ subroutine play_game()
 end subroutine play_game
 
 subroutine main()
-    call c_srand(int(c_time(int(0, kind=c_long)), kind=c_int))
 #if FASTMODE != 0
     call init_tables()
 #endif

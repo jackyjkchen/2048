@@ -107,13 +107,11 @@ static int posix_getch() {
     tcgetattr(0, &old_termios);
     new_termios = old_termios;
     new_termios.c_lflag &= ~ICANON;
-
 #ifdef TERMIOSECHO
     new_termios.c_lflag |= ECHO;
 #else
     new_termios.c_lflag &= ~ECHO;
 #endif
-
 #ifdef TERMIOSFLUSH
 #define OPTIONAL_ACTIONS TCSAFLUSH
 #else
@@ -121,9 +119,7 @@ static int posix_getch() {
 #endif
     new_termios.c_cc[VMIN] = 1;
     new_termios.c_cc[VTIME] = 1;
-
     error = tcsetattr(0, OPTIONAL_ACTIONS, &new_termios);
-
     if (0 == error) {
         error = read(0, &c, 1);
     }

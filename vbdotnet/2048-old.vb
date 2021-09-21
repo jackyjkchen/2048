@@ -218,7 +218,6 @@ Public Module Class2048
             tmp >>= 4
             tile <<= 4
         End While
-
         Return board Or tile
     End Function
 

@@ -411,7 +411,7 @@ gfortran 4.3+ (linux, mingw, mingw-w64, cygwin, freebsd, macos)
 编译命令行示例：
 ```
 gcc -std=c90 -O2 -c fortran/f03deps.c -o f03deps.o
-gfortran -std=f2003 -O2 fortran/2048.F90 f03deps.o -o 2048
+gfortran -std=f2003 -O2 fortran/2048.F03 f03deps.o -o 2048
 ```
 
 
