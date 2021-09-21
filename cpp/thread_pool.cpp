@@ -45,7 +45,7 @@ void ThreadLock::unlock()
 #endif
 }
 
-bool ThreadLock::wait(int32 timeout_ms/* = -1*/)
+bool ThreadLock::wait(int timeout_ms/* = -1*/)
 {
 #ifdef _WIN32
 #if WINVER >= 0x0600
@@ -99,7 +99,7 @@ void ThreadLock::broadcast()
 
 #ifdef _WIN32
 #if defined(WINVER) && WINVER >= 0x0501
-DWORD ThreadPool::_count_set_bits(ULONG_PTR bitMask)
+static DWORD _count_set_bits(ULONG_PTR bitMask)
 {
     DWORD LSHIFT = sizeof(ULONG_PTR) * 8 - 1;
     DWORD bitSetCount = 0;
@@ -130,9 +130,9 @@ void* ThreadPool::_threadstart(void *param)
 }
 #endif
 
-int32 ThreadPool::get_cpu_num()
+int ThreadPool::get_cpu_num()
 {
-    int32 cpu_num = 0;
+    int cpu_num = 0;
 #ifdef _WIN32
 #if defined(WINVER) && WINVER >= 0x0501
     DWORD length = 0;
@@ -164,12 +164,12 @@ int32 ThreadPool::get_cpu_num()
     cpu_num = sysinfo.dwNumberOfProcessors;
 #endif
 #else
-    cpu_num = (int32)sysconf(_SC_NPROCESSORS_CONF);
+    cpu_num = (int)sysconf(_SC_NPROCESSORS_CONF);
 #endif
     return cpu_num;
 }
 
-ThreadPool::ThreadPool(int32 max_thrd_num/* = 0*/) : m_pool_signaled(false), m_stop(false), m_max_thrd_num(max_thrd_num), m_thrd_num(0), m_active_thrd_num(0), m_thread_handle(NULL)
+ThreadPool::ThreadPool(int max_thrd_num/* = 0*/) : m_pool_signaled(false), m_stop(false), m_max_thrd_num(max_thrd_num), m_thrd_num(0), m_active_thrd_num(0), m_thread_handle(NULL)
 {
     m_thrd.func = ThreadPool::thread_instance;
     m_thrd.param = this;
@@ -202,7 +202,7 @@ bool ThreadPool::init()
         m_ctrl_lock.unlock(); //LCOV_EXCL_LINE
         return false;         //LCOV_EXCL_LINE
     }
-    for (int32 i= 0; i<m_max_thrd_num; ++i) {
+    for (int i= 0; i<m_max_thrd_num; ++i) {
 #ifdef _WIN32
         if (!(m_thread_handle[i] = (HANDLE)_beginthreadex(NULL, 0, ThreadPool::_threadstart, &m_thrd, 0, NULL))) {
 #else
@@ -264,7 +264,7 @@ void ThreadPool::wait_all_thrd()
     m_pool_lock.broadcast();
     m_pool_signaled = true;
     m_pool_lock.unlock();
-    for (int32 i = 0; i < m_max_thrd_num; ++i) {
+    for (int i = 0; i < m_max_thrd_num; ++i) {
         if (m_thread_handle[i]) {
 #ifdef _WIN32
             WaitForSingleObject(m_thread_handle[i], INFINITE);
@@ -278,7 +278,7 @@ void ThreadPool::wait_all_thrd()
     m_thrd_num = 0;
 }
 
-int32 ThreadPool::get_max_thrd_num()
+int ThreadPool::get_max_thrd_num()
 {
     LockScope(this->m_ctrl_lock);
     return m_max_thrd_num;

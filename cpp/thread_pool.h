@@ -17,12 +17,6 @@ extern "C" {
 #include <sys/time.h>
 #endif
 
-#ifdef _M_I86
-typedef long int32;
-#else
-typedef int int32;
-#endif
-
 #if defined(__WATCOMC__)
 #if defined(max)
 #undef max
@@ -69,7 +63,7 @@ public:
         CloseHandle(m_semphore);
     }
 
-    bool wait(int32 timeout_ms = -1)
+    bool wait(int timeout_ms = -1)
     {
         DWORD timeout = INFINITE;
         if (timeout_ms >= 0) {
@@ -100,7 +94,7 @@ public:
 private:
     LOCK &m_lock;
     HANDLE m_semphore;
-    int32 m_wait_num;
+    int m_wait_num;
 };
 #endif
 
@@ -113,7 +107,7 @@ public:
     void lock();
     void unlock();
 
-    bool wait(int32 timeout_ms = -1);
+    bool wait(int timeout_ms = -1);
     void signal();
     void broadcast();
 
@@ -152,15 +146,15 @@ private:
 class ThreadPool
 {
 public:
-    ThreadPool(int32 max_thrd_num = 0);
+    ThreadPool(int max_thrd_num = 0);
     ~ThreadPool();
 
     bool init();
     void add_task(thrd_callback func, void *param);
     void wait_all_task();
     void wait_all_thrd();
-    int32 get_max_thrd_num();
-    static int32 get_cpu_num();
+    int get_max_thrd_num();
+    static int get_cpu_num();
 
 private:
     static void thread_instance(void *param);
@@ -170,15 +164,12 @@ private:
     ThreadLock m_ctrl_lock;
     volatile bool m_pool_signaled;
     volatile bool m_stop;
-    volatile int32 m_max_thrd_num;
-    volatile int32 m_thrd_num;
-    volatile int32 m_active_thrd_num;
+    volatile int m_max_thrd_num;
+    volatile int m_thrd_num;
+    volatile int m_active_thrd_num;
 #ifdef _WIN32
     HANDLE *m_thread_handle;
     static unsigned int WINAPI _threadstart(void *param);
-#if defined(WINVER) && WINVER >= 0x0501
-    static DWORD _count_set_bits(ULONG_PTR bitMask);
-#endif
 #else
     pthread_t *m_thread_handle;
     static void* _threadstart(void *param);
