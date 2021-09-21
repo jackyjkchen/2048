@@ -51,7 +51,7 @@ int c_clear_screen(lua_State *L) {
         cellCount = 8192;
     }
 
-    if (!FillConsoleOutputCharacter(hStdOut, (TCHAR) ' ', cellCount, homeCoords, &count))
+    if (!FillConsoleOutputCharacter(hStdOut, (TCHAR)' ', cellCount, homeCoords, &count))
         return;
     if (full_clear && !FillConsoleOutputAttribute(hStdOut, csbi.wAttributes, cellCount, homeCoords, &count))
         return;
@@ -75,6 +75,7 @@ int c_clear_screen(lua_State *L) {
 
 int c_getch(lua_State *L) {
     int ret = 0;
+
 #if (defined(_WIN32) && !defined(GETCH_USE)) || defined(_GETCH_USE)
     ret = _getch();
 #elif defined(MSDOS) || defined(GETCH_USE)

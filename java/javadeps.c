@@ -1,9 +1,4 @@
 #include <jni.h>
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -56,7 +51,7 @@ JNIEXPORT void JNICALL Java_Class2048_clear_1screen(JNIEnv *env, jobject obj) {
         cellCount = 8192;
     }
 
-    if (!FillConsoleOutputCharacter(hStdOut, (TCHAR) ' ', cellCount, homeCoords, &count))
+    if (!FillConsoleOutputCharacter(hStdOut, (TCHAR)' ', cellCount, homeCoords, &count))
         return;
     if (full_clear && !FillConsoleOutputAttribute(hStdOut, csbi.wAttributes, cellCount, homeCoords, &count))
         return;
@@ -77,7 +72,6 @@ JNIEXPORT void JNICALL Java_Class2048_clear_1screen(JNIEnv *env, jobject obj) {
 #elif defined(__WATCOMC__) && __WATCOMC__ < 1100
 #define GETCH_USE 1
 #endif
-
 JNIEXPORT jchar JNICALL Java_Class2048_get_1ch(JNIEnv *env, jobject obj) {
 #if (defined(_WIN32) && !defined(GETCH_USE)) || defined(_GETCH_USE)
     return _getch();
@@ -115,7 +109,3 @@ JNIEXPORT jchar JNICALL Java_Class2048_get_1ch(JNIEnv *env, jobject obj) {
     return getchar();
 #endif
 }
-
-#ifdef __cplusplus
-}
-#endif
