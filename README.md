@@ -363,6 +363,7 @@ free pascal 2.2+ (linux, win32, freebsd, macos, dos32)
 已测试编译器和平台：
 ```
 free pascal 2.2+ (linux, win32, freebsd, macos, dos32)
+borland pascal 7.01 (dos16)
 turbo pascal 7.1 (dos16)
 ```
 
@@ -374,6 +375,7 @@ turbo pascal 7.1 (dos16)
 已测试编译器和平台：
 ```
 free pascal 2.2+ (linux, win32, freebsd, macos, dos32)
+borland pascal 7.01 (dos16)
 turbo pascal 4.0/5.5/6.0/7.1 (dos16)
 quick pascal 1.0 (dos16)
 ```
