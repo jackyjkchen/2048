@@ -186,12 +186,8 @@ bool ThreadPool::init()
     bool ret = false, clear_thrd = false;
     do {
         LockScope(this->m_ctrl_lock);
-        LockScope(this->m_pool_lock);
         if (m_thrd_num == 0) {
             m_thrd_num = get_cpu_num();
-        }
-        if (m_thrd_num <= 0 || !m_stop) {
-            break;
         }
         if (!m_thread_handle) {
 #ifdef _WIN32
@@ -203,7 +199,13 @@ bool ThreadPool::init()
         if (!m_thread_handle) {
             break;
         }
+        m_pool_lock.lock();
+        if (m_thrd_num <= 0 || !m_stop) {
+            m_pool_lock.unlock();
+            break;
+        }
         m_stop = false;
+        m_pool_lock.unlock();
         for (int i= 0; i<m_thrd_num; ++i) {
 #ifdef _WIN32
             if (!(m_thread_handle[i] = (HANDLE)_beginthreadex(NULL, 0, ThreadPool::_threadstart, &m_thrd_context, 0, NULL))) {
@@ -227,12 +229,13 @@ void ThreadPool::add_task(thrd_callback func, void *param)
     ThrdContext context;
     context.func = func;
     context.param = param;
-    LockScope(this->m_pool_lock);
+    m_pool_lock.lock();
     m_queue.push_back(context);
-    if (m_stop) {
+    if (!m_stop) {
         m_pool_lock.broadcast();
         m_pool_signaled = true;
     }
+    m_pool_lock.unlock();
 }
 
 void ThreadPool::wait_all_task()
@@ -246,11 +249,11 @@ void ThreadPool::wait_all_task()
     while (true) {
         if (m_queue.empty() && m_active_thrd_num == 0) {
             m_pool_signaled = false;
-            m_pool_lock.unlock();
-            return;
+            break;
         }
         m_pool_lock.wait();
     }
+    m_pool_lock.unlock();
 }
 
 void ThreadPool::wait_all_thrd()

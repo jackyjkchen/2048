@@ -161,10 +161,10 @@ private:
     ThrdContext m_thrd_context;
     ThreadLock m_pool_lock;
     ThreadLock m_ctrl_lock;
-    volatile bool m_pool_signaled;
-    volatile bool m_stop;
-    volatile int m_thrd_num;
-    volatile int m_active_thrd_num;
+    bool m_pool_signaled;
+    bool m_stop;
+    int m_thrd_num;
+    int m_active_thrd_num;
 #ifdef _WIN32
     HANDLE *m_thread_handle;
     static unsigned int WINAPI _threadstart(void *param);
