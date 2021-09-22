@@ -31,7 +31,7 @@ typedef void (*thrd_callback)(void *param);
 typedef struct {
     thrd_callback func;
     void *param;
-} ThrdCallback;
+} ThrdContext;
 
 #ifdef __cplusplus
 }
@@ -39,13 +39,13 @@ typedef struct {
 
 #if defined(__GNUC__) && __GNUC__ == 2 && __GNUC_MINOR__ < 8
 #include <deque.h>
-typedef deque<ThrdCallback> ThreadQueue;
+typedef deque<ThrdContext> ThreadQueue;
 #elif defined(_MSC_VER) && _MSC_VER < 1100
 #include <deque>
-typedef deque<ThrdCallback, allocator<ThrdCallback> > ThreadQueue;
+typedef deque<ThrdContext, allocator<ThrdContext> > ThreadQueue;
 #else
 #include <deque>
-typedef std::deque<ThrdCallback> ThreadQueue;
+typedef std::deque<ThrdContext> ThreadQueue;
 #endif
 
 #if defined(WINVER) && WINVER < 0x0600
@@ -153,18 +153,16 @@ public:
     void add_task(thrd_callback func, void *param);
     void wait_all_task();
     void wait_all_thrd();
-    int get_max_thrd_num();
     static int get_cpu_num();
 
 private:
     static void thread_instance(void *param);
     ThreadQueue m_queue;
-    ThrdCallback m_thrd;
+    ThrdContext m_thrd_context;
     ThreadLock m_pool_lock;
     ThreadLock m_ctrl_lock;
     volatile bool m_pool_signaled;
     volatile bool m_stop;
-    volatile int m_max_thrd_num;
     volatile int m_thrd_num;
     volatile int m_active_thrd_num;
 #ifdef _WIN32

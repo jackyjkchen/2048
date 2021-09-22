@@ -785,7 +785,10 @@ void play_game(get_move_func_t get_move) {
 int main() {
 #if defined(MULTI_THREAD)
     ThreadPool &thrd_pool = get_thrd_pool();
-    thrd_pool.init();
+    if (!thrd_pool.init()) {
+        printf("Init thread pool failed.");
+        return -1;
+    }
 #endif
 #if FASTMODE != 0
     init_tables();

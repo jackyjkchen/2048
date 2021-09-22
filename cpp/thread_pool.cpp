@@ -117,15 +117,15 @@ static DWORD _count_set_bits(ULONG_PTR bitMask)
 
 unsigned int WINAPI ThreadPool::_threadstart(void *param)
 {
-    ThrdCallback *thrd = (ThrdCallback *)param;
-    thrd->func(thrd->param);
+    ThrdContext *context = (ThrdContext *)param;
+    context->func(context->param);
     return 0;
 }
 #else
 void* ThreadPool::_threadstart(void *param)
 {
-    ThrdCallback *thrd = (ThrdCallback *)param;
-    thrd->func(thrd->param);
+    ThrdContext *context = (ThrdContext *)param;
+    context->func(context->param);
     return NULL;
 }
 #endif
@@ -169,10 +169,10 @@ int ThreadPool::get_cpu_num()
     return cpu_num;
 }
 
-ThreadPool::ThreadPool(int max_thrd_num/* = 0*/) : m_pool_signaled(false), m_stop(false), m_max_thrd_num(max_thrd_num), m_thrd_num(0), m_active_thrd_num(0), m_thread_handle(NULL)
+ThreadPool::ThreadPool(int max_thrd_num/* = 0*/) : m_pool_signaled(false), m_stop(true), m_thrd_num(max_thrd_num), m_active_thrd_num(0), m_thread_handle(NULL)
 {
-    m_thrd.func = ThreadPool::thread_instance;
-    m_thrd.param = this;
+    m_thrd_context.func = ThreadPool::thread_instance;
+    m_thrd_context.param = this;
 }
 
 ThreadPool::~ThreadPool()
@@ -183,88 +183,89 @@ ThreadPool::~ThreadPool()
 
 bool ThreadPool::init()
 {
-    m_ctrl_lock.lock();
-    if (m_max_thrd_num == 0) {
-        m_max_thrd_num = get_cpu_num();
-    }
-    if (m_max_thrd_num <= 0 || m_thrd_num != 0) {
-        m_ctrl_lock.unlock();
-        return false;
-    }
-    if (!m_thread_handle) {
-#ifdef _WIN32
-        m_thread_handle = (HANDLE *)malloc(m_max_thrd_num * sizeof(HANDLE));
-#else
-        m_thread_handle = (pthread_t *)malloc(m_max_thrd_num * sizeof(pthread_t));
-#endif
-    }
-    if (!m_thread_handle) {
-        m_ctrl_lock.unlock(); //LCOV_EXCL_LINE
-        return false;         //LCOV_EXCL_LINE
-    }
-    for (int i= 0; i<m_max_thrd_num; ++i) {
-#ifdef _WIN32
-        if (!(m_thread_handle[i] = (HANDLE)_beginthreadex(NULL, 0, ThreadPool::_threadstart, &m_thrd, 0, NULL))) {
-#else
-        if (pthread_create(&m_thread_handle[i], NULL, ThreadPool::_threadstart, &m_thrd) != 0) {
-#endif
-            m_thread_handle[i] = 0;
-            m_ctrl_lock.unlock(); //LCOV_EXCL_LINE
-            wait_all_thrd();      //LCOV_EXCL_LINE
-            return false;         //LCOV_EXCL_LINE
+    bool ret = false, clear_thrd = false;
+    do {
+        LockScope(this->m_ctrl_lock);
+        LockScope(this->m_pool_lock);
+        if (m_thrd_num == 0) {
+            m_thrd_num = get_cpu_num();
         }
-    }
-    m_thrd_num = m_max_thrd_num;
-    m_ctrl_lock.unlock();
-    return true;
+        if (m_thrd_num <= 0 || !m_stop) {
+            break;
+        }
+        if (!m_thread_handle) {
+#ifdef _WIN32
+            m_thread_handle = (HANDLE *)malloc(m_thrd_num * sizeof(HANDLE));
+#else
+            m_thread_handle = (pthread_t *)malloc(m_thrd_num * sizeof(pthread_t));
+#endif
+        }
+        if (!m_thread_handle) {
+            break;
+        }
+        m_stop = false;
+        for (int i= 0; i<m_thrd_num; ++i) {
+#ifdef _WIN32
+            if (!(m_thread_handle[i] = (HANDLE)_beginthreadex(NULL, 0, ThreadPool::_threadstart, &m_thrd_context, 0, NULL))) {
+#else
+            if (pthread_create(&m_thread_handle[i], NULL, ThreadPool::_threadstart, &m_thrd_context) != 0) {
+#endif
+                m_thread_handle[i] = 0;
+                clear_thrd = true;
+                break;
+            }
+        }
+        ret = true;
+    } while (false);
+    if (!ret && clear_thrd)
+        wait_all_thrd();
+    return ret;
 }
 
 void ThreadPool::add_task(thrd_callback func, void *param)
 {
-    LockScope(this->m_ctrl_lock);
-    if (m_thrd_num == 0) {
-        return;
+    ThrdContext context;
+    context.func = func;
+    context.param = param;
+    LockScope(this->m_pool_lock);
+    m_queue.push_back(context);
+    if (m_stop) {
+        m_pool_lock.broadcast();
+        m_pool_signaled = true;
     }
-    ThrdCallback clbk;
-    clbk.func = func;
-    clbk.param = param;
-    m_pool_lock.lock();
-    m_queue.push_back(clbk);
-    m_pool_lock.broadcast();
-    m_pool_signaled = true;
-    m_pool_lock.unlock();
 }
 
 void ThreadPool::wait_all_task()
 {
     LockScope(this->m_ctrl_lock);
-    if (m_thrd_num == 0) {
+    m_pool_lock.lock();
+    if (m_stop) {
+        m_pool_lock.unlock();
         return;
     }
     while (true) {
-        m_pool_lock.lock();
         if (m_queue.empty() && m_active_thrd_num == 0) {
             m_pool_signaled = false;
             m_pool_lock.unlock();
             return;
         }
         m_pool_lock.wait();
-        m_pool_lock.unlock();
     }
 }
 
 void ThreadPool::wait_all_thrd()
 {
     LockScope(this->m_ctrl_lock);
-    if (m_thrd_num == 0) {
+    m_pool_lock.lock();
+    if (m_stop) {
+        m_pool_lock.unlock();
         return;
     }
-    m_pool_lock.lock();
     m_stop = true;
     m_pool_lock.broadcast();
     m_pool_signaled = true;
     m_pool_lock.unlock();
-    for (int i = 0; i < m_max_thrd_num; ++i) {
+    for (int i = 0; i < m_thrd_num; ++i) {
         if (m_thread_handle[i]) {
 #ifdef _WIN32
             WaitForSingleObject(m_thread_handle[i], INFINITE);
@@ -275,13 +276,6 @@ void ThreadPool::wait_all_thrd()
             m_thread_handle[i] = 0;
         }
     }
-    m_thrd_num = 0;
-}
-
-int ThreadPool::get_max_thrd_num()
-{
-    LockScope(this->m_ctrl_lock);
-    return m_max_thrd_num;
 }
 
 void ThreadPool::thread_instance(void *param) {
@@ -304,11 +298,11 @@ void ThreadPool::thread_instance(void *param) {
             pthis->m_pool_lock.unlock();
             continue;
         }
-        ThrdCallback clbk = pthis->m_queue.front();
+        ThrdContext context = pthis->m_queue.front();
         pthis->m_queue.pop_front();
         pthis->m_active_thrd_num++;
         pthis->m_pool_lock.unlock();
-        clbk.func(clbk.param);
+        context.func(context.param);
         pthis->m_pool_lock.lock();
         pthis->m_active_thrd_num--;
         pthis->m_pool_lock.unlock();
