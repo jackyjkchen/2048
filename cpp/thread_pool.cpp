@@ -1,6 +1,13 @@
 #include <stdlib.h>
 #include "thread_pool.h"
 
+#if defined(__GLIBC__) && __GLIBC__ >= 2
+#include <sys/sysinfo.h>
+#elif defined(_SC_NPROCESSORS_ONLN)
+#else
+#error "Unsupport system, cannot get cpu count."
+#endif
+
 ThreadLock::ThreadLock()
 #if defined(WINVER) && WINVER < 0x0600
     : m_cond(*this)
@@ -163,8 +170,12 @@ int ThreadPool::get_cpu_num()
     GetSystemInfo(&sysinfo);
     cpu_num = sysinfo.dwNumberOfProcessors;
 #endif
+#elif defined(__GLIBC__) && __GLIBC__ >= 2
+    cpu_num = get_nprocs();
+#elif defined(_SC_NPROCESSORS_ONLN)
+    cpu_num = (int)sysconf(_SC_NPROCESSORS_ONLN);
 #else
-    cpu_num = (int)sysconf(_SC_NPROCESSORS_CONF);
+#error "Unsupport system, cannot get cpu count."
 #endif
     return cpu_num;
 }
