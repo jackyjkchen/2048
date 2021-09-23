@@ -226,15 +226,14 @@ bool ThreadPool::init()
 
 void ThreadPool::add_task(thrd_callback func, void *param)
 {
+    LockScope(this->m_ctrl_lock);
     ThrdContext context;
     context.func = func;
     context.param = param;
     m_pool_lock.lock();
     m_queue.push_back(context);
-    if (!m_stop) {
-        m_pool_lock.broadcast();
-        m_pool_signaled = true;
-    }
+    m_pool_lock.signal();
+    m_pool_signaled = true;
     m_pool_lock.unlock();
 }
 
@@ -246,11 +245,7 @@ void ThreadPool::wait_all_task()
         m_pool_lock.unlock();
         return;
     }
-    while (true) {
-        if (m_queue.empty() && m_active_thrd_num == 0) {
-            m_pool_signaled = false;
-            break;
-        }
+    while (!m_queue.empty() || m_active_thrd_num > 0) {
         m_pool_lock.wait();
     }
     m_pool_lock.unlock();
@@ -286,14 +281,13 @@ void ThreadPool::thread_instance(void *param) {
     while (true) {
         pthis->m_pool_lock.lock();
         if (pthis->m_queue.empty()) {
-            pthis->m_pool_signaled = false;
             if (pthis->m_stop) {
                 pthis->m_pool_lock.unlock();
                 break;
             }
+            pthis->m_pool_signaled = false;
             if (pthis->m_active_thrd_num == 0) {
                 pthis->m_pool_lock.broadcast();
-                pthis->m_pool_signaled = true;
             }
             while (!pthis->m_pool_signaled) {
                 pthis->m_pool_lock.wait();
