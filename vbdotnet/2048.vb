@@ -158,9 +158,9 @@ Public Module Class2048
     End Function
 
     Private Function execute_move(_move As Integer, board As ULong) As ULong
-        If _move = UP Or _move = DOWN Then
+        If _move = UP OrElse _move = DOWN Then
             Return execute_move_col(board, _move)
-        ElseIf _move = LEFT Or _move = RIGHT Then
+        ElseIf _move = LEFT OrElse _move = RIGHT Then
             Return execute_move_row(board, _move)
         Else
             Return &HFFFFFFFFFFFFFFFFUL

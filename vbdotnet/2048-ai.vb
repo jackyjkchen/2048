@@ -30,6 +30,8 @@ Public Module Class2048
         Public trans_table As Dictionary(Of ULong, trans_table_entry_t) = New Dictionary(Of ULong, trans_table_entry_t)()
         Public maxdepth As Integer
         Public curdepth As Integer
+        Public nomoves As Integer
+        Public tablehits As Integer
         Public cachehits As Integer
         Public moves_evaled As Integer
         Public depth_limit As Integer
@@ -227,9 +229,9 @@ Public Module Class2048
     End Function
 
     Private Function execute_move(_move As Integer, board As ULong) As ULong
-        If _move = UP Or _move = DOWN Then
+        If _move = UP OrElse _move = DOWN Then
             Return execute_move_col(board, _move)
-        ElseIf _move = LEFT Or _move = RIGHT Then
+        ElseIf _move = LEFT OrElse _move = RIGHT Then
             Return execute_move_row(board, _move)
         Else
             Return &HFFFFFFFFFFFFFFFFUL
@@ -272,6 +274,7 @@ Public Module Class2048
     Private Function score_tilechoose_node(ByRef state As eval_state, board As ULong, cprob As Double) As Double
         If cprob < CPROB_THRESH_BASE OrElse state.curdepth >= state.depth_limit Then
             state.maxdepth = Math.Max(state.curdepth, state.maxdepth)
+            state.tablehits += 1
             Return score_heur_board(board)
         End If
 
@@ -320,6 +323,8 @@ Public Module Class2048
             state.moves_evaled += 1
             If board <> newboard Then
                 best = Math.Max(best, score_tilechoose_node(state, newboard, cprob))
+            Else
+                state.nomoves += 1
             End If
             _move += 1
         End While
@@ -339,7 +344,7 @@ Public Module Class2048
         Dim state As eval_state = New eval_state()
         state.depth_limit = Math.Max(3, count_distinct_tiles(board) - 2)
         res = _score_toplevel_move(state, board, _move)
-        Console.WriteLine("Move {0}: result {1}: eval'd {2} moves ({3} cache hits, {4} cache size) (maxdepth={5})", _move, res, state.moves_evaled, state.cachehits, state.trans_table.Count, state.maxdepth)
+        Console.WriteLine("Move {0}: result {1}: eval'd {2} moves ({3} no moves, {4} table hits, {5} cache hits, {6} cache size) (maxdepth={7})", _move, res, state.moves_evaled, state.nomoves, state.tablehits, state.cachehits, state.trans_table.Count, state.maxdepth)
         Return res
     End Function
 

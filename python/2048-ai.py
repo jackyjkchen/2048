@@ -90,6 +90,8 @@ class eval_state:
         self.trans_table = {}
         self.maxdepth = 0
         self.curdepth = 0
+        self.nomoves = 0
+        self.tablehits = 0
         self.cachehits = 0
         self.moves_evaled = 0
         self.depth_limit = 0
@@ -229,6 +231,7 @@ def count_distinct_tiles(board):
 def score_tilechoose_node(state, board, cprob):
     if (cprob < CPROB_THRESH_BASE) or (state.curdepth >= state.depth_limit):
         state.maxdepth = max(state.curdepth, state.maxdepth)
+        state.tablehits += 1
         return score_heur_board(board)
 
     if state.curdepth < CACHE_DEPTH_LIMIT:
@@ -272,6 +275,8 @@ def score_move_node(state, board, cprob):
 
         if board != newboard:
             best = max(best, score_tilechoose_node(state, newboard, cprob))
+        else:
+            state.nomoves += 1
 
     state.curdepth -= 1
 
@@ -292,8 +297,8 @@ def score_toplevel_move(board, move):
     state.depth_limit = max(3, count_distinct_tiles(board) - 2)
     res = _score_toplevel_move(state, board, move)
 
-    sys.stdout.write("Move %d: result %f: eval'd %d moves (%d cache hits, %d cache size) (maxdepth=%d)%s" % (move, res,
-           state.moves_evaled, state.cachehits, len(state.trans_table), state.maxdepth, os.linesep))
+    sys.stdout.write("Move %d: result %f: eval'd %d moves (%d no moves, %d table hits, %d cache hits, %d cache size) (maxdepth=%d)%s" % (move, res,
+           state.moves_evaled, state.nomoves, state.tablehits, state.cachehits, len(state.trans_table), state.maxdepth, os.linesep))
 
     return res
 

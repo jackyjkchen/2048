@@ -109,6 +109,8 @@ type
         trans_table  : trans_table_t;
         maxdepth     : integer;
         curdepth     : integer;
+        nomoves      : longint;
+        tablehits    : longint;
         cachehits    : longint;
         moves_evaled : longint;
         depth_limit  : integer;
@@ -478,6 +480,7 @@ var
 begin
     if (cprob < CPROB_THRESH_BASE) or (state.curdepth >= state.depth_limit) then begin
         state.maxdepth := max(state.curdepth, state.maxdepth);
+        state.tablehits := state.tablehits + 1;
         exit(score_heur_board(board));
     end;
     if state.curdepth < CACHE_DEPTH_LIMIT then begin
@@ -528,6 +531,8 @@ begin
             tmp := score_tilechoose_node(state, newboard, cprob);
             if best < tmp then
                 best := tmp;
+        end else begin
+            state.nomoves := state.nomoves + 1;
         end;
     end;
     state.curdepth := state.curdepth - 1;
@@ -560,8 +565,8 @@ begin
         state.depth_limit := 3;
 
     res := _score_toplevel_move(state, board, _move);
-    msg := format('Move %d: result %f: eval''d %d moves (%d cache hits, %d cache size) (maxdepth=%d)', [_move, res,
-           state.moves_evaled, state.cachehits, state.trans_table.Count, state.maxdepth]);
+    msg := format('Move %d: result %f: eval''d %d moves (%d no moves, %d table hits, %d cache hits, %d cache size) (maxdepth=%d)', [_move, res,
+           state.moves_evaled, state.nomoves, state.tablehits, state.cachehits, state.trans_table.Count, state.maxdepth]);
     state.trans_table.Free();
     score_toplevel_move := res;
 end;

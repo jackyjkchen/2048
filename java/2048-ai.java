@@ -36,6 +36,8 @@ class Class2048
         public HashMap<Long, trans_table_entry_t> trans_table = new HashMap<>();
         public int maxdepth;
         public int curdepth;
+        public int nomoves;
+        public int tablehits;
         public int cachehits;
         public int moves_evaled;
         public int depth_limit;
@@ -288,6 +290,7 @@ class Class2048
     double score_tilechoose_node(eval_state state, long board, double cprob) {
         if (cprob < CPROB_THRESH_BASE || state.curdepth >= state.depth_limit) {
             state.maxdepth = Math.max(state.curdepth, state.maxdepth);
+            state.tablehits++;
             return score_heur_board(board);
         }
         if (state.curdepth < CACHE_DEPTH_LIMIT) {
@@ -337,6 +340,8 @@ class Class2048
 
             if (board != newboard)
                 best = Math.max(best, score_tilechoose_node(state, newboard, cprob));
+            else
+                state.nomoves++;
         }
         state.curdepth--;
 
@@ -360,8 +365,8 @@ class Class2048
 
         res = _score_toplevel_move(state, board, move);
 
-        System.out.printf("Move %d: result %f: eval'd %d moves (%d cache hits, %d cache size) (maxdepth=%d)\n", move, res,
-               state.moves_evaled, state.cachehits, state.trans_table.size(), state.maxdepth);
+        System.out.printf("Move %d: result %f: eval'd %d moves (%d no moves, %d table hits, %d cache hits, %d cache size) (maxdepth=%d)\n", move, res,
+               state.moves_evaled, state.nomoves, state.tablehits, state.cachehits, state.trans_table.size(), state.maxdepth);
 
         return res;
     }

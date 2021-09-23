@@ -44,6 +44,8 @@ type eval_state struct {
 	trans_table  map[board_t]trans_table_entry_t
 	maxdepth     int
 	curdepth     int
+	nomoves      int
+	tablehits    int
 	cachehits    int
 	moves_evaled int
 	depth_limit  int
@@ -298,6 +300,7 @@ func score_tilechoose_node(state *eval_state, board board_t, cprob float64) floa
 		if state.curdepth > state.maxdepth {
 			state.maxdepth = state.curdepth
 		}
+		state.tablehits++
 		return score_heur_board(board)
 	}
 	if state.curdepth < CACHE_DEPTH_LIMIT {
@@ -347,6 +350,8 @@ func score_move_node(state *eval_state, board board_t, cprob float64) float64 {
 
 		if board != newboard {
 			best = math.Max(best, score_tilechoose_node(state, newboard, cprob))
+		} else {
+			state.nomoves++
 		}
 	}
 	state.curdepth--
@@ -376,8 +381,8 @@ func score_toplevel_move(board board_t, move int, res *float64, wg *sync.WaitGro
 
 	*res = _score_toplevel_move(&state, board, move)
 
-	fmt.Printf("Move %d: result %f: eval'd %d moves (%d cache hits, %d cache size) (maxdepth=%d)\n", move, *res,
-		state.moves_evaled, state.cachehits, len(state.trans_table), state.maxdepth)
+	fmt.Printf("Move %d: result %f: eval'd %d moves (%d no moves, %d table hits, %d cache hits, %d cache size) (maxdepth=%d)\n", move, *res,
+		state.moves_evaled, state.nomoves, state.tablehits, state.cachehits, len(state.trans_table), state.maxdepth)
 }
 
 func find_best_move(board board_t) int {

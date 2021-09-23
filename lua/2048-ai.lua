@@ -246,6 +246,7 @@ end
 function score_tilechoose_node(state, board, cprob)
     if (cprob < CPROB_THRESH_BASE or state.curdepth >= state.depth_limit) then
         state.maxdepth = math.max(state.curdepth, state.maxdepth)
+        state.tablehits = state.tablehits + 1
         return score_heur_board(board)
     end
     if (state.curdepth < CACHE_DEPTH_LIMIT) then
@@ -297,6 +298,8 @@ function score_move_node(state, board, cprob)
         state.moves_evaled = state.moves_evaled + 1
         if (board ~= newboard) then
             best = math.max(best, score_tilechoose_node(state, newboard, cprob))
+        else
+            state.nomoves = state.nomoves + 1
         end
     end
     state.curdepth = state.curdepth - 1
@@ -321,6 +324,8 @@ function score_toplevel_move(board, move)
         tablesize = 0;
         maxdepth = 0,
         curdepth = 0,
+        nomoves = 0,
+        tablehits = 0,
         cachehits = 0,
         moves_evaled = 0,
         depth_limit = 0,
@@ -330,8 +335,8 @@ function score_toplevel_move(board, move)
 
     res = _score_toplevel_move(state, board, move)
 
-    print(string.format("Move %d: result %f: eval'd %d moves (%d cache hits, %d cache size) (maxdepth=%d)", move, res,
-           state.moves_evaled, state.cachehits, state.tablesize, state.maxdepth))
+    print(string.format("Move %d: result %f: eval'd %d moves (%d no moves, %d table hits, %d cache hits, %d cache size) (maxdepth=%d)", move, res,
+           state.moves_evaled, state.nomoves, state.tablehits, state.cachehits, state.tablesize, state.maxdepth))
 
     return res
 end

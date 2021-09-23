@@ -160,11 +160,13 @@ struct eval_state {
     trans_table_t trans_table;
     int maxdepth;
     int curdepth;
+    long nomoves;
+    long tablehits;
     long cachehits;
     long moves_evaled;
     int depth_limit;
 
-    eval_state():maxdepth(0), curdepth(0), cachehits(0), moves_evaled(0), depth_limit(0) {}
+    eval_state() : maxdepth(0), curdepth(0), nomoves(0), tablehits(0), cachehits(0), moves_evaled(0), depth_limit(0) {}
 };
 
 static unsigned int unif_random(unsigned int n) {
@@ -555,6 +557,7 @@ static float score_move_node(eval_state &state, board_t board, float cprob);
 static float score_tilechoose_node(eval_state &state, board_t board, float cprob) {
     if (cprob < CPROB_THRESH_BASE || state.curdepth >= state.depth_limit) {
         state.maxdepth = max(state.curdepth, state.maxdepth);
+        state.tablehits++;
         return score_heur_board(board);
     }
     if (state.curdepth < CACHE_DEPTH_LIMIT) {
@@ -611,12 +614,13 @@ static float score_move_node(eval_state &state, board_t board, float cprob) {
         board_t newboard = execute_move(move, board);
 
         state.moves_evaled++;
-
         if (board != newboard) {
             float tmp = score_tilechoose_node(state, newboard, cprob);
             if (best < tmp) {
                 best = tmp;
             }
+        } else {
+            state.nomoves++;
         }
     }
     state.curdepth--;
@@ -643,8 +647,8 @@ float score_toplevel_move(board_t board, int move) {
 
     float res = _score_toplevel_move(state, board, move);
 
-    printf("Move %d: result %f: eval'd %ld moves (%ld cache hits, %ld cache size) (maxdepth=%d)\n", move, res,
-           state.moves_evaled, state.cachehits, (long)state.trans_table.size(), state.maxdepth);
+    printf("Move %d: result %f: eval'd %ld moves (%ld no moves, %ld table hits, %ld cache hits, %ld cache size) (maxdepth=%d)\n", move, res,
+           state.moves_evaled, state.nomoves, state.tablehits, state.cachehits, (long)state.trans_table.size(), state.maxdepth);
 
     return res;
 }

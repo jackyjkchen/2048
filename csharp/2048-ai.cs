@@ -32,6 +32,8 @@ class Class2048
         public Dictionary<UInt64, trans_table_entry_t> trans_table = new Dictionary<UInt64, trans_table_entry_t>();
         public int maxdepth;
         public int curdepth;
+        public int nomoves;
+        public int tablehits;
         public int cachehits;
         public int moves_evaled;
         public int depth_limit;
@@ -314,6 +316,7 @@ class Class2048
         if (cprob < CPROB_THRESH_BASE || state.curdepth >= state.depth_limit)
         {
             state.maxdepth = Math.Max(state.curdepth, state.maxdepth);
+            state.tablehits++;
             return score_heur_board(board);
         }
         if (state.curdepth < CACHE_DEPTH_LIMIT)
@@ -369,9 +372,10 @@ class Class2048
             UInt64 newboard = execute_move(move, board);
 
             state.moves_evaled++;
-
             if (board != newboard)
                 best = Math.Max(best, score_tilechoose_node(ref state, newboard, cprob));
+            else
+                state.nomoves++;
         }
         state.curdepth--;
 
@@ -397,8 +401,8 @@ class Class2048
 
         res = _score_toplevel_move(ref state, board, move);
 
-        Console.WriteLine("Move {0}: result {1}: eval'd {2} moves ({3} cache hits, {4} cache size) (maxdepth={5})", move, res,
-               state.moves_evaled, state.cachehits, state.trans_table.Count, state.maxdepth);
+        Console.WriteLine("Move {0}: result {1}: eval'd {2} moves ({3} no moves, {4} table hits, {5} cache hits, {6} cache size) (maxdepth={7})", move, res,
+               state.moves_evaled, state.nomoves, state.tablehits, state.cachehits, state.trans_table.Count, state.maxdepth);
 
         return res;
     }
