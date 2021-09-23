@@ -177,7 +177,7 @@ borland c++ 5.5 (win32)
 g++-2.7.2 -DMULTI_THREAD -O2 -I/usr/lib/gcc-lib/i686-legacy-linux-gnu/2.7.2.3/include/stlport/ cpp/2048-ai.cpp cpp/thread_pool.cpp -pthread -o 2048
 ```
 
-* msvc 4.2的STL allocator线程不安全，有概率启动时crash（在Windows 10上概率高）。使用Release选项编译且运行在Windows 10上时，需要去掉NDEBUG宏，否则会有后台线程死循环。
+* msvc 4.2的STL allocator线程不安全，有概率启动时crash。
 
 本实现亦支持OpenMP多线程，由预处理OPENMP_THREAD控制，编译示例如下，以gcc为例：
 ```

@@ -10,12 +10,12 @@ extern "C" {
 #include <windows.h>
 #include <process.h>
 #include <limits.h>
-#include <assert.h>
 #else
 #include <unistd.h>
 #include <pthread.h>
 #include <sys/time.h>
 #endif
+#include <stdio.h>
 
 #if defined(__WATCOMC__)
 #if defined(max)
@@ -55,7 +55,11 @@ class ConditionVariable
 public:
     ConditionVariable(LOCK &lock) : m_lock(lock), m_semphore(NULL), m_wait_num(0)
     {
-        assert(m_semphore = CreateSemaphore(NULL, 0, INT_MAX, NULL));
+        m_semphore = CreateSemaphore(NULL, 0, INT_MAX, NULL);
+        if (!m_semphore) {
+            printf("CreateSemaphore failed.");
+            abort();
+        }
     }
 
     ~ConditionVariable()
