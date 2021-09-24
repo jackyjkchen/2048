@@ -18,10 +18,14 @@ extern "C" {
 #include <windows.h>
 #include <process.h>
 #include <limits.h>
+typedef HANDLE THRD_HANDLE;
+#define THRD_INST unsigned int WINAPI
 #else
 #include <unistd.h>
 #include <pthread.h>
 #include <sys/time.h>
+typedef pthread_t THRD_HANDLE;
+#define THRD_INST void*
 #endif
 
 #if defined(__WATCOMC__)
@@ -141,13 +145,8 @@ private:
     bool m_stop;
     int m_thrd_num;
     int m_active_thrd_num;
-#ifdef _WIN32
-    HANDLE *m_thread_handle;
-    static unsigned int WINAPI _threadstart(void *param);
-#else
-    pthread_t *m_thread_handle;
-    static void* _threadstart(void *param);
-#endif
+    THRD_HANDLE *m_thread_handle;
+    static THRD_INST _threadstart(void *);
 };
 
 #endif

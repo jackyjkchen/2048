@@ -264,7 +264,7 @@ static void init_tables(void) {
         result = line[0] | (line[1] << 4) | (line[2] << 8) | (line[3] << 12);
 
         row_table[row] = row ^ result;
-    } while (row++ != TABLESIZE - 1);
+    } while (row++ != 0xFFFF);
 }
 
 static board_t execute_move_col(board_t board, int move) {

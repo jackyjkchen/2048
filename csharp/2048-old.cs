@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
-class Class2048
+class Game2048
 {
     Random rand = new Random();
     const UInt64 ROW_MASK = 0xFFFF;
@@ -138,7 +138,7 @@ class Class2048
             }
             result = (UInt16)(line[0] | (line[1] << 4) | (line[2] << 8) | (line[3] << 12));
             row_table[row] = (UInt16)(row ^ result);
-        } while (row++ != TABLESIZE - 1);
+        } while (row++ != 0xFFFF);
     }
 
     UInt64 execute_move_col(UInt64 board, int move)
@@ -338,8 +338,8 @@ class Class2048
 
     static void Main(string[] args)
     {
-        Class2048 class_2048 = new Class2048();
-        class_2048.init_tables();
-        class_2048.play_game();
+        Game2048 game_2048 = new Game2048();
+        game_2048.init_tables();
+        game_2048.play_game();
     }
 }

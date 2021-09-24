@@ -2,7 +2,7 @@
 Imports System.Collections.Generic
 Imports System.Threading
 
-Public Module Class2048
+Public Module Game2048
     Private rand As Random = New Random()
     Const ROW_MASK As ULong = &HFFFFUL
     Const COL_MASK As ULong = &HF000F000F000FUL
@@ -192,7 +192,7 @@ Public Module Class2048
             row_table(row) = row Xor result
 
             row += 1
-        Loop While row <> (TABLESIZE - 1)
+        Loop While row <> &HFFFF
     End Sub
 
     Private Function execute_move_col(board As ULong, _move As Integer) As ULong

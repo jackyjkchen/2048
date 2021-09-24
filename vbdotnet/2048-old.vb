@@ -1,6 +1,6 @@
 ﻿Imports System
 
-Public Module Class2048
+Public Module Game2048
     Private rand As Random = New Random
     Const ROW_MASK As Long = &HFFFFL
     Const COL_MASK As Long = &HF000F000F000FL
@@ -123,7 +123,7 @@ Public Module Class2048
             row_table(row) = row Xor result
 
             row += 1
-        Loop While row <> (TABLESIZE - 1)
+        Loop While row <> &HFFFF
     End Sub
 
     Private Function execute_move_col(ByVal board As Long, ByVal _move As Integer) As Long

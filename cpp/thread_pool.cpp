@@ -158,21 +158,14 @@ static DWORD _count_set_bits(ULONG_PTR bitMask)
     return bitSetCount;
 }
 #endif
+#endif
 
-unsigned int WINAPI ThreadPool::_threadstart(void *param)
+THRD_INST ThreadPool::_threadstart(void *param)
 {
     ThrdContext *context = (ThrdContext *)param;
     context->func(context->param);
     return 0;
 }
-#else
-void* ThreadPool::_threadstart(void *param)
-{
-    ThrdContext *context = (ThrdContext *)param;
-    context->func(context->param);
-    return NULL;
-}
-#endif
 
 int ThreadPool::get_cpu_num()
 {
@@ -241,11 +234,7 @@ bool ThreadPool::init()
             break;
         }
         if (!m_thread_handle) {
-#ifdef _WIN32
-            m_thread_handle = (HANDLE *)malloc(m_thrd_num * sizeof(HANDLE));
-#else
-            m_thread_handle = (pthread_t *)malloc(m_thrd_num * sizeof(pthread_t));
-#endif
+            m_thread_handle = (THRD_HANDLE *)malloc(m_thrd_num * sizeof(THRD_HANDLE));
         }
         if (!m_thread_handle) {
             break;

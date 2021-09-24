@@ -6,7 +6,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ExecutorService;
 
-class Class2048
+class Game2048
 {
     Random rand = new Random();
     final long ROW_MASK = 0xFFFFL;
@@ -201,7 +201,7 @@ class Class2048
 
             result = line[0] | (line[1] << 4) | (line[2] << 8) | (line[3] << 12);
             row_table[row] = row ^ result;
-        } while (row++ != TABLESIZE - 1);
+        } while (row++ != 0xFFFF);
     }
 
     long execute_move_col(long board, int move) {
@@ -488,9 +488,9 @@ class Class2048
     }
 
     public static void main(String[] args) {
-        Class2048 class_2048 = new Class2048();
-        class_2048.init_tables();
-        class_2048.play_game();
-        class_2048.thrd_pool.shutdown();
+        Game2048 game_2048 = new Game2048();
+        game_2048.init_tables();
+        game_2048.play_game();
+        game_2048.thrd_pool.shutdown();
     }
 }

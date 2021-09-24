@@ -150,7 +150,7 @@ dmc 8.57 (win32)
 g++-2.6.3 -I/usr/lib/gcc-lib/i686-legacy-linux-gnu/2.6.3/include/g++/stl -O2 cpp/2048-ai.cpp -lstdc++ -lm -o 2048
 ```
 
-### 若使用FASTMODE=0预处理，不启用查表法也不启用std::map cache，速度会极慢，但代码段和数据段可控制在64KiB以内，额外支持：
+### 若使用FASTMODE=0预处理，不启用std::map cache，查表法采取分表形式（单表小于64KiB），速度会很慢，但可支持dos16目标（需要compact或large内存模型），额外支持：
 ```
 gcc 2.2.2/2.3.3/2.4.5/2.5.8 (linux)
 msvc 2.x (win32)
@@ -330,7 +330,7 @@ jdk 1.5+ (linux, win32, freebsd, macos, openbsd, netbsd, dragonflybsd, solaris)
 cd java
 gcc -I/opt/openjdk-bin-8.292_p10/include/ -I/opt/openjdk-bin-8.292_p10/include/linux/ -std=c90 -fPIC -O2 -shared javadeps.c -o libjavadeps.so 
 javac 2048.java
-java -Djava.library.path=. Class2048
+java -Djava.library.path=. Game2048
 ```
 
 
