@@ -463,10 +463,16 @@ static uint32 score_helper(board_t board) {
 
 static float score_heur_helper(board_t board) {
     int i = 0, j = 0;
+    uint8 line[4] = { 0 };
     float heur_score = 0.0f;
 
     for (j = 0; j < 4; ++j) {
         row_t row = (row_t)((board >> (j << 4)) & ROW_MASK);
+
+        line[0] = row & 0xf;
+        line[1] = (row >> 4) & 0xf;
+        line[2] = (row >> 8) & 0xf;
+        line[3] = (row >> 12) & 0xf;
 
         float sum = 0.0f;
         int empty = 0;
@@ -475,7 +481,7 @@ static float score_heur_helper(board_t board) {
         int counter = 0;
 
         for (i = 0; i < 4; ++i) {
-            int rank = (row >> (i << 2)) & 0xf;
+            int rank = line[i];
 
             sum += (float)pow(rank, SCORE_SUM_POWER);
             if (rank == 0) {
@@ -499,11 +505,11 @@ static float score_heur_helper(board_t board) {
 
         for (i = 1; i < 4; ++i) {
             if (line[i - 1] > line[i]) {
-                monotonicity_left += (float)(pow(line[i - 1], SCORE_MONOTONICITY_POWER) -
-                    pow(line[i], SCORE_MONOTONICITY_POWER));
+                monotonicity_left += pow((float)line[i - 1], SCORE_MONOTONICITY_POWER) -
+                    pow((float)line[i], SCORE_MONOTONICITY_POWER);
             } else {
-                monotonicity_right += (float)(pow(line[i], SCORE_MONOTONICITY_POWER) -
-                    pow(line[i - 1], SCORE_MONOTONICITY_POWER));
+                monotonicity_right += pow((float)line[i], SCORE_MONOTONICITY_POWER) -
+                    pow((float)line[i - 1], SCORE_MONOTONICITY_POWER);
             }
         }
         heur_score += SCORE_LOST_PENALTY + SCORE_EMPTY_WEIGHT * empty + SCORE_MERGES_WEIGHT * merges -
