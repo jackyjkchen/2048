@@ -19,7 +19,7 @@ AI实现需要关联容器做cache以提升性能，考验编译器标准库能�
 
 通常的ISO C90跨平台实现，非严格C90内容仅为64位整数。
 
-使用FASTMODE预处理（默认），可启用查表法，会增加384KiB的常驻内存开销。
+### 使用FASTMODE预处理（默认），可启用查表法，会增加384KiB的常驻内存开销。
 
 已测试编译器和平台：
 ```
@@ -57,7 +57,7 @@ cc (openserver, unixware)
 
 * win64、windows for arm等均为win32的不同硬件架构，不单独说明，类似的linux、bsd等也不针对特定硬件架构，默认跨平台。
 
-使用FASTMODE=0预处理，代码段和数据段可控制在64KiB以内，额外支持：
+### 使用FASTMODE=0预处理，代码段和数据段可控制在64KiB以内，额外支持：
 ```
 openwatcom c++ 1.9 (dos16)
 watcom c++ 11.0 (dos16)
@@ -124,7 +124,7 @@ msc 3.0/4.0 (dos16)
 
 AI版本，ISO C++98实现，可选支持多线程（预处理MULTI_THREAD或OPENMP_THREAD），默认启用查表法和std::map cache（FASTMODE预处理控制）。
 
-不启用MULTI_THREAD时（默认），无须依赖thread_pool.cpp，已测试编译器和平台：
+### 不启用MULTI_THREAD时（默认），无须依赖thread_pool.cpp，已测试编译器和平台：
 ```
 gcc 2.6.3+ (linux, freebsd, macos, mingw, mingw-w64, cygwin, djgpp, openbsd, netbsd, dragonflybsd, solaris, openserver, unixware)
 clang 3.0+ (linux, macos, freebsd, win32, openbsd, netbsd, dragonflybsd)
@@ -150,7 +150,7 @@ dmc 8.57 (win32)
 g++-2.6.3 -I/usr/lib/gcc-lib/i686-legacy-linux-gnu/2.6.3/include/g++/stl -O2 cpp/2048-ai.cpp -lstdc++ -lm -o 2048
 ```
 
-若使用FASTMODE=0预处理，不启用查表法也不启用std::map cache，速度会极慢，但代码段和数据段可控制在64KiB以内，额外支持：
+### 若使用FASTMODE=0预处理，不启用查表法也不启用std::map cache，速度会极慢，但代码段和数据段可控制在64KiB以内，额外支持：
 ```
 gcc 2.2.2/2.3.3/2.4.5/2.5.8 (linux)
 msvc 2.x (win32)
@@ -163,12 +163,7 @@ watcom c++ 11.0 (dos16)
 
 * msvc 2.x和C语言情况一样不能使用优化。
 
-本实现支持多线程，由预处理MULTI_THREAD控制，编译示例如下，以gcc为例：
-```
-g++ -DMULTI_THREAD -O2 cpp/2048-ai.cpp cpp/thread_pool.cpp -pthread -o 2048
-```
-
-多线程版本依赖操作系统原生线程，因此dos等都不支持，已测试编译器和平台：
+### 本实现支持多线程，由预处理MULTI_THREAD控制，多线程版本依赖操作系统原生线程，因此dos等都不支持，已测试编译器和平台：
 ```
 gcc 2.7.2+ (linux, freebsd, macos, mingw, mingw-w64, cygwin, openbsd, netbsd, dragonflybsd, solaris)
 clang 3.0+ (linux, macos, freebsd, win32, openbsd, netbsd, dragonflybsd)
@@ -178,8 +173,13 @@ aocc 1.0+ (linux)
 nvhpc/pgi 20.11/21.7 (linux)
 open64 4.2.4/4.5.2.1/5.0 (linux)
 openwatcom c++ 1.9 (win32)
-watcom c++ 11.0 (win32, dos32)
+watcom c++ 11.0 (win32)
 borland c++ 5.5 (win32)
+```
+
+gcc编译示例：
+```
+g++ -DMULTI_THREAD -O2 cpp/2048-ai.cpp cpp/thread_pool.cpp -pthread -o 2048
 ```
 
 * gcc 2.7.2需要使用[经过修改的STLPort-3.12.2](https://github.com/jackyjkchen/legacy-gcc/blob/master/dev-libs/stlport/files/3.12.2/00_stlport-3.12.2.patch)，在legacy-gcc中已提供，否则libg++-2.7.x的STL在多线程场景下会coredump，编译示例：
@@ -189,13 +189,7 @@ g++-2.7.2 -DMULTI_THREAD -O2 -I/usr/lib/gcc-lib/i686-legacy-linux-gnu/2.7.2.3/in
 
 * msvc 4.2的STL allocator线程不安全，有概率启动时crash。
 
-本实现亦支持OpenMP多线程，由预处理OPENMP_THREAD控制，编译示例如下，以gcc为例：
-```
-g++ -DOPENMP_THREAD -O2 -fopenmp cpp/2048-ai.cpp -o 2048
-```
-
-OpenMP多线程不依赖thread_pool.cpp，但编译器和平台更为受限，已测试编译器和平台：
-
+### 本实现亦支持OpenMP多线程，由预处理OPENMP_THREAD控制，OpenMP多线程不依赖thread_pool.cpp，但编译器和平台更为受限，已测试编译器和平台：
 ```
 gcc 4.2+ (linux, freebsd, macos, openbsd, netbsd, dragonflybsd, solaris)
 clang 3.5+ (linux, freebsd，macos, openbsd, netbsd, dragonflybsd)
@@ -204,6 +198,11 @@ icc 8.1+ (win32, linux)
 aocc 1.0+ (linux)
 nvhpc/pgi 20.11/21.7 (linux)
 open64 4.2.4/4.5.2.1/5.0 (linux)
+```
+
+gcc编译示例：
+```
+g++ -DOPENMP_THREAD -O2 -fopenmp cpp/2048-ai.cpp -o 2048
 ```
 
 
