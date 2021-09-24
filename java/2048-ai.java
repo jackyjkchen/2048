@@ -270,6 +270,34 @@ class Game2048
         return score_heur_helper(board) + score_heur_helper(transpose(board));
     }
 
+    long draw_tile() {
+        return (long)((unif_random(10) < 9) ? 1 : 2);
+    }
+
+    long insert_tile_rand(long board, long tile) {
+        int index = unif_random(count_empty(board));
+        long tmp = board;
+
+        while (true) {
+            while ((tmp & 0xf) != 0) {
+                tmp >>= 4;
+                tile <<= 4;
+            }
+            if (index == 0)
+                break;
+            --index;
+            tmp >>= 4;
+            tile <<= 4;
+        }
+        return board | tile;
+    }
+
+    long initial_board() {
+        long board = (long)(draw_tile()) << (unif_random(16) << 2);
+
+        return insert_tile_rand(board, draw_tile());
+    }
+
     int count_distinct_tiles(long board)
     {
         int bitset = 0;
@@ -413,34 +441,6 @@ class Game2048
         System.out.printf("Selected bestmove: %d, result: %f\n", bestmove, best);
 
         return bestmove;
-    }
-
-    long draw_tile() {
-        return (long)((unif_random(10) < 9) ? 1 : 2);
-    }
-
-    long insert_tile_rand(long board, long tile) {
-        int index = unif_random(count_empty(board));
-        long tmp = board;
-
-        while (true) {
-            while ((tmp & 0xf) != 0) {
-                tmp >>= 4;
-                tile <<= 4;
-            }
-            if (index == 0)
-                break;
-            --index;
-            tmp >>= 4;
-            tile <<= 4;
-        }
-        return board | tile;
-    }
-
-    long initial_board() {
-        long board = (long)(draw_tile()) << (unif_random(16) << 2);
-
-        return insert_tile_rand(board, draw_tile());
     }
 
     void play_game() {

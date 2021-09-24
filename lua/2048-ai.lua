@@ -225,6 +225,38 @@ function score_heur_board(board)
     return score_helper(board, score_heur_table) + score_helper(transpose(board), score_heur_table)
 end
 
+function draw_tile()
+    local rd = unif_random(10)
+    if (rd < 9) then
+       return 1
+    else
+       return 2
+    end
+end
+
+function insert_tile_rand(board, tile)
+    local index = unif_random(count_empty(board))
+    local tmp = board
+    while true do
+        while ((tmp & 0xf) ~= 0) do
+            tmp = tmp >> 4
+            tile = tile << 4
+        end
+        if (index == 0) then
+            break
+        end
+        index = index - 1
+        tmp = tmp >> 4
+        tile = tile << 4
+    end
+    return board | tile
+end
+
+function initial_board()
+    local board = draw_tile() << (unif_random(16) << 2)
+    return insert_tile_rand(board, draw_tile())
+end
+
 function count_distinct_tiles(board)
     bitset = 0
 
@@ -360,38 +392,6 @@ function find_best_move(board)
     print(string.format("Selected bestmove: %d, result: %f", bestmove, best))
 
     return bestmove
-end
-
-function draw_tile()
-    local rd = unif_random(10)
-    if (rd < 9) then
-       return 1
-    else
-       return 2
-    end
-end
-
-function insert_tile_rand(board, tile)
-    local index = unif_random(count_empty(board))
-    local tmp = board
-    while true do
-        while ((tmp & 0xf) ~= 0) do
-            tmp = tmp >> 4
-            tile = tile << 4
-        end
-        if (index == 0) then
-            break
-        end
-        index = index - 1
-        tmp = tmp >> 4
-        tile = tile << 4
-    end
-    return board | tile
-end
-
-function initial_board()
-    local board = draw_tile() << (unif_random(16) << 2)
-    return insert_tile_rand(board, draw_tile())
 end
 
 function play_game(get_move)

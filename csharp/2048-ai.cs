@@ -292,6 +292,39 @@ class Game2048
         return score_heur_helper(board) + score_heur_helper(transpose(board));
     }
 
+    UInt64 draw_tile()
+    {
+        return (UInt64)((unif_random(10) < 9) ? 1 : 2);
+    }
+
+    UInt64 insert_tile_rand(UInt64 board, UInt64 tile)
+    {
+        int index = unif_random(count_empty(board));
+        UInt64 tmp = board;
+
+        while (true)
+        {
+            while ((tmp & 0xf) != 0)
+            {
+                tmp >>= 4;
+                tile <<= 4;
+            }
+            if (index == 0)
+                break;
+            --index;
+            tmp >>= 4;
+            tile <<= 4;
+        }
+        return board | tile;
+    }
+
+    UInt64 initial_board()
+    {
+        UInt64 board = (UInt64)(draw_tile()) << (unif_random(16) << 2);
+
+        return insert_tile_rand(board, draw_tile());
+    }
+
     int count_distinct_tiles(UInt64 board)
     {
         UInt16 bitset = 0;
@@ -451,39 +484,6 @@ class Game2048
         Console.WriteLine("Selected bestmove: {0}, result: {1}", bestmove, best);
 
         return bestmove;
-    }
-
-    UInt64 draw_tile()
-    {
-        return (UInt64)((unif_random(10) < 9) ? 1 : 2);
-    }
-
-    UInt64 insert_tile_rand(UInt64 board, UInt64 tile)
-    {
-        int index = unif_random(count_empty(board));
-        UInt64 tmp = board;
-
-        while (true)
-        {
-            while ((tmp & 0xf) != 0)
-            {
-                tmp >>= 4;
-                tile <<= 4;
-            }
-            if (index == 0)
-                break;
-            --index;
-            tmp >>= 4;
-            tile <<= 4;
-        }
-        return board | tile;
-    }
-
-    UInt64 initial_board()
-    {
-        UInt64 board = (UInt64)(draw_tile()) << (unif_random(16) << 2);
-
-        return insert_tile_rand(board, draw_tile());
     }
 
     void play_game(get_move_func_t get_move)

@@ -212,6 +212,31 @@ def score_board(board):
 def score_heur_board(board):
     return score_helper(board, score_heur_table) + score_helper(transpose(board), score_heur_table)
 
+def draw_tile():
+    rd = unif_random(10)
+    if rd < 9:
+       return 1
+    else:
+       return 2
+
+def insert_tile_rand(board, tile):
+    index = unif_random(count_empty(board))
+    tmp = board
+    while True:
+        while (tmp & 0xf) != 0:
+            tmp >>= 4
+            tile <<= 4
+        if index == 0:
+            break
+        index -= 1
+        tmp >>= 4
+        tile <<= 4
+    return (board | tile) & INT64_MASK
+
+def initial_board():
+    board = draw_tile() << (unif_random(16) << 2)
+    return insert_tile_rand(board, draw_tile())
+
 def count_distinct_tiles(board):
     bitset = 0
 
@@ -317,31 +342,6 @@ def find_best_move(board):
     sys.stdout.write("Selected bestmove: %d, result: %f%s" % (bestmove, best, os.linesep))
 
     return bestmove
-
-def draw_tile():
-    rd = unif_random(10)
-    if rd < 9:
-       return 1
-    else:
-       return 2
-
-def insert_tile_rand(board, tile):
-    index = unif_random(count_empty(board))
-    tmp = board
-    while True:
-        while (tmp & 0xf) != 0:
-            tmp >>= 4
-            tile <<= 4
-        if index == 0:
-            break
-        index -= 1
-        tmp >>= 4
-        tile <<= 4
-    return (board | tile) & INT64_MASK
-
-def initial_board():
-    board = draw_tile() << (unif_random(16) << 2)
-    return insert_tile_rand(board, draw_tile())
 
 def play_game(get_move):
     board = initial_board()

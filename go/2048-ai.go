@@ -278,6 +278,38 @@ func score_heur_board(board board_t) float64 {
 	return score_heur_helper(board) + score_heur_helper(transpose(board))
 }
 
+func draw_tile() board_t {
+	if unif_random(10) < 9 {
+		return 1
+	}
+	return 2
+}
+
+func insert_tile_rand(board, tile board_t) board_t {
+	index := unif_random(count_empty(board))
+	var tmp board_t = board
+
+	for true {
+		for (tmp & 0xf) != 0 {
+			tmp >>= 4
+			tile <<= 4
+		}
+		if index == 0 {
+			break
+		}
+		index--
+		tmp >>= 4
+		tile <<= 4
+	}
+	return board | tile
+}
+
+func initial_board() board_t {
+	var board board_t = board_t(draw_tile()) << (unif_random(16) << 2)
+
+	return insert_tile_rand(board, draw_tile())
+}
+
 func count_distinct_tiles(board board_t) int {
 	var bitset uint16 = 0
 
@@ -409,38 +441,6 @@ func find_best_move(board board_t) int {
 	fmt.Printf("Selected bestmove: %d, result: %f\n", bestmove, best)
 
 	return bestmove
-}
-
-func draw_tile() board_t {
-	if unif_random(10) < 9 {
-		return 1
-	}
-	return 2
-}
-
-func insert_tile_rand(board, tile board_t) board_t {
-	index := unif_random(count_empty(board))
-	var tmp board_t = board
-
-	for true {
-		for (tmp & 0xf) != 0 {
-			tmp >>= 4
-			tile <<= 4
-		}
-		if index == 0 {
-			break
-		}
-		index--
-		tmp >>= 4
-		tile <<= 4
-	}
-	return board | tile
-}
-
-func initial_board() board_t {
-	var board board_t = board_t(draw_tile()) << (unif_random(16) << 2)
-
-	return insert_tile_rand(board, draw_tile())
 }
 
 func play_game(get_move get_move_func_t) {

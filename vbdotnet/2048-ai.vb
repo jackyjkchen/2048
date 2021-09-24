@@ -254,6 +254,36 @@ Public Module Game2048
         Return score_heur_helper(board) + score_heur_helper(transpose(board))
     End Function
 
+    Private Function draw_tile() As ULong
+        If unif_random(10) < 9 Then
+            Return 1
+        Else
+            Return 2
+        End If
+    End Function
+
+    Private Function insert_tile_rand(board As ULong, tile As ULong) As ULong
+        Dim index As Integer = unif_random(count_empty(board))
+        Dim tmp As ULong = board
+
+        While True
+            While (tmp And &HFUL) <> 0
+                tmp >>= 4
+                tile <<= 4
+            End While
+            If index = 0 Then Exit While
+            index -= 1
+            tmp >>= 4
+            tile <<= 4
+        End While
+        Return board Or tile
+    End Function
+
+    Private Function initial_board() As ULong
+        Dim board As ULong = CULng((draw_tile())) << (unif_random(16) << 2)
+        Return insert_tile_rand(board, draw_tile())
+    End Function
+
     Private Function count_distinct_tiles(board As ULong) As Integer
         Dim bitset As UShort = 0
         While board <> 0
@@ -385,36 +415,6 @@ Public Module Game2048
 
         Console.WriteLine("Selected bestmove: {0}, result: {1}", bestmove, best)
         Return bestmove
-    End Function
-
-    Private Function draw_tile() As ULong
-        If unif_random(10) < 9 Then
-            Return 1
-        Else
-            Return 2
-        End If
-    End Function
-
-    Private Function insert_tile_rand(board As ULong, tile As ULong) As ULong
-        Dim index As Integer = unif_random(count_empty(board))
-        Dim tmp As ULong = board
-
-        While True
-            While (tmp And &HFUL) <> 0
-                tmp >>= 4
-                tile <<= 4
-            End While
-            If index = 0 Then Exit While
-            index -= 1
-            tmp >>= 4
-            tile <<= 4
-        End While
-        Return board Or tile
-    End Function
-
-    Private Function initial_board() As ULong
-        Dim board As ULong = CULng((draw_tile())) << (unif_random(16) << 2)
-        Return insert_tile_rand(board, draw_tile())
     End Function
 
     Private Sub play_game(get_move As get_move_func_t)

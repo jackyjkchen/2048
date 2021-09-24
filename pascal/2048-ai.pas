@@ -295,6 +295,46 @@ begin
     score_heur_board := score_heur_helper(board) + score_heur_helper(transpose(board));
 end;
 
+function draw_tile : word;
+var
+    ret : integer;
+begin
+    ret := unif_random(10);
+    if ret < 9 then
+        ret := 1
+    else
+        ret := 2;
+    draw_tile := ret;
+end;
+
+function insert_tile_rand(board : board_t; tile : board_t) : board_t;
+var
+    index : integer;
+    tmp : board_t;
+begin
+    index := unif_random(count_empty(board));
+    tmp := board;
+    while true do begin
+        while (tmp and $f) <> 0 do begin
+            tmp := tmp shr 4;
+            tile := tile shl 4;
+        end;
+        if index = 0 then break;
+        index := index - 1;
+        tmp := tmp shr 4;
+        tile := tile shl 4;
+    end;
+    insert_tile_rand := board or tile;
+end;
+
+function initial_board : board_t;
+var
+    board : board_t;
+begin
+    board := board_t((draw_tile) shl (unif_random(16) shl 2));
+    initial_board := insert_tile_rand(board, draw_tile);
+end;
+
 function count_distinct_tiles(board : board_t) : integer;
 var
     bitset : word;
@@ -474,46 +514,6 @@ begin
     writeln(format('Selected bestmove: %d, result: %f', [bestmove, best]));
 
     find_best_move := bestmove;
-end;
-
-function draw_tile : word;
-var
-    ret : integer;
-begin
-    ret := unif_random(10);
-    if ret < 9 then
-        ret := 1
-    else
-        ret := 2;
-    draw_tile := ret;
-end;
-
-function insert_tile_rand(board : board_t; tile : board_t) : board_t;
-var
-    index : integer;
-    tmp : board_t;
-begin
-    index := unif_random(count_empty(board));
-    tmp := board;
-    while true do begin
-        while (tmp and $f) <> 0 do begin
-            tmp := tmp shr 4;
-            tile := tile shl 4;
-        end;
-        if index = 0 then break;
-        index := index - 1;
-        tmp := tmp shr 4;
-        tile := tile shl 4;
-    end;
-    insert_tile_rand := board or tile;
-end;
-
-function initial_board : board_t;
-var
-    board : board_t;
-begin
-    board := board_t((draw_tile) shl (unif_random(16) shl 2));
-    initial_board := insert_tile_rand(board, draw_tile);
 end;
 
 type
