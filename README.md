@@ -57,7 +57,7 @@ cc (openserver, unixware)
 
 * win64、windows for arm等均为win32的不同硬件架构，不单独说明，类似的linux、bsd等也不针对特定硬件架构，默认跨平台。
 
-使用FASTMODE=0预处理，代码和数据段可控制在64KiB以内，额外支持：
+使用FASTMODE=0预处理，代码段和数据段可控制在64KiB以内，额外支持：
 ```
 openwatcom c++ 1.9 (dos16)
 watcom c++ 11.0 (dos16)
@@ -122,9 +122,7 @@ msc 3.0/4.0 (dos16)
 
 ## cpp/2048-ai.cpp + cpp/thread_pool.cpp + cpp/thread_pool.h
 
-AI版本，ISO C++98实现，可选支持多线程（预处理MULTI_THREAD或OPENMP_THREAD）。
-
-由于使用std::map且动态增长内存（可能超过1MiB），因此不支持dos16，无论是否启用FASTMODE预处理（默认启用，增加640KiB内存占用），编译器和平台支持均一致。
+AI版本，ISO C++98实现，可选支持多线程（预处理MULTI_THREAD或OPENMP_THREAD），默认启用查表法和std::map cache（FASTMODE预处理控制）。
 
 不启用MULTI_THREAD时（默认），无须依赖thread_pool.cpp，已测试编译器和平台：
 ```
@@ -152,6 +150,18 @@ dmc 8.57 (win32)
 g++-2.6.3 -I/usr/lib/gcc-lib/i686-legacy-linux-gnu/2.6.3/include/g++/stl -O2 cpp/2048-ai.cpp -lstdc++ -lm -o 2048
 ```
 
+若使用FASTMODE=0预处理，不启用查表法也不启用std::map cache，速度会极慢，但代码段和数据段可控制在64KiB以内，额外支持：
+```
+gcc 2.2.2/2.3.3/2.4.5/2.5.8 (linux)
+msvc 2.x (win32)
+visualage c++ 3.5 (win32)
+openwatcom c++ 1.9 (dos16)
+watcom c++ 11.0 (dos16)
+```
+
+* 上表中gcc低版本均为[legacy-gcc](https://github.com/jackyjkchen/legacy-gcc)的版本，且由于这些低版本gcc不认cpp扩展名，请编译软链接的cpp/2048-ai.cc。
+
+* msvc 2.x和C语言情况一样不能使用优化。
 
 本实现支持多线程，由预处理MULTI_THREAD控制，编译示例如下，以gcc为例：
 ```

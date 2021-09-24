@@ -3,6 +3,10 @@
 #include <string.h>
 #include <time.h>
 
+#if !defined(FASTMODE) || (defined(FASTMODE) && FASTMODE != 0)
+#define FASTMODE 1
+#endif
+
 #if defined(__linux__) || defined(__unix__) || defined(__CYGWIN__) || defined(__MACH__) || defined(unix)
 #define UNIX_LIKE 1
 #endif
@@ -209,10 +213,6 @@ static int count_empty(board_t x) {
     x += x >> 4;
     return (int)(x & 0xf);
 }
-
-#if !defined(FASTMODE) || (defined(FASTMODE) && FASTMODE != 0)
-#define FASTMODE 1
-#endif
 
 #if FASTMODE != 0
 #define TABLESIZE 65536

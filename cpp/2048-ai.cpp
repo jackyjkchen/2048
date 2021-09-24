@@ -4,6 +4,10 @@
 #include <string.h>
 #include <time.h>
 
+#if !defined(FASTMODE) || (defined(FASTMODE) && FASTMODE != 0)
+#define FASTMODE 1
+#endif
+
 #if defined(__linux__) || defined(__unix__) || defined(__CYGWIN__) || defined(__MACH__) || defined(unix)
 #define UNIX_LIKE 1
 #endif
@@ -94,11 +98,6 @@ enum {
 
 typedef int (*get_move_func_t)(board_t);
 
-typedef struct {
-    uint8 depth;
-    float heuristic;
-} trans_table_entry_t;
-
 #if defined(MULTI_THREAD) && defined(OPENMP_THREAD)
 #error "MULTI_THREAD and OPENMP_THREAD cannot be defined at the same time."
 #endif
@@ -114,6 +113,12 @@ typedef struct {
 #if defined(min)
 #undef min
 #endif
+
+#if FASTMODE != 0
+typedef struct {
+    uint8 depth;
+    float heuristic;
+} trans_table_entry_t;
 
 #if __cplusplus >= 201103L
 #include <unordered_map>
@@ -142,6 +147,7 @@ typedef std::map<board_t, trans_table_entry_t, less<board_t> > trans_table_t;
 typedef std::map<board_t, trans_table_entry_t> trans_table_t;
 #define MAP_HAVE_SECOND 1
 #endif
+#endif
 
 #define max(a,b) ( ((a)>(b)) ? (a):(b) )
 #define min(a,b) ( ((a)>(b)) ? (b):(a) )
@@ -157,7 +163,9 @@ static const float CPROB_THRESH_BASE = 0.0001f;
 static const uint16 CACHE_DEPTH_LIMIT = 15;
 
 struct eval_state {
+#if FASTMODE != 0
     trans_table_t trans_table;
+#endif
     int maxdepth;
     int curdepth;
     long nomoves;
@@ -232,10 +240,6 @@ static int count_empty(board_t x) {
     x += x >> 4;
     return (int)(x & 0xf);
 }
-
-#if !defined(FASTMODE) || (defined(FASTMODE) && FASTMODE != 0)
-#define FASTMODE 1
-#endif
 
 #if FASTMODE != 0
 #define TABLESIZE 65536
@@ -566,6 +570,7 @@ static float score_tilechoose_node(eval_state &state, board_t board, float cprob
         state.tablehits++;
         return score_heur_board(board);
     }
+#if FASTMODE != 0
     if (state.curdepth < CACHE_DEPTH_LIMIT) {
 #if defined(__WATCOMC__)
         trans_table_t::iterator &i = state.trans_table.find(board);
@@ -585,6 +590,7 @@ static float score_tilechoose_node(eval_state &state, board_t board, float cprob
             }
         }
     }
+#endif
 
     int num_open = count_empty(board);
 
@@ -604,10 +610,12 @@ static float score_tilechoose_node(eval_state &state, board_t board, float cprob
     }
     res = res / num_open;
 
+#if FASTMODE != 0
     if (state.curdepth < CACHE_DEPTH_LIMIT) {
         trans_table_entry_t entry = { (uint8)(state.curdepth), res };
         state.trans_table[board] = entry;
     }
+#endif
 
     return res;
 }
@@ -653,8 +661,13 @@ float score_toplevel_move(board_t board, int move) {
 
     float res = _score_toplevel_move(state, board, move);
 
+#if FASTMODE != 0
     printf("Move %d: result %f: eval'd %ld moves (%ld no moves, %ld table hits, %ld cache hits, %ld cache size) (maxdepth=%d)\n", move, res,
            state.moves_evaled, state.nomoves, state.tablehits, state.cachehits, (long)state.trans_table.size(), state.maxdepth);
+#else
+    printf("Move %d: result %f: eval'd %ld moves (%ld no moves, %ld table hits, %ld cache hits, %ld cache size) (maxdepth=%d)\n", move, res,
+           state.moves_evaled, state.nomoves, state.tablehits, state.cachehits, 0L, state.maxdepth);
+#endif
 
     return res;
 }
