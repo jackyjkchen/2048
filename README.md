@@ -41,7 +41,7 @@ dmc 8.57 (win32)
 cc (openserver, unixware)
 ```
 
-* gcc 3.1以下版本需要大量补丁用于支持现代化系统和修复一些bug，[参见](https://github.com/jackyjkchen/legacy-gcc)。
+* gcc 3.1以下版本需要大量补丁用于支持现代化系统和修复一些bug，[参见legacy-gcc](https://github.com/jackyjkchen/legacy-gcc)。低版本gcc均在legacy-gcc场景测试，复用系统高版本的glibc，因此在一些老系统上可能行为会有所差异（比如使用gcc 2.x + libc5）。
 
 * msvc 2.x都不能使用优化，否则编译器直接crash，包括最新的2.2。其他版本msvc测试的都是补丁打满的版本。
 

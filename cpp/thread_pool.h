@@ -48,58 +48,24 @@ typedef deque<ThrdContext, allocator<ThrdContext> > ThreadQueue;
 typedef std::deque<ThrdContext> ThreadQueue;
 #endif
 
-#if defined(WINVER) && WINVER < 0x0600
-template<class LOCK>
-class ConditionVariable
+#if defined(WINVER) && WINVER >= 0x0600
+typedef CONDITION_VARIABLE ConditionVariable;
+#else
+class ThreadLock;
+class ConditionVariableLegacy
 {
 public:
-    ConditionVariable(LOCK &lock) : m_lock(lock), m_semphore(NULL), m_wait_num(0)
-    {
-        m_semphore = CreateSemaphore(NULL, 0, INT_MAX, NULL);
-        if (!m_semphore) {
-            printf("CreateSemaphore failed.");
-            abort();
-        }
-    }
-
-    ~ConditionVariable()
-    {
-        CloseHandle(m_semphore);
-    }
-
-    bool wait(int timeout_ms = -1)
-    {
-        DWORD timeout = INFINITE;
-        if (timeout_ms >= 0) {
-            timeout = (DWORD)timeout_ms;
-        }
-        m_wait_num++;
-        m_lock.unlock();
-        DWORD ret = WaitForSingleObject(m_semphore, timeout);
-        m_lock.lock();
-        m_wait_num--;
-        return (ret == WAIT_OBJECT_0) ? true : false;
-    }
-
-    void signal()
-    {
-        if (m_wait_num > 0) {
-            ReleaseSemaphore(m_semphore, 1, NULL);
-        }
-    }
-
-    void broadcast()
-    {
-        if (m_wait_num > 0) {
-            ReleaseSemaphore(m_semphore, m_wait_num, NULL);
-        }
-    }
+    ConditionVariableLegacy();
+    ~ConditionVariableLegacy();
+    bool wait(ThreadLock &lock, int timeout_ms = -1);
+    void signal();
+    void broadcast();
 
 private:
-    LOCK &m_lock;
     HANDLE m_semphore;
     int m_wait_num;
 };
+typedef ConditionVariableLegacy ConditionVariable;
 #endif
 
 class ThreadLock
@@ -118,11 +84,7 @@ public:
 private:
 #ifdef _WIN32
     CRITICAL_SECTION m_mutex;
-#if defined(WINVER) && WINVER >= 0x0600
-    CONDITION_VARIABLE m_cond;
-#else
-    ConditionVariable<ThreadLock> m_cond;
-#endif
+    ConditionVariable m_cond;
 #else
     pthread_mutex_t m_mutex;
     pthread_cond_t m_cond;

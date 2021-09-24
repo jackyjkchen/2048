@@ -1,17 +1,54 @@
 #include <stdlib.h>
 #include "thread_pool.h"
-
-#if defined(__GLIBC__) && __GLIBC__ >= 2
+#if defined(__GLIBC__) && __GLIBC__ >= 2 && __GLIBC_MINOR__ >= 2
 #include <sys/sysinfo.h>
-#elif defined(_SC_NPROCESSORS_ONLN)
-#else
-#error "Unsupport system, cannot get cpu count."
+#endif
+
+#if defined(WINVER) && WINVER < 0x0600
+ConditionVariableLegacy::ConditionVariableLegacy() : m_semphore(NULL), m_wait_num(0)
+{
+    m_semphore = CreateSemaphore(NULL, 0, INT_MAX, NULL);
+    if (!m_semphore) {
+        printf("CreateSemaphore failed.");
+        abort();
+    }
+}
+
+ConditionVariableLegacy::~ConditionVariableLegacy()
+{
+    CloseHandle(m_semphore);
+}
+
+bool ConditionVariableLegacy::wait(ThreadLock &lock, int timeout_ms/* = -1*/)
+{
+    DWORD timeout = INFINITE;
+    if (timeout_ms >= 0) {
+        timeout = (DWORD)timeout_ms;
+    }
+    m_wait_num++;
+    lock.unlock();
+    DWORD ret = WaitForSingleObject(m_semphore, timeout);
+    lock.lock();
+    m_wait_num--;
+    return (ret == WAIT_OBJECT_0) ? true : false;
+}
+
+void ConditionVariableLegacy::signal()
+{
+    if (m_wait_num > 0) {
+        ReleaseSemaphore(m_semphore, 1, NULL);
+    }
+}
+
+void ConditionVariableLegacy::broadcast()
+{
+    if (m_wait_num > 0) {
+        ReleaseSemaphore(m_semphore, m_wait_num, NULL);
+    }
+}
 #endif
 
 ThreadLock::ThreadLock()
-#if defined(WINVER) && WINVER < 0x0600
-    : m_cond(*this)
-#endif
 {
 #ifdef _WIN32
     InitializeCriticalSection(&m_mutex);
@@ -62,7 +99,7 @@ bool ThreadLock::wait(int timeout_ms/* = -1*/)
     }
     return (TRUE == SleepConditionVariableCS(&m_cond, &m_mutex, timeout));
 #else
-    return m_cond.wait(timeout_ms);
+    return m_cond.wait(*this, timeout_ms);
 #endif
 #else
     int ret = 0;
@@ -200,6 +237,9 @@ bool ThreadPool::init()
         if (m_thrd_num == 0) {
             m_thrd_num = get_cpu_num();
         }
+        if (m_thrd_num <= 0) {
+            break;
+        }
         if (!m_thread_handle) {
 #ifdef _WIN32
             m_thread_handle = (HANDLE *)malloc(m_thrd_num * sizeof(HANDLE));
@@ -211,7 +251,7 @@ bool ThreadPool::init()
             break;
         }
         m_pool_lock.lock();
-        if (m_thrd_num <= 0 || !m_stop) {
+        if (!m_stop) {
             m_pool_lock.unlock();
             break;
         }
