@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdio.h>
 #include "thread_pool.h"
 #if defined(__GLIBC__) && __GLIBC__ >= 2 && __GLIBC_MINOR__ >= 2
 #include <sys/sysinfo.h>
@@ -148,9 +149,8 @@ static DWORD _count_set_bits(ULONG_PTR bitMask)
     DWORD LSHIFT = sizeof(ULONG_PTR) * 8 - 1;
     DWORD bitSetCount = 0;
     ULONG_PTR bitTest = (ULONG_PTR)1 << LSHIFT;
-    DWORD i;
 
-    for (i = 0; i <= LSHIFT; ++i) {
+    for (DWORD i = 0; i <= LSHIFT; ++i) {
         bitSetCount += ((bitMask & bitTest) ? 1 : 0);
         bitTest /= 2;
     }
@@ -212,7 +212,7 @@ int ThreadPool::get_cpu_num()
 #elif defined(_SC_NPROCESSORS_ONLN)
     cpu_num = (int)sysconf(_SC_NPROCESSORS_ONLN);
 #else
-#error "Unsupport system, cannot get cpu count."
+#error "Unsupported system, cannot get cpu count."
 #endif
     return cpu_num;
 }

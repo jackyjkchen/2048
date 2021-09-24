@@ -5,6 +5,14 @@
 extern "C" {
 #endif
 
+#if defined(__linux__) || defined(__unix__) || defined(__CYGWIN__) || defined(__MACH__) || defined(unix)
+#define UNIX_LIKE 1
+#endif
+
+#if !defined(_WIN32) && !defined(UNIX_LIKE)
+#error "This library need win32 thread or posix thread."
+#endif
+
 #if defined(_WIN32)
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -15,7 +23,6 @@ extern "C" {
 #include <pthread.h>
 #include <sys/time.h>
 #endif
-#include <stdio.h>
 
 #if defined(__WATCOMC__)
 #if defined(max)
@@ -50,13 +57,14 @@ typedef std::deque<ThrdContext> ThreadQueue;
 
 #if defined(WINVER) && WINVER >= 0x0600
 typedef CONDITION_VARIABLE ConditionVariable;
-#else
+#elif defined(_WIN32)
 class ThreadLock;
 class ConditionVariableLegacy
 {
 public:
     ConditionVariableLegacy();
     ~ConditionVariableLegacy();
+
     bool wait(ThreadLock &lock, int timeout_ms = -1);
     void signal();
     void broadcast();
@@ -102,6 +110,7 @@ public:
     {
         m_lock.unlock();
     }
+
 private:
     LockScope();
     LockScope(const LockScope&);
@@ -119,6 +128,7 @@ public:
     void add_task(thrd_callback func, void *param);
     void wait_all_task();
     void wait_all_thrd();
+
     static int get_cpu_num();
 
 private:
