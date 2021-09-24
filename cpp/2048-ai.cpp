@@ -235,12 +235,12 @@ private:
     int find_best_move(board_t board);
 
 #if FASTMODE != 0
-    static const int TABLESIZE  = 65536;
+#define TABLESIZE 65536
     row_t *row_table;
     uint32 *score_table;
     float *score_heur_table;
 #else
-    static const int TABLESIZE  = 65536 / 8;
+#define TABLESIZE 8192
     row_t* row_table[8];
     float* score_heur_table[8];
 #endif
