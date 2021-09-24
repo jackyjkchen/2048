@@ -18,12 +18,15 @@ extern "C" {
 #include <windows.h>
 #include <process.h>
 #include <limits.h>
+typedef CRITICAL_SECTION CriticalSection;
 typedef HANDLE THRD_HANDLE;
 #define THRD_INST unsigned int WINAPI
 #else
 #include <unistd.h>
 #include <pthread.h>
 #include <sys/time.h>
+typedef pthread_mutex_t CriticalSection;
+typedef pthread_cond_t ConditionVariable;
 typedef pthread_t THRD_HANDLE;
 #define THRD_INST void*
 #endif
@@ -94,13 +97,8 @@ public:
     void broadcast();
 
 private:
-#ifdef _WIN32
-    CRITICAL_SECTION m_mutex;
+    CriticalSection m_mutex;
     ConditionVariable m_cond;
-#else
-    pthread_mutex_t m_mutex;
-    pthread_cond_t m_cond;
-#endif
 };
 
 class LockScope
@@ -146,7 +144,7 @@ private:
     int m_thrd_num;
     int m_active_thrd_num;
     THRD_HANDLE *m_thread_handle;
-    static THRD_INST _threadstart(void *);
+    static THRD_INST _threadstart(void *param);
 };
 
 #endif
