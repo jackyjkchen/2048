@@ -306,7 +306,6 @@ void Game2048::init_tables() {
     do {
         int i = 0, j = 0;
         uint8 line[4] = { 0 };
-        uint32 score = 0;
 
         line[0] = row & 0xf;
         line[1] = (row >> 4) & 0xf;
@@ -314,6 +313,7 @@ void Game2048::init_tables() {
         line[3] = (row >> 12) & 0xf;
 
 #if FASTMODE != 0
+        uint32 score = 0;
         for (i = 0; i < 4; ++i) {
             int rank = line[i];
 
