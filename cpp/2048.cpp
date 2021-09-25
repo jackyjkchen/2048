@@ -265,7 +265,7 @@ void Game2048::init_tables() {
         line[3] = (row >> 12) & 0xf;
 
         for (i = 0; i < 4; ++i) {
-            int rank = line[i];
+            uint32 rank = line[i];
 
             if (rank >= 2) {
                 score += (rank - 1) * (1 << rank);
@@ -424,7 +424,7 @@ uint32 Game2048::score_helper(board_t board) {
 		row_t row = (row_t)((board >> (j << 4)) & ROW_MASK);
 
 		for (int i = 0; i < 4; ++i) {
-			int rank = (row >> (i << 2)) & 0xf;
+			uint32 rank = (row >> (i << 2)) & 0xf;
 
 			if (rank >= 2) {
 				score += (rank - 1) * (1 << rank);

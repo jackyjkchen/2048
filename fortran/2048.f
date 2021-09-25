@@ -91,7 +91,7 @@
       subroutine print_board(board)
         integer*8 :: board
         integer*8 :: board_, t_
-        integer*2 :: i, j, power_val
+        integer*4 :: i, j, power_val
         integer*2 :: Z000F, Z00F0, Z0F00
         common /CONST_NUM/  Z000F, Z00F0, Z0F00
 
@@ -270,8 +270,8 @@
 
       integer*4 function score_helper(board)
         integer*8 :: board
-        integer*4 :: score
-        integer*2 :: row, i, j, rank
+        integer*4 :: score, i, j, rank
+        integer*2 :: row
         integer*2 :: Z000F, Z00F0, Z0F00
         common /CONST_NUM/  Z000F, Z00F0, Z0F00
         integer*8 :: ROW_MASK, COL_MASK

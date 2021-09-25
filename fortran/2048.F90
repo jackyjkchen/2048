@@ -69,7 +69,7 @@ end function reverse_row
 subroutine print_board(board)
     integer(8), intent(in) :: board
     integer(8) :: board_
-    integer(2) :: i, j, power_val
+    integer(4) :: i, j, power_val
 
     board_ = board
     print *, '-----------------------------'
@@ -122,8 +122,8 @@ end function count_empty
 #if FASTMODE != 0
 subroutine init_tables()
     integer(2) :: row, row_result, t0, t1, t2, t3
-    integer(2) :: i, j, rank
     integer(2) :: row_line(0:3)
+    integer(4) :: i, j, rank
     integer(4) :: score
 
     row = 0
@@ -324,8 +324,8 @@ end function execute_move_row
 function score_helper(board)
     integer(8), intent(in) :: board
     integer(4) :: score_helper
-    integer(4) :: score
-    integer(2) :: row, i, j, rank
+    integer(4) :: score, i, j, rank
+    integer(2) :: row
 
     score = 0
     do j = 0, 3

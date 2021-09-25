@@ -130,10 +130,10 @@ var
 procedure init_tables;
 var
     row, row_result : row_t;
-    i, j, rank : integer;
-    row_line   : array[0..3] of byte;
-    score      : dword;
-    sum        : real;
+    i, j        : integer;
+    row_line    : array[0..3] of byte;
+    score, rank : dword;
+    sum         : real;
     empty, merges, prev, counter : integer;
     monotonicity_left, monotonicity_right : real;
 begin

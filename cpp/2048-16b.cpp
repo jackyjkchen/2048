@@ -332,7 +332,7 @@ uint32 Game2048::score_helper(board_t board) {
         uint16 row = ((uint16 *)&board)[3 - j];
 
         for (int i = 0; i < 4; ++i) {
-            int rank = (row >> (i << 2)) & 0xf;
+            uint32 rank = (row >> (i << 2)) & 0xf;
 
             if (rank >= 2) {
                 score += (rank - 1) * (1 << rank);

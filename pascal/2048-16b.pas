@@ -192,7 +192,7 @@ var
     i, j : integer;
     score : longint;
     row : row_t;
-    rank : byte;
+    rank : dword;
 begin
     score := 0;
     for j := 0 to 3 do begin

@@ -105,9 +105,9 @@ var
 procedure init_tables;
 var
     row, row_result : row_t;
-    i, j, rank : integer;
-    row_line   : array[0..3] of byte;
-    score      : dword;
+    i, j        : integer;
+    row_line    : array[0..3] of byte;
+    score, rank : dword;
 begin
     row := 0;
     row_result := 0;
@@ -275,7 +275,7 @@ var
     i, j : integer;
     score : dword;
     row : row_t;
-    rank : byte;
+    rank : dword;
 begin
     score := 0;
     for j := 0 to 3 do begin
