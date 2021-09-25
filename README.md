@@ -123,7 +123,7 @@ msc 3.0/4.0 (dos16)
 
 # C++
 
-## cpp/2048-ai.cpp
+## cpp/2048.cpp
 
 ISO C++98实现，使用64位整数，不依赖C++标准库。
 
@@ -131,7 +131,7 @@ ISO C++98实现，使用64位整数，不依赖C++标准库。
 
 已测试编译器和平台：
 ```
-gcc 2.2+ (linux, freebsd, macos, mingw, mingw-w64, cygwin, djgpp, openbsd, netbsd, dragonflybsd, solaris, openserver, unixware)
+gcc 2.2.2+ (linux, freebsd, macos, mingw, mingw-w64, cygwin, djgpp, openbsd, netbsd, dragonflybsd, solaris, openserver, unixware)
 clang 3.0+ (linux, macos, freebsd, win32, openbsd, netbsd, dragonflybsd)
 msvc 2.0+ (win32)
 icc 8.1+ (win32, linux)
@@ -154,6 +154,32 @@ dmc 8.57 (win32)
 openwatcom c++ 1.9 (dos16)
 watcom c++ 11.0 (dos16)
 ```
+
+## cpp/2048-16b.cpp
+
+ISO C++98实现，不使用64位整数，不依赖C++标准库。
+
+已测试编译器和平台：
+```
+gcc 2.2.2+ (linux, freebsd, macos, mingw, mingw-w64, cygwin, djgpp, openbsd, netbsd, dragonflybsd, solaris, openserver, unixware)
+clang 3.0+ (linux, macos, freebsd, win32, openbsd, netbsd, dragonflybsd)
+msvc 2.0+ (win32)
+icc 8.1+ (win32, linux)
+aocc 1.0+ (linux)
+nvhpc/pgi 20.11/21.7 (linux)
+open64 4.2.4/4.5.2.1/5.0 (linux)
+openwatcom c++ 1.9 (win32, dos32, dos16)
+watcom c++ 10.6/11.0 (win32, dos32, dos16)
+borland c++ 5.5 (win32)
+visualage c++ 3.5 (win32)
+dmc 8.57 (win32)
+msvc 1.52 (dos16)
+msc 7.0 (dos16)
+borland c++ 2.0/3.1 (dos16)
+turbo c++ 1.01/3.0 (dos16)
+symantec c++ 7.5 (dos16)
+```
+
 
 ## cpp/2048-ai.cpp + cpp/thread_pool.cpp + cpp/thread_pool.h
 
