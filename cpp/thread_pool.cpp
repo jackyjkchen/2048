@@ -3,6 +3,7 @@
 #include "thread_pool.h"
 #if defined(__GLIBC__) && __GLIBC__ >= 2 && __GLIBC_MINOR__ >= 2
 #include <sys/sysinfo.h>
+#define USE_SYSINFO 1
 #endif
 
 #if defined(WINVER) && WINVER < 0x0600
@@ -201,7 +202,7 @@ int ThreadPool::get_cpu_num()
     GetSystemInfo(&sysinfo);
     cpu_num = sysinfo.dwNumberOfProcessors;
 #endif
-#elif defined(__GLIBC__) && __GLIBC__ >= 2
+#elif defined(USE_SYSINFO)
     cpu_num = get_nprocs();
 #elif defined(_SC_NPROCESSORS_ONLN)
     cpu_num = (int)sysconf(_SC_NPROCESSORS_ONLN);
