@@ -401,6 +401,7 @@ function play_game(get_move)
     local current_score = 0
     local moveno = 0
 
+    init_tables()
     while true do
         luadeps.c_clear_screen()
         local move = 0
@@ -444,5 +445,4 @@ function play_game(get_move)
     print(string.format('Game over. Your score is %d.', current_score))
 end
 
-init_tables()
 play_game(find_best_move)

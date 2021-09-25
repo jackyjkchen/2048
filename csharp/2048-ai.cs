@@ -492,6 +492,7 @@ class Game2048
         int scorepenalty = 0;
         int last_score = 0, current_score = 0, moveno = 0;
 
+        init_tables();
         while (true)
         {
             int move = 0;
@@ -536,7 +537,6 @@ class Game2048
     static void Main(string[] args)
     {
         Game2048 game_2048 = new Game2048();
-        game_2048.init_tables();
         game_2048.play_game(game_2048.find_best_move);
     }
 }

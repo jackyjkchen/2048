@@ -180,26 +180,6 @@ class Game2048
         return score_helper(board);
     }
 
-    int ask_for_move(long board) {
-        print_board(board);
-
-        while (true) {
-            final String allmoves = "wsadkjhl";
-            int pos = 0;
-            char movechar = get_ch();
-
-            if (movechar == 'q') {
-                return -1;
-            } else if (movechar == 'r') {
-                return RETRACT;
-            }
-            pos = allmoves.indexOf(movechar);
-            if (pos != -1) {
-                return pos % 4;
-            }
-        }
-    }
-
     long draw_tile() {
         return (long)((unif_random(10) < 9) ? 1 : 2);
     }
@@ -228,6 +208,26 @@ class Game2048
         return insert_tile_rand(board, draw_tile());
     }
 
+    int ask_for_move(long board) {
+        print_board(board);
+
+        while (true) {
+            final String allmoves = "wsadkjhl";
+            int pos = 0;
+            char movechar = get_ch();
+
+            if (movechar == 'q') {
+                return -1;
+            } else if (movechar == 'r') {
+                return RETRACT;
+            }
+            pos = allmoves.indexOf(movechar);
+            if (pos != -1) {
+                return pos % 4;
+            }
+        }
+    }
+
     void play_game() {
         long board = initial_board();
         int scorepenalty = 0;
@@ -237,6 +237,7 @@ class Game2048
         int[] retract_penalty_vec = new int[MAX_RETRACT];
         int retract_pos = 0, retract_num = 0;
 
+        init_tables();
         while (true) {
             int move = 0;
             long tile = 0;
@@ -300,7 +301,6 @@ class Game2048
 
     public static void main(String[] args) {
         Game2048 game_2048 = new Game2048();
-        game_2048.init_tables();
         game_2048.play_game();
     }
 }

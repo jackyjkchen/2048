@@ -1,3 +1,4 @@
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -19,7 +20,6 @@
 
 typedef unsigned char uint8;
 typedef unsigned short uint16;
-
 #ifdef _M_I86
 typedef unsigned long uint32;
 #else
@@ -27,11 +27,9 @@ typedef unsigned int uint32;
 #endif
 #if defined(_MSC_VER) || defined(__BORLANDC__) || defined(__WATCOMC__)
 typedef unsigned __int64 uint64;
-
 #define W64LIT(x) x##ui64
 #else
 typedef unsigned long long uint64;
-
 #define W64LIT(x) x##ULL
 #endif
 
@@ -73,8 +71,7 @@ static void clear_screen(void) {
     } else {
         cellCount = 8192;
     }
-
-    if (!FillConsoleOutputCharacter(hStdOut, (TCHAR)' ', cellCount, homeCoords, &count))
+    if (!FillConsoleOutputCharacter(hStdOut, (TCHAR) ' ', cellCount, homeCoords, &count))
         return;
     if (full_clear && !FillConsoleOutputAttribute(hStdOut, csbi.wAttributes, cellCount, homeCoords, &count))
         return;
@@ -148,9 +145,61 @@ enum {
     RETRACT
 };
 
-typedef int (*get_move_func_t)(board_t);
+class Game2048 {
+public:
+#if FASTMODE != 0
+    Game2048() {
+        alloc_tables();
+    }
+    ~Game2048() {
+        free_tables();
+    }
+#endif
 
-static unsigned int unif_random(unsigned int n) {
+    void play_game();
+
+private:
+    inline board_t unpack_col(row_t row) {
+        board_t tmp = row;
+
+        return (tmp | (tmp << 12) | (tmp << 24) | (tmp << 36)) & COL_MASK;
+    }
+    inline row_t reverse_row(row_t row) {
+        return (row >> 12) | ((row >> 4) & 0x00F0) | ((row << 4) & 0x0F00) | (row << 12);
+    }
+    unsigned int unif_random(unsigned int n);
+    void print_board(board_t board);
+    board_t transpose(board_t x);
+    int count_empty(board_t x);
+
+#if FASTMODE != 0
+    void init_tables();
+    void alloc_tables();
+    void free_tables();
+#else
+    row_t execute_move_helper(row_t row);
+#endif
+
+    board_t execute_move_col(board_t board, int move);
+    board_t execute_move_row(board_t board, int move);
+    uint32 score_helper(board_t board);
+    board_t execute_move(int move, board_t board);
+    uint32 score_board(board_t board);
+
+    uint16 draw_tile();
+    board_t insert_tile_rand(board_t board, board_t tile);
+    board_t initial_board();
+
+    int ask_for_move(board_t board);
+
+#if FASTMODE != 0
+#define TABLESIZE 65536
+    row_t *row_table;
+    uint32 *score_table;
+#endif
+};
+
+unsigned int Game2048::unif_random(unsigned int n) {
     static unsigned int seeded = 0;
 
     if (!seeded) {
@@ -161,17 +210,7 @@ static unsigned int unif_random(unsigned int n) {
     return rand() % n;
 }
 
-static board_t unpack_col(row_t row) {
-    board_t tmp = row;
-
-    return (tmp | (tmp << 12) | (tmp << 24) | (tmp << 36)) & COL_MASK;
-}
-
-static row_t reverse_row(row_t row) {
-    return (row >> 12) | ((row >> 4) & 0x00F0) | ((row << 4) & 0x0F00) | (row << 12);
-}
-
-static void print_board(board_t board) {
+void Game2048::print_board(board_t board) {
     int i = 0, j = 0;
 
     printf("-----------------------------\n");
@@ -191,7 +230,7 @@ static void print_board(board_t board) {
     printf("-----------------------------\n");
 }
 
-static board_t transpose(board_t x) {
+board_t Game2048::transpose(board_t x) {
     board_t a1 = x & W64LIT(0xF0F00F0FF0F00F0F);
     board_t a2 = x & W64LIT(0x0000F0F00000F0F0);
     board_t a3 = x & W64LIT(0x0F0F00000F0F0000);
@@ -203,7 +242,7 @@ static board_t transpose(board_t x) {
     return b1 | (b2 >> 24) | (b3 << 24);
 }
 
-static int count_empty(board_t x) {
+int Game2048::count_empty(board_t x) {
     x |= (x >> 2) & W64LIT(0x3333333333333333);
     x |= (x >> 1);
     x = ~x & W64LIT(0x1111111111111111);
@@ -215,11 +254,7 @@ static int count_empty(board_t x) {
 }
 
 #if FASTMODE != 0
-#define TABLESIZE 65536
-static row_t row_table[TABLESIZE];
-static uint32 score_table[TABLESIZE];
-
-static void init_tables(void) {
+void Game2048::init_tables() {
     row_t row = 0, result = 0;
 
     do {
@@ -267,7 +302,22 @@ static void init_tables(void) {
     } while (row++ != 0xFFFF);
 }
 
-static board_t execute_move_col(board_t board, int move) {
+void Game2048::alloc_tables() {
+    row_table = (row_t*)malloc(sizeof(row_t) * TABLESIZE);
+    score_table = (uint32*)malloc(sizeof(uint32) * TABLESIZE);
+    if (!row_table || !score_table) {
+        fprintf(stderr, "Not enough memory.");
+        fflush(stderr);
+        abort();
+    }
+}
+
+void Game2048::free_tables() {
+    free(row_table);
+    free(score_table);
+}
+
+board_t Game2048::execute_move_col(board_t board, int move) {
     board_t ret = board;
     board_t t = transpose(board);
 
@@ -285,7 +335,7 @@ static board_t execute_move_col(board_t board, int move) {
     return ret;
 }
 
-static board_t execute_move_row(board_t board, int move) {
+board_t Game2048::execute_move_row(board_t board, int move) {
     board_t ret = board;
 
     if (move == LEFT) {
@@ -302,12 +352,12 @@ static board_t execute_move_row(board_t board, int move) {
     return ret;
 }
 
-static uint32 score_helper(board_t board) {
+uint32 Game2048::score_helper(board_t board) {
     return score_table[board & ROW_MASK] + score_table[(board >> 16) & ROW_MASK] +
         score_table[(board >> 32) & ROW_MASK] + score_table[(board >> 48) & ROW_MASK];
 }
 #else
-static row_t execute_move_helper(row_t row) {
+row_t Game2048::execute_move_helper(row_t row) {
     int i = 0, j = 0;
     uint8 line[4] = { 0 };
 
@@ -339,7 +389,7 @@ static row_t execute_move_helper(row_t row) {
     return line[0] | (line[1] << 4) | (line[2] << 8) | (line[3] << 12);
 }
 
-static board_t execute_move_col(board_t board, int move) {
+board_t Game2048::execute_move_col(board_t board, int move) {
     board_t ret = board;
     board_t t = transpose(board);
     int i = 0;
@@ -356,7 +406,7 @@ static board_t execute_move_col(board_t board, int move) {
     return ret;
 }
 
-static board_t execute_move_row(board_t board, int move) {
+board_t Game2048::execute_move_row(board_t board, int move) {
     board_t ret = board;
     int i = 0;
 
@@ -372,26 +422,25 @@ static board_t execute_move_row(board_t board, int move) {
     return ret;
 }
 
-static uint32 score_helper(board_t board) {
-    int i = 0, j = 0;
-    uint32 score = 0;
+uint32 Game2048::score_helper(board_t board) {
+	uint32 score = 0;
 
-    for (j = 0; j < 4; ++j) {
-        row_t row = (row_t)((board >> (j << 4)) & ROW_MASK);
+	for (int j = 0; j < 4; ++j) {
+		row_t row = (row_t)((board >> (j << 4)) & ROW_MASK);
 
-        for (i = 0; i < 4; ++i) {
-            int rank = (row >> (i << 2)) & 0xf;
+		for (int i = 0; i < 4; ++i) {
+			int rank = (row >> (i << 2)) & 0xf;
 
-            if (rank >= 2) {
-                score += (rank - 1) * (1 << rank);
-            }
-        }
-    }
-    return score;
+			if (rank >= 2) {
+				score += (rank - 1) * (1 << rank);
+			}
+		}
+	}
+	return score;
 }
 #endif
 
-static board_t execute_move(int move, board_t board) {
+board_t Game2048::execute_move(int move, board_t board) {
     switch (move) {
     case UP:
     case DOWN:
@@ -404,15 +453,15 @@ static board_t execute_move(int move, board_t board) {
     }
 }
 
-static uint32 score_board(board_t board) {
+uint32 Game2048::score_board(board_t board) {
     return score_helper(board);
 }
 
-static uint16 draw_tile(void) {
+uint16 Game2048::draw_tile(void) {
     return (unif_random(10) < 9) ? 1 : 2;
 }
 
-static board_t insert_tile_rand(board_t board, board_t tile) {
+board_t Game2048::insert_tile_rand(board_t board, board_t tile) {
     int index = unif_random(count_empty(board));
     board_t tmp = board;
 
@@ -430,13 +479,13 @@ static board_t insert_tile_rand(board_t board, board_t tile) {
     return board | tile;
 }
 
-static board_t initial_board(void) {
+board_t Game2048::initial_board(void) {
     board_t board = (board_t)(draw_tile()) << (unif_random(16) << 2);
 
     return insert_tile_rand(board, draw_tile());
 }
 
-int ask_for_move(board_t board) {
+int Game2048::ask_for_move(board_t board) {
     print_board(board);
 
     while (1) {
@@ -455,11 +504,11 @@ int ask_for_move(board_t board) {
     }
 }
 
-#define MAX_RETRACT 64
-void play_game(get_move_func_t get_move) {
+void Game2048::play_game() {
     board_t board = initial_board();
     int scorepenalty = 0;
     long last_score = 0, current_score = 0, moveno = 0;
+    const int MAX_RETRACT = 64;
     board_t retract_vec[MAX_RETRACT] = { 0 };
     uint8 retract_penalty_vec[MAX_RETRACT] = { 0 };
     int retract_pos = 0, retract_num = 0;
@@ -484,7 +533,7 @@ void play_game(get_move_func_t get_move) {
         printf("Move #%ld, current score=%ld(+%ld)\n", ++moveno, current_score, current_score - last_score);
         last_score = current_score;
 
-        move = get_move(board);
+        move = ask_for_move(board);
         if (move < 0)
             break;
 
@@ -529,6 +578,7 @@ void play_game(get_move_func_t get_move) {
 }
 
 int main() {
-    play_game(ask_for_move);
+    Game2048 obj_2048;
+    obj_2048.play_game();
     return 0;
 }

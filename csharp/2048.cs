@@ -200,26 +200,6 @@ class Game2048
         return score_helper(board);
     }
 
-    int ask_for_move(UInt64 board)
-    {
-        print_board(board);
-
-        while (true)
-        {
-            const string allmoves = "wsadkjhl";
-            int pos = 0;
-            char movechar = get_ch();
-
-            if (movechar == 'q')
-                return -1;
-            else if (movechar == 'r')
-                return RETRACT;
-            pos = allmoves.IndexOf(movechar);
-            if (pos != -1)
-                return pos % 4;
-        }
-    }
-
     UInt64 draw_tile()
     {
         return (UInt64)((unif_random(10) < 9) ? 1 : 2);
@@ -253,6 +233,26 @@ class Game2048
         return insert_tile_rand(board, draw_tile());
     }
 
+    int ask_for_move(UInt64 board)
+    {
+        print_board(board);
+
+        while (true)
+        {
+            const string allmoves = "wsadkjhl";
+            int pos = 0;
+            char movechar = get_ch();
+
+            if (movechar == 'q')
+                return -1;
+            else if (movechar == 'r')
+                return RETRACT;
+            pos = allmoves.IndexOf(movechar);
+            if (pos != -1)
+                return pos % 4;
+        }
+    }
+
     void play_game(get_move_func_t get_move)
     {
         UInt64 board = initial_board();
@@ -263,6 +263,7 @@ class Game2048
         UInt16[] retract_penalty_vec = new UInt16[MAX_RETRACT];
         int retract_pos = 0, retract_num = 0;
 
+        init_tables();
         while (true)
         {
             int move = 0;
@@ -335,7 +336,6 @@ class Game2048
     static void Main(string[] args)
     {
         Game2048 game_2048 = new Game2048();
-        game_2048.init_tables();
         game_2048.play_game(game_2048.ask_for_move);
     }
 }

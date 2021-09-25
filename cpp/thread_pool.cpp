@@ -10,7 +10,8 @@ ConditionVariableLegacy::ConditionVariableLegacy() : m_semphore(NULL), m_wait_nu
 {
     m_semphore = CreateSemaphore(NULL, 0, INT_MAX, NULL);
     if (!m_semphore) {
-        printf("CreateSemaphore failed.");
+        fprintf(stderr, "CreateSemaphore failed.");
+        fflush(stderr);
         abort();
     }
 }

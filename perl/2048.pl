@@ -188,27 +188,6 @@ sub score_board {
     return score_helper($board);
 }
 
-sub ask_for_move {
-    my $board = $_[0];
-    print_board($board);
-
-    while (1) {
-        my $allmoves = "wsadkjhl";
-        my $pos = 0;
-        my $movechar = get_ch();
-
-        if ($movechar eq "q") {
-            return -1;
-        } elsif ($movechar eq "r") {
-            return $RETRACT;
-        }
-        $pos = index($allmoves, $movechar);
-        if ($pos != -1) {
-            return $pos % 4;
-        }
-    }
-}
-
 sub draw_tile {
     return (unif_random(10) < 9) ? 1 : 2;
 }
@@ -237,6 +216,27 @@ sub insert_tile_rand {
 sub initial_board {
     my $board = draw_tile() << (unif_random(16) << 2);
     return insert_tile_rand($board, draw_tile());
+}
+
+sub ask_for_move {
+    my $board = $_[0];
+    print_board($board);
+
+    while (1) {
+        my $allmoves = "wsadkjhl";
+        my $pos = 0;
+        my $movechar = get_ch();
+
+        if ($movechar eq "q") {
+            return -1;
+        } elsif ($movechar eq "r") {
+            return $RETRACT;
+        }
+        $pos = index($allmoves, $movechar);
+        if ($pos != -1) {
+            return $pos % 4;
+        }
+    }
 }
 
 sub play_game {

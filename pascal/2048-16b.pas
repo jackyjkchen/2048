@@ -211,33 +211,6 @@ begin
     score_board := score_helper(board);
 end;
 
-function ask_for_move(board : board_t) : integer;
-var
-    movechar : char;
-    _pos     : pchar;
-    ret      : integer;
-const
-    allmoves : pchar = 'wsadkjhl';
-begin
-    print_board(board);
-    while true do begin
-        movechar := get_ch;
-        if movechar = 'q' then begin
-            ret := -1;
-            break;
-        end else if movechar = 'r' then begin
-            ret :=RETRACT;
-            break;
-        end;
-        _pos := strscan(allmoves, movechar);
-        if _pos <> nil then begin
-            ret := (_pos - allmoves) mod 4;
-            break;
-        end;
-    end;
-    ask_for_move := ret;
-end;
-
 function draw_tile : word;
 var
     ret : integer;
@@ -290,6 +263,33 @@ begin
     fillchar(board, sizeof(board_t), 0);
     board[3 - (shift shr 4)] := draw_tile shl (shift mod 16);
     insert_tile_rand(board, draw_tile);
+end;
+
+function ask_for_move(board : board_t) : integer;
+var
+    movechar : char;
+    _pos     : pchar;
+    ret      : integer;
+const
+    allmoves : pchar = 'wsadkjhl';
+begin
+    print_board(board);
+    while true do begin
+        movechar := get_ch;
+        if movechar = 'q' then begin
+            ret := -1;
+            break;
+        end else if movechar = 'r' then begin
+            ret :=RETRACT;
+            break;
+        end;
+        _pos := strscan(allmoves, movechar);
+        if _pos <> nil then begin
+            ret := (_pos - allmoves) mod 4;
+            break;
+        end;
+    end;
+    ask_for_move := ret;
 end;
 
 function compare_board(var b1 : board_t; var b2 : board_t) : boolean;

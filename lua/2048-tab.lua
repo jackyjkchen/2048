@@ -171,25 +171,6 @@ function score_board(board)
     return score_helper(board, score_table)
 end
 
-function ask_for_move(board)
-    print_board(board)
-
-    while true do
-        local allmoves = "wsadkjhl"
-        local pos = 0
-        local movechar = string.char(luadeps.c_getch())
-        if (movechar == 'q') then
-            return -1
-        elseif (movechar == 'r') then
-            return RETRACT
-        end
-        pos = string.find(allmoves, movechar)
-        if (pos ~= nil) then
-            return (pos - 1) % 4
-        end
-    end
-end
-
 function draw_tile()
     local rd = unif_random(10)
 
@@ -224,6 +205,26 @@ function initial_board()
     return insert_tile_rand(board, draw_tile())
 end
 
+function ask_for_move(board)
+    print_board(board)
+
+    while true do
+        local allmoves = "wsadkjhl"
+        local pos = 0
+        local movechar = string.char(luadeps.c_getch())
+
+        if (movechar == 'q') then
+            return -1
+        elseif (movechar == 'r') then
+            return RETRACT
+        end
+        pos = string.find(allmoves, movechar)
+        if (pos ~= nil) then
+            return (pos - 1) % 4
+        end
+    end
+end
+
 function play_game(get_move)
     local board = initial_board()
     local scorepenalty = 0
@@ -236,6 +237,7 @@ function play_game(get_move)
     local retract_pos = 0
     local retract_num = 0
 
+    init_tables()
     while true do
         luadeps.c_clear_screen()
         local move = 0
@@ -306,5 +308,4 @@ function play_game(get_move)
     print(string.format('Game over. Your score is %d.', current_score))
 end
 
-init_tables()
 play_game(ask_for_move)

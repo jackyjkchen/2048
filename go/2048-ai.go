@@ -450,6 +450,7 @@ func play_game(get_move get_move_func_t) {
 	var last_score int32 = 0
 	moveno := 0
 
+	init_tables()
 	for true {
 		move := 0
 		var tile board_t = 0
@@ -494,6 +495,5 @@ func play_game(get_move get_move_func_t) {
 }
 
 func main() {
-	init_tables()
 	play_game(find_best_move)
 }

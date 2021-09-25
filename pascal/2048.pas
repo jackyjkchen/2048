@@ -308,26 +308,6 @@ begin
     score_board := score_helper(board);
 end;
 
-function ask_for_move(board : board_t) : integer;
-var
-    movechar : char;
-    _pos     : pchar;
-const
-    allmoves : pchar = 'wsadkjhl';
-begin
-    print_board(board);
-    while true do begin
-        movechar := get_ch;
-        if movechar = 'q' then
-            exit(-1)
-        else if movechar = 'r' then 
-            exit(RETRACT);
-        _pos := strscan(allmoves, movechar);
-        if _pos <> nil then
-            exit((_pos - allmoves) mod 4);
-    end;
-end;
-
 function draw_tile : word;
 var
     ret : integer;
@@ -368,6 +348,26 @@ begin
     initial_board := insert_tile_rand(board, draw_tile);
 end;
 
+function ask_for_move(board : board_t) : integer;
+var
+    movechar : char;
+    _pos     : pchar;
+const
+    allmoves : pchar = 'wsadkjhl';
+begin
+    print_board(board);
+    while true do begin
+        movechar := get_ch;
+        if movechar = 'q' then
+            exit(-1)
+        else if movechar = 'r' then 
+            exit(RETRACT);
+        _pos := strscan(allmoves, movechar);
+        if _pos <> nil then
+            exit((_pos - allmoves) mod 4);
+    end;
+end;
+
 type
     get_move_func_t = function(board : board_t) : integer;
 
@@ -398,6 +398,10 @@ begin
     retract_pos := 0;
     retract_num := 0;
 
+    randomize;
+{$if FASTMODE <> 0}
+    init_tables;
+{$endif}
     while true do begin
         clear_screen;
         _move := 0;
@@ -457,9 +461,5 @@ begin
 end;
 
 begin
-    randomize;
-{$if FASTMODE <> 0}
-    init_tables;
-{$endif}
     play_game(@ask_for_move);
 end.

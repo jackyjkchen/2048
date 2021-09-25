@@ -165,23 +165,6 @@ def score_helper(board):
 def score_board(board):
     return score_helper(board)
 
-def ask_for_move(board):
-    print_board(board)
-
-    while True:
-        allmoves = "wsadkjhl"
-        pos = 0
-
-        movechar = get_ch()
-
-        if movechar == 'q':
-            return -1
-        elif movechar == 'r':
-            return RETRACT
-        pos = allmoves.find(movechar)
-        if pos != -1:
-            return pos % 4
-
 def draw_tile():
     rd = unif_random(10)
     if rd < 9:
@@ -206,6 +189,23 @@ def insert_tile_rand(board, tile):
 def initial_board():
     board = draw_tile() << (unif_random(16) << 2)
     return insert_tile_rand(board, draw_tile())
+
+def ask_for_move(board):
+    print_board(board)
+
+    while True:
+        allmoves = "wsadkjhl"
+        pos = 0
+
+        movechar = get_ch()
+
+        if movechar == 'q':
+            return -1
+        elif movechar == 'r':
+            return RETRACT
+        pos = allmoves.find(movechar)
+        if pos != -1:
+            return pos % 4
 
 def play_game(get_move):
     board = initial_board()

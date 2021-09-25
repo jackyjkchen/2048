@@ -175,25 +175,6 @@ Public Module Game2048
         Return score_helper(board)
     End Function
 
-    Private Function ask_for_move(board As ULong) As Integer
-        print_board(board)
-        While True
-            Const allmoves As String = "wsadkjhl"
-            Dim pos As Integer = 0
-            Dim movechar As Char = get_ch()
-
-            If movechar = "q"c Then
-                Return -1
-            ElseIf movechar = "r"c Then
-                Return RETRACT
-            End If
-            pos = allmoves.IndexOf(movechar)
-            If pos <> -1 Then
-                Return pos Mod 4
-            End If
-        End While
-    End Function
-
     Private Function draw_tile() As ULong
         If unif_random(10) < 9 Then
             Return 1
@@ -224,6 +205,25 @@ Public Module Game2048
         Return insert_tile_rand(board, draw_tile())
     End Function
 
+    Private Function ask_for_move(board As ULong) As Integer
+        print_board(board)
+        While True
+            Const allmoves As String = "wsadkjhl"
+            Dim pos As Integer = 0
+            Dim movechar As Char = get_ch()
+
+            If movechar = "q"c Then
+                Return -1
+            ElseIf movechar = "r"c Then
+                Return RETRACT
+            End If
+            pos = allmoves.IndexOf(movechar)
+            If pos <> -1 Then
+                Return pos Mod 4
+            End If
+        End While
+    End Function
+
     Private Sub play_game(get_move As get_move_func_t)
         Dim board As ULong = initial_board()
         Dim scorepenalty As Integer = 0
@@ -233,6 +233,7 @@ Public Module Game2048
         Dim retract_penalty_vec As Byte() = New Byte(MAX_RETRACT - 1) {}
         Dim retract_pos As Integer = 0, retract_num As Integer = 0
 
+        init_tables()
         While True
             Dim _move As Integer = 0
             Dim tile As ULong = 0
@@ -290,7 +291,6 @@ Public Module Game2048
     End Sub
 
     Sub Main(args As String())
-        init_tables()
         play_game(New get_move_func_t(AddressOf ask_for_move))
     End Sub
 End Module

@@ -422,6 +422,7 @@ Public Module Game2048
         Dim scorepenalty As Integer = 0
         Dim last_score As Integer = 0, current_score As Integer = 0, moveno As Integer = 0
 
+        init_tables()
         While True
             Dim _move As Integer = 0
             Dim tile As ULong = 0
@@ -459,7 +460,6 @@ Public Module Game2048
     End Sub
 
     Sub Main(args As String())
-        init_tables()
         play_game(New get_move_func_t(AddressOf find_best_move))
     End Sub
 End Module

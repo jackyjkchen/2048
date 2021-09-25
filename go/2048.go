@@ -201,27 +201,6 @@ func score_board(board board_t) uint32 {
 	return score_helper(board)
 }
 
-func ask_for_move(board board_t) int {
-	print_board(board)
-
-	for true {
-		allmoves := "wsadkjhl"
-		pos := 0
-		var movechar rune = rune(C.get_ch())
-
-		if movechar == 'q' {
-			return -1
-		} else if movechar == 'r' {
-			return RETRACT
-		}
-		pos = strings.IndexRune(allmoves, movechar)
-		if pos != -1 {
-			return pos % 4
-		}
-	}
-	return -1
-}
-
 func draw_tile() board_t {
 	if unif_random(10) < 9 {
 		return 1
@@ -254,6 +233,27 @@ func initial_board() board_t {
 	return insert_tile_rand(board, draw_tile())
 }
 
+func ask_for_move(board board_t) int {
+	print_board(board)
+
+	for true {
+		allmoves := "wsadkjhl"
+		pos := 0
+		var movechar rune = rune(C.get_ch())
+
+		if movechar == 'q' {
+			return -1
+		} else if movechar == 'r' {
+			return RETRACT
+		}
+		pos = strings.IndexRune(allmoves, movechar)
+		if pos != -1 {
+			return pos % 4
+		}
+	}
+	return -1
+}
+
 func play_game(get_move get_move_func_t) {
 	var board board_t = initial_board()
 	var scorepenalty int32 = 0
@@ -267,6 +267,7 @@ func play_game(get_move get_move_func_t) {
 	retract_pos := 0
 	retract_num := 0
 
+	init_tables()
 	for true {
 		move := 0
 		var tile board_t = 0
@@ -338,6 +339,5 @@ func play_game(get_move get_move_func_t) {
 }
 
 func main() {
-	init_tables()
 	play_game(ask_for_move)
 }

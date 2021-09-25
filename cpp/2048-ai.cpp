@@ -165,10 +165,10 @@ public:
     Game2048() {
         alloc_tables();
     }
-
     ~Game2048() {
         free_tables();
     }
+
     void play_game();
 
 private:
@@ -407,7 +407,8 @@ void Game2048::alloc_tables() {
     score_table = (uint32*)malloc(sizeof(uint32) * TABLESIZE);
     score_heur_table = (float*)malloc(sizeof(float) * TABLESIZE);
     if (!row_table || !score_table || !score_heur_table) {
-        printf("Not enough memory.");
+        fprintf(stderr, "Not enough memory.");
+        fflush(stderr);
         abort();
     }
 }
@@ -470,8 +471,9 @@ void Game2048::alloc_tables() {
         row_table[i] = (row_t*)malloc(sizeof(row_t) * TABLESIZE);
         score_heur_table[i] = (float*)malloc(sizeof(float) * TABLESIZE);
         if (!row_table[i] || !score_heur_table[i]) {
-            printf("Not enough memory.");
-            exit(-1);
+            fprintf(stderr, "Not enough memory.");
+            fflush(stderr);
+            abort();
         }
     }
 }
@@ -482,6 +484,7 @@ void Game2048::free_tables() {
         free(score_heur_table[i]);
     }
 }
+
 board_t Game2048::execute_move_col(board_t board, int move) {
     board_t ret = board;
     board_t t = transpose(board);
@@ -722,7 +725,6 @@ float Game2048::score_toplevel_move(board_t board, int move) {
     return res;
 }
 
-
 #if defined(MULTI_THREAD)
 void Game2048::thrd_worker(void *param) {
     thrd_context *pcontext = (thrd_context *)param;
@@ -789,7 +791,8 @@ void Game2048::play_game() {
 #if defined(MULTI_THREAD)
     ThreadPool &thrd_pool = get_thrd_pool();
     if (!thrd_pool.init()) {
-        printf("Init thread pool failed.");
+        fprintf(stderr, "Init thread pool failed.");
+        fflush(stderr);
         abort();
     }
 #endif

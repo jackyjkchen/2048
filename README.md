@@ -13,7 +13,7 @@ AI实现需要关联容器做cache以提升性能，考验编译器标准库能�
 本项目中所有实现的AI版本2048，其输出格式完全一致。不同编译器和平台浮点精度可能有差异。多线程版本输出可能有预期内的乱序。
 
 
-# C&C++
+# C
 
 ## c/2048.c
 
@@ -120,9 +120,44 @@ msc 3.0/4.0 (dos16)
 * msc 2.0或以下版本支持的C格式是某种C方言，既不是ANSI C也不是K&R C，因此无法兼容。
 
 
+
+# C++
+
+## cpp/2048-ai.cpp
+
+ISO C++98实现，使用64位整数，不依赖C++标准库。
+
+### 使用FASTMODE预处理（默认），可启用查表法，会增加384KiB的常驻内存开销。
+
+已测试编译器和平台：
+```
+gcc 2.2+ (linux, freebsd, macos, mingw, mingw-w64, cygwin, djgpp, openbsd, netbsd, dragonflybsd, solaris, openserver, unixware)
+clang 3.0+ (linux, macos, freebsd, win32, openbsd, netbsd, dragonflybsd)
+msvc 2.0+ (win32)
+icc 8.1+ (win32, linux)
+aocc 1.0+ (linux)
+nvhpc/pgi 20.11/21.7 (linux)
+open64 4.2.4/4.5.2.1/5.0 (linux)
+openwatcom c++ 1.9 (win32, dos32)
+watcom c++ 11.0 (win32, dos32)
+borland c++ 5.5 (win32)
+visualage c++ 3.5 (win32)
+dmc 8.57 (win32)
+```
+
+* gcc版本低于2.6时，不识别cpp扩展名，请编译软链接cpp/2048.cc。
+
+* 其余编译器已知问题参见c/2048.c。
+
+### 使用FASTMODE=0预处理，代码段和数据段可控制在64KiB以内，额外支持：
+```
+openwatcom c++ 1.9 (dos16)
+watcom c++ 11.0 (dos16)
+```
+
 ## cpp/2048-ai.cpp + cpp/thread_pool.cpp + cpp/thread_pool.h
 
-AI版本，ISO C++98实现，可选支持多线程（预处理MULTI_THREAD或OPENMP_THREAD），默认启用查表法和std::map cache（FASTMODE预处理控制）。
+AI版本，ISO C++98实现，可选支持多线程（预处理MULTI_THREAD或OPENMP_THREAD），默认启用查表法和std::map cache。
 
 ### 不启用MULTI_THREAD时（默认），无须依赖thread_pool.cpp，已测试编译器和平台：
 ```
@@ -158,10 +193,6 @@ visualage c++ 3.5 (win32)
 openwatcom c++ 1.9 (dos16)
 watcom c++ 11.0 (dos16)
 ```
-
-* 上表中gcc低版本均为[legacy-gcc](https://github.com/jackyjkchen/legacy-gcc)的版本，且由于这些低版本gcc不认cpp扩展名，请编译软链接的cpp/2048-ai.cc。
-
-* msvc 2.x和C语言情况一样不能使用优化。
 
 ### 本实现支持多线程，由预处理MULTI_THREAD控制，多线程版本依赖操作系统原生线程，因此dos等都不支持，已测试编译器和平台：
 ```

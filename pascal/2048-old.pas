@@ -213,48 +213,6 @@ begin
     score_board := score_helper(board);
 end;
 
-function strchr(var _str : string; _chr : char) : integer;
-var
-    i : integer;
-label 1;
-begin
-    for i := 1 to length(_str) do begin
-        if _str[i] = _chr then goto 1;
-    end;
-    i := 0;
-    1:
-    strchr := i - 1;
-end;
-
-function ask_for_move(board : board_t) : integer;
-var
-  movechar : char;
-  _pos     : integer;
-  ret      : integer;
-const
-  allmoves : string = 'wsadkjhl';
-label 1;
-begin
-    print_board(board);
-    while true do begin
-        movechar := get_ch;
-        if movechar = 'q' then begin
-            ret := -1;
-            goto 1;
-        end else if movechar = 'r' then begin
-            ret :=RETRACT;
-            goto 1;
-        end;
-        _pos := strchr(allmoves, movechar);
-        if _pos <> -1 then begin
-            ret := _pos mod 4;
-            goto 1;
-        end;
-    end;
-    1:
-    ask_for_move := ret;
-end;
-
 function draw_tile : word;
 var
     ret : integer;
@@ -299,6 +257,48 @@ begin
     end;
     1:
     board[3 - (shift shr 4)] := board[3 - (shift shr 4)] or tile;
+end;
+
+function strchr(var _str : string; _chr : char) : integer;
+var
+    i : integer;
+label 1;
+begin
+    for i := 1 to length(_str) do begin
+        if _str[i] = _chr then goto 1;
+    end;
+    i := 0;
+    1:
+    strchr := i - 1;
+end;
+
+function ask_for_move(board : board_t) : integer;
+var
+  movechar : char;
+  _pos     : integer;
+  ret      : integer;
+const
+  allmoves : string = 'wsadkjhl';
+label 1;
+begin
+    print_board(board);
+    while true do begin
+        movechar := get_ch;
+        if movechar = 'q' then begin
+            ret := -1;
+            goto 1;
+        end else if movechar = 'r' then begin
+            ret :=RETRACT;
+            goto 1;
+        end;
+        _pos := strchr(allmoves, movechar);
+        if _pos <> -1 then begin
+            ret := _pos mod 4;
+            goto 1;
+        end;
+    end;
+    1:
+    ask_for_move := ret;
 end;
 
 procedure initial_board(var board : board_t);

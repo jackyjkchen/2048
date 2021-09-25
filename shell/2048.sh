@@ -196,29 +196,6 @@ function strindex() {
   [[ $x = $1 ]] && echo -1 || echo $((${#x} + 1))
 }
 
-function ask_for_move() {
-    local allmoves="wsadkjhl"
-    local movechar
-    local pos=0
-
-    while true; do
-        movechar=`dd if=/dev/tty bs=1 count=1 2>/dev/null`
-
-        if [[ $movechar == 'q' ]]; then
-            echo -1
-            return
-        elif [[ $movechar == 'r' ]]; then
-            echo 4
-            return
-        fi
-        pos=$(strindex $allmoves $movechar)
-        if [ $((pos)) -ne -1 ]; then
-            echo $(((pos - 1) % 4))
-            return
-        fi
-    done
-}
-
 function draw_tile() {
     local rd=$(unif_random 10)
     if [ $((rd)) -lt 9 ]; then
@@ -253,6 +230,29 @@ function initial_board() {
     local board
     board=$(($(draw_tile) << ($(unif_random 10) << 2)))
     echo $(insert_tile_rand $((board)) $(draw_tile))
+}
+
+function ask_for_move() {
+    local allmoves="wsadkjhl"
+    local movechar
+    local pos=0
+
+    while true; do
+        movechar=`dd if=/dev/tty bs=1 count=1 2>/dev/null`
+
+        if [[ $movechar == 'q' ]]; then
+            echo -1
+            return
+        elif [[ $movechar == 'r' ]]; then
+            echo 4
+            return
+        fi
+        pos=$(strindex $allmoves $movechar)
+        if [ $((pos)) -ne -1 ]; then
+            echo $(((pos - 1) % 4))
+            return
+        fi
+    done
 }
 
 function play_game() {

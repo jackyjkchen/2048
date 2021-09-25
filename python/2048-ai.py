@@ -350,6 +350,7 @@ def play_game(get_move):
     current_score = 0
     moveno = 0
 
+    init_tables()
     while True:
         clear_screen()
         move = 0
@@ -387,5 +388,4 @@ def play_game(get_move):
 
 
 if __name__ == "__main__":
-    init_tables()
     play_game(find_best_move)

@@ -297,35 +297,6 @@
         score_board = score_helper(board)
       end
 
-      integer*4 function ask_for_move(board)
-        integer*8 :: board
-        integer*4 :: ret
-        character :: movechar
-        integer :: pos
-        character(len=9) :: allmoves = 'wsadkjhl'
-        external c_getch
-        integer :: c_getch
-
-        call print_board(board)
-        ret = -1
-        do while (1 > 0)
-          movechar = achar(c_getch())
-          if (movechar == 'q') then
-            ret = -1
-            exit
-          else if (movechar == 'r') then
-            ret = 5
-            exit
-          end if
-          pos = index(allmoves, movechar)
-          if (pos /= 0) then
-            ret = mod(pos - 1, 4)
-            exit
-          end if
-        end do
-        ask_for_move = ret
-      end
-
       integer*8 function draw_tile()
         integer*4 :: ret
         integer*4 :: unif_random
@@ -380,6 +351,35 @@
         board = ishft(tile, ishft(rd, 2))
         tile = draw_tile()
         initial_board = insert_tile_rand(board, tile)
+      end
+
+      integer*4 function ask_for_move(board)
+        integer*8 :: board
+        integer*4 :: ret
+        character :: movechar
+        integer :: pos
+        character(len=9) :: allmoves = 'wsadkjhl'
+        external c_getch
+        integer :: c_getch
+
+        call print_board(board)
+        ret = -1
+        do while (1 > 0)
+          movechar = achar(c_getch())
+          if (movechar == 'q') then
+            ret = -1
+            exit
+          else if (movechar == 'r') then
+            ret = 5
+            exit
+          end if
+          pos = index(allmoves, movechar)
+          if (pos /= 0) then
+            ret = mod(pos - 1, 4)
+            exit
+          end if
+        end do
+        ask_for_move = ret
       end
 
       subroutine play_game()

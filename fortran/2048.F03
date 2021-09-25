@@ -373,34 +373,6 @@ function score_board(board)
     score_board = score_helper(board)
 end function score_board
 
-function ask_for_move(board)
-    integer(8), value, intent(in) :: board
-    integer(4) :: ask_for_move
-    integer(4) :: ret
-    character :: movechar
-    integer :: pos
-    character(len=9) :: allmoves = 'wsadkjhl'
-
-    call print_board(board)
-    ret = -1
-    do while (1 > 0)
-        movechar = achar(c_getch())
-        if (movechar == 'q') then
-            ret = -1
-            exit
-        else if (movechar == 'r') then
-            ret = RETRACT
-            exit
-        end if
-        pos = index(allmoves, movechar)
-        if (pos /= 0) then
-            ret = mod(pos - 1, 4)
-            exit
-        end if
-    end do
-    ask_for_move = ret
-end function ask_for_move
-
 function draw_tile()
     integer(8) :: draw_tile
     integer(4) :: ret
@@ -451,6 +423,34 @@ function initial_board()
     initial_board = insert_tile_rand(board, tile)
 end function initial_board
 
+function ask_for_move(board)
+    integer(8), value, intent(in) :: board
+    integer(4) :: ask_for_move
+    integer(4) :: ret
+    character :: movechar
+    integer :: pos
+    character(len=9) :: allmoves = 'wsadkjhl'
+
+    call print_board(board)
+    ret = -1
+    do while (1 > 0)
+        movechar = achar(c_getch())
+        if (movechar == 'q') then
+            ret = -1
+            exit
+        else if (movechar == 'r') then
+            ret = RETRACT
+            exit
+        end if
+        pos = index(allmoves, movechar)
+        if (pos /= 0) then
+            ret = mod(pos - 1, 4)
+            exit
+        end if
+    end do
+    ask_for_move = ret
+end function ask_for_move
+
 subroutine play_game()
     integer(8) :: board, newboard, tile
     integer(4) :: scorepenalty, current_score, last_score, moveno, move
@@ -466,6 +466,9 @@ subroutine play_game()
     retract_pos = 0
     retract_num = 0
 
+#if FASTMODE != 0
+    call init_tables()
+#endif
     do while (1 > 0)
         call c_clear_screen()
         move = 0
@@ -533,9 +536,6 @@ subroutine play_game()
 end subroutine play_game
 
 subroutine main()
-#if FASTMODE != 0
-    call init_tables()
-#endif
     call play_game()
 end subroutine main
 

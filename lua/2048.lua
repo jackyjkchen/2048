@@ -161,26 +161,6 @@ function score_board(board)
     return score_helper(board)
 end
 
-function ask_for_move(board)
-    print_board(board)
-
-    while true do
-        local allmoves = "wsadkjhl"
-        local pos = 0
-        local movechar = string.char(luadeps.c_getch())
-
-        if (movechar == 'q') then
-            return -1
-        elseif (movechar == 'r') then
-            return RETRACT
-        end
-        pos = string.find(allmoves, movechar)
-        if (pos ~= nil) then
-            return (pos - 1) % 4
-        end
-    end
-end
-
 function draw_tile()
     local rd = unif_random(10)
 
@@ -213,6 +193,26 @@ end
 function initial_board()
     local board = draw_tile() << (unif_random(16) << 2)
     return insert_tile_rand(board, draw_tile())
+end
+
+function ask_for_move(board)
+    print_board(board)
+
+    while true do
+        local allmoves = "wsadkjhl"
+        local pos = 0
+        local movechar = string.char(luadeps.c_getch())
+
+        if (movechar == 'q') then
+            return -1
+        elseif (movechar == 'r') then
+            return RETRACT
+        end
+        pos = string.find(allmoves, movechar)
+        if (pos ~= nil) then
+            return (pos - 1) % 4
+        end
+    end
 end
 
 function play_game(get_move)

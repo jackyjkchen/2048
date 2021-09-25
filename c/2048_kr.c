@@ -363,27 +363,6 @@ static uint32 score_board(board)
     return score_helper(board);
 }
 
-int ask_for_move(board)
-     board_t board;
-{
-    print_board(board);
-
-    while (1) {
-        char *allmoves = "wsadkjhl", *pos = 0;
-        char movechar = get_ch();
-
-        if (movechar == 'q') {
-            return -1;
-        } else if (movechar == 'r') {
-            return RETRACT;
-        }
-        pos = strchr(allmoves, movechar);
-        if (pos) {
-            return (pos - allmoves) % 4;
-        }
-    }
-}
-
 static uint16 draw_tile() {
     return (unif_random(10) < 9) ? 1 : 2;
 }
@@ -434,6 +413,27 @@ static board_t initial_board() {
     t2 = shift % 16;
     t[3 - t1] = draw_tile() << t2;
     return insert_tile_rand(board, draw_tile());
+}
+
+int ask_for_move(board)
+     board_t board;
+{
+    print_board(board);
+
+    while (1) {
+        char *allmoves = "wsadkjhl", *pos = 0;
+        char movechar = get_ch();
+
+        if (movechar == 'q') {
+            return -1;
+        } else if (movechar == 'r') {
+            return RETRACT;
+        }
+        pos = strchr(allmoves, movechar);
+        if (pos) {
+            return (pos - allmoves) % 4;
+        }
+    }
 }
 
 #define MAX_RETRACT 64

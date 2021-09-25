@@ -177,25 +177,6 @@ Public Module Game2048
         Return score_helper(board)
     End Function
 
-    Private Function ask_for_move(ByVal board As Long) As Integer
-        print_board(board)
-        While True
-            Const allmoves As String = "wsadkjhl"
-            Dim pos As Integer = 0
-            Dim movechar As Char = get_ch()
-
-            If movechar = "q"c Then
-                Return -1
-            ElseIf movechar = "r"c Then
-                Return RETRACT
-            End If
-            pos = allmoves.IndexOf(movechar)
-            If pos <> -1 Then
-                Return pos Mod 4
-            End If
-        End While
-    End Function
-
     Private Function draw_tile() As Long
         If unif_random(10) < 9 Then
             Return 1
@@ -226,6 +207,25 @@ Public Module Game2048
         Return insert_tile_rand(board, draw_tile())
     End Function
 
+    Private Function ask_for_move(ByVal board As Long) As Integer
+        print_board(board)
+        While True
+            Const allmoves As String = "wsadkjhl"
+            Dim pos As Integer = 0
+            Dim movechar As Char = get_ch()
+
+            If movechar = "q"c Then
+                Return -1
+            ElseIf movechar = "r"c Then
+                Return RETRACT
+            End If
+            pos = allmoves.IndexOf(movechar)
+            If pos <> -1 Then
+                Return pos Mod 4
+            End If
+        End While
+    End Function
+
     Private Sub play_game()
         Dim board As Long = initial_board()
         Dim scorepenalty As Integer = 0
@@ -235,6 +235,7 @@ Public Module Game2048
         Dim retract_penalty_vec As Byte() = New Byte(MAX_RETRACT - 1) {}
         Dim retract_pos As Integer = 0, retract_num As Integer = 0
 
+        init_tables()
         While True
             Dim _move As Integer = 0
             Dim tile As Long = 0
@@ -294,7 +295,6 @@ Public Module Game2048
     End Sub
 
     Sub Main(ByVal args As String())
-        init_tables()
         play_game()
     End Sub
 End Module

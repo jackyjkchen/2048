@@ -536,6 +536,8 @@ begin
     last_score := 0;
     moveno := 0;
 
+    randomize;
+    init_tables;
     while true do begin
         clear_screen;
         _move := 0;
@@ -571,7 +573,5 @@ begin
 end;
 
 begin
-    randomize;
-    init_tables;
     play_game(@find_best_move);
 end.

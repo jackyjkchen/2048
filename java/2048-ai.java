@@ -448,6 +448,7 @@ class Game2048
         int scorepenalty = 0;
         int last_score = 0, current_score = 0, moveno = 0;
 
+        init_tables();
         while (true) {
             int move = 0;
             long tile = 0;
@@ -485,12 +486,11 @@ class Game2048
 
         print_board(board);
         System.out.printf("Game over. Your score is %d.\n", current_score);
+        thrd_pool.shutdown();
     }
 
     public static void main(String[] args) {
         Game2048 game_2048 = new Game2048();
-        game_2048.init_tables();
         game_2048.play_game();
-        game_2048.thrd_pool.shutdown();
     }
 }
