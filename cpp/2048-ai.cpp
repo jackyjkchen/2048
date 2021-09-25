@@ -606,6 +606,9 @@ int Game2048::count_distinct_tiles(board_t board) {
         board >>= 4;
     }
 
+    if (bitset <= 3072) {
+        return 2;
+    }
     bitset >>= 1;
 
     int count = 0;
@@ -707,10 +710,14 @@ float Game2048::_score_toplevel_move(eval_state &state, board_t board, int move)
 float Game2048::score_toplevel_move(board_t board, int move) {
     eval_state state;
 
+#if FASTMODE != 0
     state.depth_limit = count_distinct_tiles(board) - 2;
     if (state.depth_limit < 3) {
         state.depth_limit = 3;
     }
+#else
+    state.depth_limit = 3;
+#endif
 
     float res = _score_toplevel_move(state, board, move);
 

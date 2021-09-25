@@ -334,6 +334,9 @@ class Game2048
             board >>= 4;
         }
 
+        if (bitset <= 3072) {
+            return 2;
+        }
         bitset >>= 1;
         int count = 0;
         while (bitset != 0)

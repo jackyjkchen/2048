@@ -291,6 +291,9 @@ Public Module Game2048
             board >>= 4
         End While
 
+        If bitset <= 3072 Then
+            Return 2
+        End If
         bitset >>= 1
         Dim count As Integer = 0
         While bitset <> 0

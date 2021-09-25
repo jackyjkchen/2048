@@ -257,24 +257,6 @@ function initial_board()
     return insert_tile_rand(board, draw_tile())
 end
 
-function count_distinct_tiles(board)
-    bitset = 0
-
-    while (board ~= 0) do
-        bitset = bitset | (1 << (board & 0xf))
-        board = board >> 4
-    end
-
-    bitset = bitset >> 1
-    count = 0
-
-    while (bitset ~= 0) do
-        bitset = bitset & (bitset - 1)
-        count = count + 1
-    end
-    return count
-end
-
 function score_tilechoose_node(state, board, cprob)
     if (cprob < CPROB_THRESH_BASE or state.curdepth >= state.depth_limit) then
         state.maxdepth = math.max(state.curdepth, state.maxdepth)
@@ -363,7 +345,7 @@ function score_toplevel_move(board, move)
         depth_limit = 0,
     }
 
-    state.depth_limit = math.max(3, count_distinct_tiles(board) - 2)
+    state.depth_limit = 3
 
     res = _score_toplevel_move(state, board, move)
 

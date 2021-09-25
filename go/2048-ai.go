@@ -318,6 +318,9 @@ func count_distinct_tiles(board board_t) int {
 		board >>= 4
 	}
 
+	if bitset <= 3072 {
+		return 2
+	}
 	bitset >>= 1
 	count := 0
 	for bitset != 0 {

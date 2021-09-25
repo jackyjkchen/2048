@@ -346,6 +346,8 @@ begin
         board := board shr 4;
     end;
 
+    if bitset <= 3072 then
+        exit(2);
     bitset := bitset shr 1;
     count := 0;
     while bitset <> 0 do begin
@@ -453,6 +455,9 @@ begin
     res := _score_toplevel_move(state, board, _move);
     msg := format('Move %d: result %f: eval''d %d moves (%d no moves, %d table hits, %d cache hits, %d cache size) (maxdepth=%d)', [_move, res,
            state.moves_evaled, state.nomoves, state.tablehits, state.cachehits, state.trans_table.Count, state.maxdepth]);
+{$ifndef MULTI_THREAD}
+    writeln(msg);
+{$endif}
     state.trans_table.Free();
     score_toplevel_move := res;
 end;
@@ -504,8 +509,8 @@ begin
     for _move := 0 to 3 do begin
 {$ifdef MULTI_THREAD}
         WaitForThreadTerminate(thrd_ids[_move], 2147483647);
-{$endif}
         writeln(context[_move].msg);
+{$endif}
         if context[_move].res > best then begin
             best := context[_move].res;
             bestmove := _move;

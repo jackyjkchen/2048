@@ -33,7 +33,7 @@
 #define DLLEXPORT
 #endif
 
-JNIEXPORT void JNICALL Java_Class2048_clear_1screen(JNIEnv *env, jobject obj) {
+JNIEXPORT void JNICALL Java_Game2048_clear_1screen(JNIEnv *env, jobject obj) {
 #if defined(_WIN32) && !defined(NOT_USE_WIN32_SDK)
     HANDLE hStdOut;
     DWORD count;
@@ -76,7 +76,7 @@ JNIEXPORT void JNICALL Java_Class2048_clear_1screen(JNIEnv *env, jobject obj) {
 #elif defined(__WATCOMC__) && __WATCOMC__ < 1100
 #define GETCH_USE 1
 #endif
-JNIEXPORT jchar JNICALL Java_Class2048_get_1ch(JNIEnv *env, jobject obj) {
+JNIEXPORT jchar JNICALL Java_Game2048_get_1ch(JNIEnv *env, jobject obj) {
 #if (defined(_WIN32) && !defined(GETCH_USE)) || defined(_GETCH_USE)
     return _getch();
 #elif defined(MSDOS) || defined(GETCH_USE)
