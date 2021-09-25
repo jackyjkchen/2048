@@ -3,10 +3,6 @@
 #include <string.h>
 #include <time.h>
 
-#if !defined(FASTMODE) || (defined(FASTMODE) && FASTMODE != 0)
-#define FASTMODE 1
-#endif
-
 #if defined(__linux__) || defined(__unix__) || defined(__CYGWIN__) || defined(__MACH__) || defined(unix)
 #define UNIX_LIKE 1
 #endif
@@ -15,6 +11,13 @@
 #ifndef MSDOS
 #define MSDOS 1
 #endif
+#ifdef _M_I86
+#define FASTMODE 0
+#endif
+#endif
+
+#if !defined(FASTMODE) || (defined(FASTMODE) && FASTMODE != 0)
+#define FASTMODE 1
 #endif
 
 typedef unsigned char uint8;
