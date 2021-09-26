@@ -1,6 +1,3 @@
-#include <stdio.h>
-#include <stdlib.h>
-
 #if defined(__linux__) || defined(__unix__) || defined(__CYGWIN__) || defined(__MACH__) || defined(unix)
 #define UNIX_LIKE 1
 #endif
@@ -31,6 +28,13 @@
 #include <conio.h>
 #define DLLEXPORT
 #endif
+
+#if defined(__MINGW64__) || defined(__MINGW32__)
+#undef __USE_MINGW_ANSI_STDIO
+#define __USE_MINGW_ANSI_STDIO 0
+#endif
+#include <stdio.h>
+#include <stdlib.h>
 
 DLLEXPORT void c_clear_screen(void) {
 #if defined(_WIN32) && !defined(NOT_USE_WIN32_SDK)

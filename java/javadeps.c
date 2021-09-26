@@ -1,7 +1,3 @@
-#include <jni.h>
-#include <stdio.h>
-#include <stdlib.h>
-
 #if defined(__linux__) || defined(__unix__) || defined(__CYGWIN__) || defined(__MACH__) || defined(unix)
 #define UNIX_LIKE 1
 #endif
@@ -32,6 +28,20 @@
 #include <conio.h>
 #define DLLEXPORT
 #endif
+
+#if defined(_MSC_VER) && _MSC_VER >= 700 && defined(__STDC__)
+#define _GETCH_USE 1
+#elif defined(__WATCOMC__) && __WATCOMC__ < 1100
+#define GETCH_USE 1
+#endif
+
+#if defined(__MINGW64__) || defined(__MINGW32__)
+#undef __USE_MINGW_ANSI_STDIO
+#define __USE_MINGW_ANSI_STDIO 0
+#endif
+#include <stdio.h>
+#include <stdlib.h>
+#include <jni.h>
 
 JNIEXPORT void JNICALL Java_Game2048_clear_1screen(JNIEnv *env, jobject obj) {
 #if defined(_WIN32) && !defined(NOT_USE_WIN32_SDK)
@@ -71,11 +81,6 @@ JNIEXPORT void JNICALL Java_Game2048_clear_1screen(JNIEnv *env, jobject obj) {
 #endif
 }
 
-#if defined(_MSC_VER) && _MSC_VER >= 700 && defined(__STDC__)
-#define _GETCH_USE 1
-#elif defined(__WATCOMC__) && __WATCOMC__ < 1100
-#define GETCH_USE 1
-#endif
 JNIEXPORT jchar JNICALL Java_Game2048_get_1ch(JNIEnv *env, jobject obj) {
 #if (defined(_WIN32) && !defined(GETCH_USE)) || defined(_GETCH_USE)
     return _getch();
