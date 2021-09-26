@@ -553,10 +553,12 @@ Python版本和平台支持同上。
 
 已测试Python版本和平台：
 ```
-python 2.1+ (linux, win32, freebsd, macos, openbsd, netbsd, dragonflybsd, solaris)
+python 1.6+ (linux, win32, freebsd, macos, openbsd, netbsd, dragonflybsd, solaris)
 python 3.0+ (linux, win32, freebsd, macos, openbsd, netbsd, dragonflybsd, solaris)
 pypy/pypy3 all (linux, win32, macos)
 ```
+
+* python 1.6/2.0版本需要编译python的时候手工解除Modules/Setup中termios行的注释启用该module。
 
 
 

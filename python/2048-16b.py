@@ -75,7 +75,7 @@ def print_board(board):
                 sys.stdout.write('|%6c' % ' ')
             else:
                 sys.stdout.write("|%6d" % (1 << power_val))
-            t[3 - i] >>= 4
+            t[3 - i] = t[3 - i] >> 4
         sys.stdout.write('|%s' % os.linesep)
     sys.stdout.write('-----------------------------%s' % os.linesep)
 
@@ -112,12 +112,12 @@ def count_empty(board):
     sum = 0
     for i in range(0, 4):
         x = board[i]
-        x |= (x >> 2) & 0x3333
-        x |= (x >> 1)
+        x = x | ((x >> 2) & 0x3333)
+        x = x | (x >> 1)
         x = ~x & 0x1111
-        x += x >> 8
-        x += x >> 4
-        sum += x
+        x = x + (x >> 8)
+        x = x + (x >> 4)
+        sum = sum + x
     return sum & 0xf
 
 def execute_move_helper(row):
@@ -128,19 +128,19 @@ def execute_move_helper(row):
         while j < 4:
             if line[j] != 0:
                 break
-            j += 1
+            j = j + 1
         if j == 4:
             break
 
         if line[i] == 0:
             line[i] = line[j]
             line[j] = 0
-            i -= 1
+            i = i - 1
         elif line[i] == line[j]:
             if line[i] != 0xf:
-                line[i] += 1
+                line[i] = line[i] + 1
             line[j] = 0
-        i += 1
+        i = i + 1
 
     return  line[0] | (line[1] << 4) | (line[2] << 8) | (line[3] << 12)
 
@@ -153,10 +153,10 @@ def execute_move_col(board, move):
             tmp = unpack_col(row ^ execute_move_helper(row))
         elif move == DOWN:
             tmp = unpack_col(row ^ reverse_row(execute_move_helper(reverse_row(row))))
-        ret[0] ^= tmp[0] << (i << 2)
-        ret[1] ^= tmp[1] << (i << 2)
-        ret[2] ^= tmp[2] << (i << 2)
-        ret[3] ^= tmp[3] << (i << 2)
+        ret[0] = ret[0] ^ (tmp[0] << (i << 2))
+        ret[1] = ret[1] ^ (tmp[1] << (i << 2))
+        ret[2] = ret[2] ^ (tmp[2] << (i << 2))
+        ret[3] = ret[3] ^ (tmp[3] << (i << 2))
     return ret
 
 def execute_move_row(board, move):
@@ -164,9 +164,9 @@ def execute_move_row(board, move):
     for i in range(0, 4):
         row = t[3 - i]
         if move == LEFT:
-            t[3 - i] ^= row ^ execute_move_helper(row)
+            t[3 - i] = t[3 - i] ^ (row ^ execute_move_helper(row))
         elif move == RIGHT:
-            t[3 - i] ^= row ^ reverse_row(execute_move_helper(reverse_row(row)))
+            t[3 - i] = t[3 - i] ^ (row ^ reverse_row(execute_move_helper(reverse_row(row))))
     return t
 
 def execute_move(move, board):
@@ -184,7 +184,7 @@ def score_helper(board):
         for i in range(0, 4):
             rank = (row >> (i << 2)) & 0xf
             if rank >= 2:
-                score += (rank - 1) * (1 << rank)
+                score = score + (rank - 1) * (1 << rank)
     return score
 
 def score_board(board):
@@ -205,22 +205,22 @@ def insert_tile_rand(board, tile):
     orig_tile = tile
     while 1:
         while (tmp & 0xf) != 0:
-            tmp >>= 4
-            tile <<= 4
-            shift += 4
+            tmp = tmp >> 4
+            tile = tile << 4
+            shift = shift + 4
             if (shift % 16) == 0:
                 tmp = t[3 - (shift >> 4)]
                 tile = orig_tile
         if index == 0:
             break
-        index -= 1
-        tmp >>= 4
-        tile <<= 4
-        shift += 4
+        index = index - 1
+        tmp = tmp >> 4
+        tile = tile << 4
+        shift = shift + 4
         if (shift % 16) == 0:
             tmp = t[3 - (shift >> 4)]
             tile = orig_tile
-    t[3 - (shift >> 4)] |= tile
+    t[3 - (shift >> 4)] = t[3 - (shift >> 4)] | tile
     return t
 
 def initial_board():
@@ -262,12 +262,12 @@ def play_game(get_move):
         while move < 4:
             if execute_move(move, board) != board:
                 break
-            move += 1
+            move = move + 1
         if move == 4:
             break
 
         current_score = score_board(board) - scorepenalty
-        moveno += 1
+        moveno = moveno + 1
         sys.stdout.write('Move #%d, current score=%d(+%d)%s' % (moveno, current_score, current_score - last_score, os.linesep))
         last_score = current_score
         sys.stdout.flush()
@@ -278,34 +278,34 @@ def play_game(get_move):
 
         if move == RETRACT:
             if moveno <= 1 or retract_num <= 0:
-                moveno -= 1
+                moveno = moveno - 1
                 continue
-            moveno -= 2
+            moveno = moveno - 2
             if retract_pos == 0 and retract_num > 0:
                 retract_pos = MAX_RETRACT
-            retract_pos -= 1
+            retract_pos = retract_pos - 1
             board = retract_vec[retract_pos]
             scorepenalty = scorepenalty - retract_penalty_vec[retract_pos]
-            retract_num -= 1
+            retract_num = retract_pos - 1
             continue
 
         newboard = execute_move(move, board)
         if newboard == board:
-            moveno -= 1
+            moveno = moveno - 1
             continue
 
         tile = draw_tile()
         if tile == 2:
-            scorepenalty += 4
+            scorepenalty = scorepenalty + 4
             retract_penalty_vec[retract_pos] = 4
         else:
             retract_penalty_vec[retract_pos] = 0
         retract_vec[retract_pos] = board
-        retract_pos += 1
+        retract_pos = retract_pos + 1
         if retract_pos == MAX_RETRACT:
             retract_pos = 0
         if retract_num < MAX_RETRACT:
-            retract_num += 1
+            retract_num = retract_num + 1
 
         board = insert_tile_rand(newboard, tile)
 
