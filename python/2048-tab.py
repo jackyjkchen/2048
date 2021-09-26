@@ -109,7 +109,6 @@ def init_tables():
             if rank >= 2:
                 score += (rank - 1) * (1 << rank)
         score_table[row] = score
-
         i = 0
         while i < 3:
             j = i + 1
@@ -168,7 +167,7 @@ def execute_move(move, board):
     elif move == LEFT or move == RIGHT:
         return execute_move_row(board, move)
     else:
-        return INT64_MASK
+        raise
 
 def score_helper(board, table):
     return table[board & ROW_MASK] + table[(board >> 16) & ROW_MASK] + \
@@ -204,13 +203,10 @@ def initial_board():
 
 def ask_for_move(board):
     print_board(board)
-
     while True:
         allmoves = "wsadkjhl"
         pos = 0
-
         movechar = get_ch()
-
         if movechar == 'q':
             return -1
         elif movechar == 'r':

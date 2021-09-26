@@ -252,13 +252,10 @@ def score_tilechoose_node(state, board, cprob):
                 return entry.heuristic
 
     num_open = count_empty(board)
-
     cprob /= num_open
-
     res = 0.0
     tmp = board
     tile_2 = 1
-
     while tile_2 != 0:
         if (tmp & 0xf) == 0:
             res += score_move_node(state, board | tile_2, cprob * 0.9) * 0.9
@@ -275,56 +272,43 @@ def score_tilechoose_node(state, board, cprob):
 
 def score_move_node(state, board, cprob):
     best = 0.0
-
     state.curdepth += 1
     for move in range(0, 4):
         newboard = execute_move(move, board)
-
         state.moves_evaled += 1
-
         if board != newboard:
             best = max(best, score_tilechoose_node(state, newboard, cprob))
         else:
             state.nomoves += 1
-
     state.curdepth -= 1
-
     return best
 
 def _score_toplevel_move(state, board, move):
     newboard = execute_move(move, board)
-
     if (board == newboard):
         return 0.0
-
     return score_tilechoose_node(state, newboard, 1.0) + 0.000001
 
 def score_toplevel_move(board, move):
     res = 0.0
     state = eval_state()
-
     state.depth_limit = 3
     res = _score_toplevel_move(state, board, move)
-
     sys.stdout.write("Move %d: result %f: eval'd %d moves (%d no moves, %d table hits, %d cache hits, %d cache size) (maxdepth=%d)%s" % (move, res,
            state.moves_evaled, state.nomoves, state.tablehits, state.cachehits, len(state.trans_table), state.maxdepth, os.linesep))
-
     return res
 
 def find_best_move(board):
     best = 0.0
     bestmove = -1
-
     print_board(board)
     sys.stdout.write("Current scores: heur %d, actual %d%s" % (score_heur_board(board), score_board(board), os.linesep))
-
     for move in range(0, 4):
         res = score_toplevel_move(board, move)
         if res > best:
             best = res
             bestmove = move
     sys.stdout.write("Selected bestmove: %d, result: %f%s" % (bestmove, best, os.linesep))
-
     return bestmove
 
 def play_game(get_move):

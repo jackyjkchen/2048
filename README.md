@@ -281,6 +281,13 @@ mono 1.1.1+ (linux, freebsd, macos)
 ```
 
 
+## csharp/2048-ai.cs
+
+C# AI实现，查表法 + Dictionary + 多线程。需要.net framework 2.0+。
+
+编译器和平台支持同上。
+
+
 ## csharp/2048-old.cs + csharp/csdeps.c
 
 C# 1.0实现，查表法，兼容.net framework 1.0/1.1。由于.net 1.0/1.1缺少System.Console.ReadKey()和System.Console.Clear()，因此由csharp/csdeps.c提供跨平台实现
@@ -299,17 +306,6 @@ mono 2048-old.exe
 ```
 
 
-## csharp/2048-ai.cs
-
-C# AI实现，查表法 + Dictionary + 多线程。需要.net framework 2.0+。
-
-已测试编译器和平台：
-```
-visual studio 2005+ (win32)
-mono 1.1.1+ (linux, freebsd, macos)
-```
-
-
 
 # VB.net
 
@@ -324,6 +320,13 @@ mono 1.2.3+ (linux, freebsd, macos)
 ```
 
 
+## vbdotnet/2048-ai.vb
+
+VB.net AI实现，查表法 + Dictionary + 多线程。需要.net framework 2.0+。
+
+编译器和平台支持同上。
+
+
 ## vbdotnet/2048-old.vb
 
 VB.net 1.0实现，查表法。兼容.net framework 1.0/1.1，仅支持Win32。
@@ -331,17 +334,6 @@ VB.net 1.0实现，查表法。兼容.net framework 1.0/1.1，仅支持Win32。
 已测试编译器和平台：
 ```
 visual studio 2002+ (win32)
-```
-
-
-## vbdotnet/2048-ai.vb
-
-VB.net AI实现，查表法 + Dictionary + 多线程。需要.net framework 2.0+。
-
-已测试编译器和平台：
-```
-visual studio 2005+ (win32)
-mono 1.2.3+ (linux, freebsd, macos)
 ```
 
 
@@ -395,23 +387,20 @@ java -Djava.library.path=. Game2048
 ```
 
 
-## java/2048-old.java + java/javadeps.c
-
-兼容Java 1.0的实现，其余同上。
-
-已测试Java版本和平台：
-```
-jdk 1.1+ (linux, win32)
-```
-
-
 ## java/2048-ai.java + java/javadeps.c
 
 Java AI实现，查表法 + HashMap + 多线程，由于Java标准库不支持清除屏幕，由JNI方式——java/javadeps.c实现。
 
+编译器和平台支持同上。
+
+
+## java/2048-old.java + java/javadeps.c
+
+兼容Java 1.0的实现。
+
 已测试Java版本和平台：
 ```
-jdk 1.5+ (linux, win32, freebsd, macos, openbsd, netbsd, dragonflybsd, solaris)
+jdk 1.1+ (linux, win32)
 ```
 
 
@@ -542,6 +531,8 @@ python 3.0+ (linux, win32, freebsd, macos, openbsd, netbsd, dragonflybsd, solari
 pypy/pypy3 all (linux, win32, macos)
 ```
 
+* 在amd64 + linux平台，python 2.2/2.3也可以运行，由于缺乏可移植性，不例入兼容列表。
+
 ## python/2048-tab.py
 
 Python实现，使用查表法，在低配置设备上启动较慢，但执行较快。
@@ -554,6 +545,18 @@ Python版本和平台支持同上。
 Python AI实现，查表法 + 原生dict cache，建议使用pypy速度较快。
 
 Python版本和平台支持同上。
+
+
+## python/2048-16b.py
+
+不使用64位整数的Python实现，不使用查表法。
+
+已测试Python版本和平台：
+```
+python 2.1+ (linux, win32, freebsd, macos, openbsd, netbsd, dragonflybsd, solaris)
+python 3.0+ (linux, win32, freebsd, macos, openbsd, netbsd, dragonflybsd, solaris)
+pypy/pypy3 all (linux, win32, macos)
+```
 
 
 
