@@ -335,26 +335,38 @@ begin
     initial_board := insert_tile_rand(board, draw_tile);
 end;
 
-function count_distinct_tiles(board : board_t) : integer;
+function get_depth_limit(board : board_t) : integer;
 var
-    bitset : word;
-    count  : integer;
+    bitset    : word;
+    max_limit : integer;
+    count     : integer;
 begin
     bitset := 0;
+    max_limit := 0;
     while board <> 0 do begin
         bitset := bitset or (1 shl (board and $f));
         board := board shr 4;
     end;
 
-    if bitset <= 3072 then
-        exit(2);
+    if bitset <= 2048 then
+        max_limit := 3
+    else if bitset <= 2048 + 1024 then
+        max_limit := 4
+    else if bitset <= 4096 then
+        max_limit := 5
+    else if bitset <= 4096 + 1024 then
+        max_limit := 6;
     bitset := bitset shr 1;
     count := 0;
     while bitset <> 0 do begin
         bitset := bitset and (bitset - 1);
         count := count + 1;
     end;
-    count_distinct_tiles := count;
+    count := count - 2;
+    count := max(count, 3);
+    if max_limit <> 0 then
+        count := min(count, max_limit);
+    get_depth_limit := count;
 end;
 
 function score_move_node(var state : eval_state; board : board_t; cprob : real) : real; forward;
@@ -448,9 +460,7 @@ begin
     state.curdepth := 0;
     state.cachehits := 0;
     state.moves_evaled := 0;
-    state.depth_limit := count_distinct_tiles(board) - 2;
-    if state.depth_limit < 3 then
-        state.depth_limit := 3;
+    state.depth_limit := get_depth_limit(board);
 
     res := _score_toplevel_move(state, board, _move);
     msg := format('Move %d: result %f: eval''d %d moves (%d no moves, %d table hits, %d cache hits, %d cache size) (maxdepth=%d)', [_move, res,

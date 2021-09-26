@@ -284,15 +284,22 @@ Public Module Game2048
         Return insert_tile_rand(board, draw_tile())
     End Function
 
-    Private Function count_distinct_tiles(board As ULong) As Integer
+    Private Function get_depth_limit(board As ULong) As Integer
         Dim bitset As UShort = 0
+        Dim max_limit As Integer = 0
         While board <> 0
             bitset = bitset Or (CUShort(1) << (board And &HFUL))
             board >>= 4
         End While
 
-        If bitset <= 3072 Then
-            Return 2
+        If bitset <= 2048 Then
+            max_limit = 3
+        Else If bitset <= 2048 + 1024 Then
+            max_limit = 4
+        Else If bitset <= 4096 Then
+            max_limit = 5
+        Else If bitset <= 4096 + 2048 Then
+            max_limit = 6
         End If
         bitset >>= 1
         Dim count As Integer = 0
@@ -300,7 +307,11 @@ Public Module Game2048
             bitset = bitset And (bitset - 1)
             count += 1
         End While
-
+        count -= 2
+        count = Math.Max(count, 3)
+        If max_limit <> 0 Then
+            count = Math.Min(count, max_limit)
+        End If
         Return count
     End Function
 
@@ -375,7 +386,7 @@ Public Module Game2048
     Private Function score_toplevel_move(board As ULong, _move As Integer) As Double
         Dim res As Double = 0.0F
         Dim state As eval_state = New eval_state()
-        state.depth_limit = Math.Max(3, count_distinct_tiles(board) - 2)
+        state.depth_limit = get_depth_limit(board)
         res = _score_toplevel_move(state, board, _move)
         Console.WriteLine("Move {0}: result {1}: eval'd {2} moves ({3} no moves, {4} table hits, {5} cache hits, {6} cache size) (maxdepth={7})", _move, res, state.moves_evaled, state.nomoves, state.tablehits, state.cachehits, state.trans_table.Count, state.maxdepth)
         Return res

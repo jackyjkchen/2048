@@ -325,17 +325,24 @@ class Game2048
         return insert_tile_rand(board, draw_tile());
     }
 
-    int count_distinct_tiles(UInt64 board)
+    int get_depth_limit(UInt64 board)
     {
         UInt16 bitset = 0;
+        int max_limit = 0;
         while (board != 0)
         {
             bitset |= (UInt16)(1 << (int)(board & 0xf));
             board >>= 4;
         }
 
-        if (bitset <= 3072) {
-            return 2;
+        if (bitset <= 2048) {
+            max_limit = 3;
+        } else if (bitset <= 2048 + 1024) {
+            max_limit = 4;
+        } else if (bitset <= 4096) {
+            max_limit = 5;
+        } else if (bitset <= 4096 + 2048) {
+            max_limit = 6;
         }
         bitset >>= 1;
         int count = 0;
@@ -343,6 +350,11 @@ class Game2048
         {
             bitset &= (UInt16)(bitset - 1);
             count++;
+        }
+        count -= 2;
+        count = Math.Max(count, 3);
+        if (max_limit != 0) {
+            count = Math.Min(count, max_limit);
         }
         return count;
     }
@@ -433,7 +445,7 @@ class Game2048
         double res = 0.0f;
         eval_state state = new eval_state();
 
-        state.depth_limit = Math.Max(3, count_distinct_tiles(board) - 2);
+        state.depth_limit = get_depth_limit(board);
 
         res = _score_toplevel_move(ref state, board, move);
 

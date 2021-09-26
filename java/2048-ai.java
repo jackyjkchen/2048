@@ -298,22 +298,33 @@ class Game2048
         return insert_tile_rand(board, draw_tile());
     }
 
-    int count_distinct_tiles(long board)
+    int get_depth_limit(long board)
     {
-        int bitset = 0;
+        int bitset = 0, max_limit = 0;
         while (board != 0) {
             bitset |= 1 << (board & 0xf);
             board /= 16;
         }
 
-        if (bitset <= 3072) {
-            return 2;
+        if (bitset <= 2048) {
+            max_limit = 3;
+        } else if (bitset <= 2048 + 1024) {
+            max_limit = 4;
+        } else if (bitset <= 4096) {
+            max_limit = 5;
+        } else if (bitset <= 4096 + 2048) {
+            max_limit = 6;
         }
         bitset >>= 1;
         int count = 0;
         while (bitset != 0) {
             bitset &= bitset - 1;
             count++;
+        }
+        count -= 2;
+        count = Math.max(count, 3);
+        if (max_limit != 0) {
+            count = Math.min(count, max_limit);
         }
         return count;
     }
@@ -392,7 +403,7 @@ class Game2048
         double res = 0.0f;
         eval_state state = new eval_state();
 
-        state.depth_limit = Math.max(3, count_distinct_tiles(board) - 2);
+        state.depth_limit = get_depth_limit(board);
 
         res = _score_toplevel_move(state, board, move);
 

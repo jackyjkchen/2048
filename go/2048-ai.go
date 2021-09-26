@@ -310,22 +310,38 @@ func initial_board() board_t {
 	return insert_tile_rand(board, draw_tile())
 }
 
-func count_distinct_tiles(board board_t) int {
+func get_depth_limit(board board_t) int {
 	var bitset uint16 = 0
+	var max_limit = 0
 
 	for board != 0 {
 		bitset |= 1 << (board & 0xf)
 		board >>= 4
 	}
 
-	if bitset <= 3072 {
-		return 2
+	if bitset <= 2048 {
+		max_limit = 3
+	} else if bitset <= 2048+1024 {
+		max_limit = 4
+	} else if bitset <= 4096 {
+		max_limit = 5
+	} else if bitset <= 4096+2048 {
+		max_limit = 6
 	}
 	bitset >>= 1
 	count := 0
 	for bitset != 0 {
 		bitset &= bitset - 1
 		count++
+	}
+	count -= 2
+	if count < 3 {
+		count = 3
+	}
+	if max_limit != 0 {
+		if count > max_limit {
+			count = max_limit
+		}
 	}
 	return count
 }
@@ -409,10 +425,7 @@ func score_toplevel_move(board board_t, move int, res *float64, wg *sync.WaitGro
 	var state eval_state
 
 	state.trans_table = make(map[board_t]trans_table_entry_t)
-	state.depth_limit = count_distinct_tiles(board) - 2
-	if state.depth_limit < 3 {
-		state.depth_limit = 3
-	}
+	state.depth_limit = get_depth_limit(board)
 
 	*res = _score_toplevel_move(&state, board, move)
 

@@ -218,7 +218,7 @@ private:
 
         eval_state() : maxdepth(0), curdepth(0), nomoves(0), tablehits(0), cachehits(0), moves_evaled(0), depth_limit(0) {}
     };
-    int count_distinct_tiles(board_t board);
+    int get_depth_limit(board_t board);
     float score_move_node(eval_state &state, board_t board, float cprob);
     float score_tilechoose_node(eval_state &state, board_t board, float cprob);
     float _score_toplevel_move(eval_state &state, board_t board, int move);
@@ -601,16 +601,22 @@ board_t Game2048::initial_board(void) {
     return insert_tile_rand(board, draw_tile());
 }
 
-int Game2048::count_distinct_tiles(board_t board) {
-    uint16 bitset = 0;
+int Game2048::get_depth_limit(board_t board) {
+    uint16 bitset = 0, max_limit = 0;
 
     while (board) {
         bitset |= 1 << (board & 0xf);
         board >>= 4;
     }
 
-    if (bitset <= 3072) {
-        return 2;
+    if (bitset <= 2048) {
+        max_limit = 3;
+    } else if (bitset <= 2048 + 1024) {
+        max_limit = 4;
+    } else if (bitset <= 4096) {
+        max_limit = 5;
+    } else if (bitset <= 4096 + 2048) {
+        max_limit = 6;
     }
     bitset >>= 1;
 
@@ -619,6 +625,11 @@ int Game2048::count_distinct_tiles(board_t board) {
     while (bitset) {
         bitset &= bitset - 1;
         count++;
+    }
+    count -= 2;
+    count = max(count, 3);
+    if (max_limit) {
+        count = min(count, max_limit);
     }
     return count;
 }
@@ -714,10 +725,7 @@ float Game2048::score_toplevel_move(board_t board, int move) {
     eval_state state;
 
 #if FASTMODE != 0
-    state.depth_limit = count_distinct_tiles(board) - 2;
-    if (state.depth_limit < 3) {
-        state.depth_limit = 3;
-    }
+    state.depth_limit = get_depth_limit(board);
 #else
     state.depth_limit = 3;
 #endif
