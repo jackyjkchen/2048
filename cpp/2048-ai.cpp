@@ -328,10 +328,10 @@ void Game2048::init_tables() {
 #endif
 
         float sum = 0.0f;
-        int empty = 0;
-        int merges = 0;
-        int prev = 0;
-        int counter = 0;
+        uint32 empty = 0;
+        uint32 merges = 0;
+        uint32 prev = 0;
+        uint32 counter = 0;
 
         for (i = 0; i < 4; ++i) {
             uint32 rank = line[i];

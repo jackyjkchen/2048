@@ -141,14 +141,14 @@ func init_tables() {
 		}
 		score_table[row] = score
 
-		sum := 0.0
-		empty := 0
-		merges := 0
-		prev := 0
-		counter := 0
+		var sum float64 = 0.0
+		var empty uint32 = 0
+		var merges uint32 = 0
+		var prev uint32 = 0
+		var counter uint32 = 0
 
 		for i = 0; i < 4; i++ {
-			var rank int = int(line[i])
+			var rank uint32 = uint32(line[i])
 
 			sum += math.Pow(float64(rank), SCORE_SUM_POWER)
 			if rank == 0 {

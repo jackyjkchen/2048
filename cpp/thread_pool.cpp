@@ -250,7 +250,8 @@ bool ThreadPool::init()
         m_pool_lock.unlock();
         for (int i= 0; i<m_thrd_num; ++i) {
 #ifdef _WIN32
-            if (!(m_thread_handle[i] = (HANDLE)_beginthreadex(NULL, 0, ThreadPool::_threadstart, &m_thrd_context, 0, NULL))) {
+            m_thread_handle[i] = (HANDLE)_beginthreadex(NULL, 0, ThreadPool::_threadstart, &m_thrd_context, 0, NULL);
+            if (!m_thread_handle[i]) {
 #else
             if (pthread_create(&m_thread_handle[i], NULL, ThreadPool::_threadstart, &m_thrd_context) != 0) {
 #endif

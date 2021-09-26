@@ -134,7 +134,7 @@ var
     row_line    : array[0..3] of byte;
     score, rank : dword;
     sum         : real;
-    empty, merges, prev, counter : integer;
+    empty, merges, prev, counter : dword;
     monotonicity_left, monotonicity_right : real;
 begin
     row := 0;
