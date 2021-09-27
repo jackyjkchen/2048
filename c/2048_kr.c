@@ -34,6 +34,35 @@ typedef unsigned int uint32;
 #include <conio.h>
 #endif
 
+#if defined(_MSC_VER) && _MSC_VER >= 700 && defined(__STDC__)
+#define _GETCH_USE 1
+#elif defined(__WATCOMC__) && __WATCOMC__ < 1100
+#define GETCH_USE 1
+#endif
+
+typedef struct {
+    uint16 r0;
+    uint16 r1;
+    uint16 r2;
+    uint16 r3;
+} board_t;
+typedef uint16 row_t;
+
+#define UP 0
+#define DOWN 1
+#define LEFT 2
+#define RIGHT 3
+#define RETRACT 4
+
+#if defined(__MINGW64__) || defined(__MINGW32__)
+#undef __USE_MINGW_ANSI_STDIO
+#define __USE_MINGW_ANSI_STDIO 0
+#endif
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
+
 static void clear_screen() {
 #if defined(_WIN32) && !defined(NOT_USE_WIN32_SDK)
     HANDLE hStdOut;
@@ -55,7 +84,6 @@ static void clear_screen() {
     } else {
         cellCount = 8192;
     }
-
     if (!FillConsoleOutputCharacter(hStdOut, (TCHAR)' ', cellCount, homeCoords, &count))
         return;
     if (full_clear && !FillConsoleOutputAttribute(hStdOut, csbi.wAttributes, cellCount, homeCoords, &count))
@@ -71,12 +99,6 @@ static void clear_screen() {
     system("cls");
 #endif
 }
-
-#if defined(_MSC_VER) && _MSC_VER >= 700 && defined(__STDC__)
-#define _GETCH_USE 1
-#elif defined(__WATCOMC__) && __WATCOMC__ < 1100
-#define GETCH_USE 1
-#endif
 
 static int get_ch() {
 #if (defined(_WIN32) && !defined(GETCH_USE)) || defined(_GETCH_USE)
@@ -115,29 +137,6 @@ static int get_ch() {
     return getchar();
 #endif
 }
-
-typedef struct {
-    uint16 r0;
-    uint16 r1;
-    uint16 r2;
-    uint16 r3;
-} board_t;
-typedef uint16 row_t;
-
-#define UP 0
-#define DOWN 1
-#define LEFT 2
-#define RIGHT 3
-#define RETRACT 4
-
-#if defined(__MINGW64__) || defined(__MINGW32__)
-#undef __USE_MINGW_ANSI_STDIO
-#define __USE_MINGW_ANSI_STDIO 0
-#endif
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <time.h>
 
 static unsigned int unif_random(n)
      unsigned int n;
