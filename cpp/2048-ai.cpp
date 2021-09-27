@@ -518,7 +518,7 @@ board_t Game2048::execute_move_row(board_t board, int move) {
             row_t row = (board >> (i << 4)) & ROW_MASK;
             ret ^= (board_t)(row_table[row / TABLESIZE][row % TABLESIZE]) << (i << 4);
         }
-    }else if (move == RIGHT) {
+    } else if (move == RIGHT) {
         for (int i = 0; i < 4; ++i) {
             row_t row = reverse_row((board >> (i << 4)) & ROW_MASK);
             ret ^= (board_t)(reverse_row(row_table[row / TABLESIZE][row % TABLESIZE])) << (i << 4);

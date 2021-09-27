@@ -12,7 +12,7 @@ AI实现需要关联容器、字典或哈希表做cache以提升性能，考验�
 
 本项目中所有实现的AI版本2048，其输出格式完全一致。不同编译器和平台浮点精度可能有差异。多线程版本输出可能有预期内的乱序。
 
-对于标准库中缺乏关联容器、字典或哈希表的语言（如C、Fortran），以及脚本语言（如Python、Lua），AI实现限定搜索上限为3，以保障性能的基本实用性，此时100%概率能算到2048，但最高只能算到4096-8192。标准库拥有关联容器、字典或哈希表的语言的编译型语言（如C++、C#、Go、Java、VB.net、Pascal），不限定算法搜索深度，运算上限通常在16384-32768。
+对于标准库中缺乏关联容器、字典或哈希表的语言（如C、Fortran），以及脚本语言（如Python、Lua），AI实现限定搜索深度上限为3，以保障性能上的基本实用性，此时100%概率能算到2048，但最高只能算到4096-8192。标准库拥有关联容器、字典或哈希表的语言的编译型语言（如C++、C#、Go、Java、VB.net、Pascal），不限定算法搜索深度，运算上限通常在16384-32768。
 
 
 # C
@@ -156,6 +156,22 @@ cc (openserver, unixware)
 ```
 openwatcom c++ 1.9 (dos16)
 watcom c++ 11.0 (dos16)
+```
+
+### 本实现支持OpenMP多线程，由预处理OPENMP_THREAD控制，已测试编译器和平台：
+```
+gcc 4.2+ (linux, freebsd, macos, openbsd, netbsd, dragonflybsd, solaris)
+clang 3.5+ (linux, freebsd，macos, openbsd, netbsd, dragonflybsd)
+msvc 8.0+ (win32)
+icc 8.1+ (win32, linux)
+aocc 1.0+ (linux)
+nvhpc/pgi 20.11/21.7 (linux)
+open64 4.2.4/4.5.2.1/5.0 (linux)
+```
+
+gcc编译示例：
+```
+gcc -DOPENMP_THREAD -O2 -fopenmp c/2048-ai.c -o 2048 -lm
 ```
 
 
