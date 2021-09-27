@@ -425,20 +425,20 @@ board_t Game2048::execute_move_row(board_t board, int move) {
 }
 
 uint32 Game2048::score_helper(board_t board) {
-	uint32 score = 0;
+    uint32 score = 0;
 
-	for (int j = 0; j < 4; ++j) {
-		row_t row = (row_t)((board >> (j << 4)) & ROW_MASK);
+    for (int j = 0; j < 4; ++j) {
+        row_t row = (row_t)((board >> (j << 4)) & ROW_MASK);
 
-		for (int i = 0; i < 4; ++i) {
-			uint32 rank = (row >> (i << 2)) & 0xf;
+        for (int i = 0; i < 4; ++i) {
+            uint32 rank = (row >> (i << 2)) & 0xf;
 
-			if (rank >= 2) {
-				score += (rank - 1) * (1 << rank);
-			}
-		}
-	}
-	return score;
+            if (rank >= 2) {
+                score += (rank - 1) * (1 << rank);
+            }
+        }
+    }
+    return score;
 }
 #endif
 
