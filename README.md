@@ -126,9 +126,9 @@ msc 3.0/4.0 (dos16)
 
 ## c/2048-ai.c
 
-ISO C90 AI实现，非严格C90内容仅为64位整数。
+ISO C90 AI实现，非严格C90内容仅为64位整数，由于C语言标准库缺乏关联容器做cache，限定搜索深度为3。可选支持OpenMP多线程（预处理OPENMP_THREAD控制）。
 
-### 使用FASTMODE预处理（默认），可启用查表法，由于C语言标准库缺乏关联容器做cache，限定搜索深度为3。
+### 使用FASTMODE预处理（默认），可启用查表法。
 
 已测试编译器和平台：
 ```
@@ -152,7 +152,7 @@ cc (openserver, unixware)
 
 * 编译器相关comments同c/2048.c。
 
-### 使用FASTMODE=0预处理（dos16目标下默认FASTMODE=0），查表法采取分表形式（单表小于64KiB），可支持dos16目标（需要compact或large内存模型），仍定搜索深度为3，额外支持：
+### 使用FASTMODE=0预处理（dos16目标下默认FASTMODE=0），查表法采取分表形式（单表小于64KiB），可支持dos16目标（需要compact或large内存模型），额外支持：
 ```
 openwatcom c++ 1.9 (dos16)
 watcom c++ 11.0 (dos16)
