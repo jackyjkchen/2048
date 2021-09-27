@@ -12,7 +12,7 @@ AI实现需要关联容器、字典或哈希表做cache以提升性能，考验�
 
 本项目中所有实现的AI版本2048，其输出格式完全一致。不同编译器和平台浮点精度可能有差异。多线程版本输出可能有预期内的乱序。
 
-对于标准库中缺乏关联容器、字典或哈希表的语言，以及脚本语言，AI实现限定搜索上限为3，保障性能的基本可用性，此时几乎100%概率能算到2048，但最高只能算到4096-8192（不限定搜索深度的算法上限通常在16384-32768）。
+对于标准库中缺乏关联容器、字典或哈希表的语言，以及脚本语言，AI实现限定搜索上限为3，保障性能的基本可用性，此时100%概率能算到2048，但最高只能算到4096-8192（不限定搜索深度的算法上限通常在16384-32768）。
 
 
 # C
@@ -462,7 +462,7 @@ fpc -dMULTI_THREAD -O2 pascal/2048-ai.pas
 
 # Fortran
 
-## fortran/2048.F03
+## fortran/2048.F03 + fortran/f03deps.c
 
 现代Fortran2003实现，使用FASTMODE预处理判定是否使用查表法（默认）。系统相关功能（无回显输入，清除屏幕），由fortran/f03deps.c提供。
 
@@ -475,6 +475,23 @@ gfortran 4.3+ (linux, mingw, mingw-w64, cygwin, freebsd, macos)
 ```
 gcc -std=c90 -O2 -c fortran/f03deps.c -o f03deps.o
 gfortran -std=f2003 -O2 fortran/2048.F03 f03deps.o -o 2048
+```
+
+
+## fortran/2048-ai.F03 + fortran/f03deps.c
+
+Fortran2003 AI实现，查表法，由于缺乏cache数据结构，搜索深度限定3。系统相关功能（无回显输入，清除屏幕），由fortran/f03deps.c提供。
+
+已测试编译器和平台：
+```
+gfortran 4.3+ (linux, mingw, mingw-w64, cygwin, freebsd, macos)
+```
+
+gfortran 4.3以上版本均支持OpenMP，推荐使用，编译命令行示例如下：
+
+```
+gcc -std=c90 -O2 -c fortran/f03deps.c -o f03deps.o
+gfortran -std=f2003 -O2 -fopenmp fortran/2048-ai.F03 f03deps.o -o 2048
 ```
 
 

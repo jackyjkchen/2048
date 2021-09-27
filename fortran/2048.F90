@@ -145,12 +145,12 @@ subroutine init_tables()
 
         i = 0
         do while (i < 3)
-            j = i + int(1, kind=2)
+            j = i + 1
             do while (j < 4)
                 if (row_line(j) /= 0) then
                     exit
                 end if
-                j = j + int(1, kind=2)
+                j = j + 1
             end do
             if (j == 4) then
                 exit
@@ -158,14 +158,14 @@ subroutine init_tables()
             if (row_line(i) == 0) then
                 row_line(i) = row_line(j)
                 row_line(j) = 0
-                i = i - int(1, kind=2)
+                i = i - 1
             else if (row_line(i) == row_line(j)) then
                 if (row_line(i) /= 15) then
-                    row_line(i) = row_line(i) + int(1, kind=2)
+                    row_line(i) = row_line(i) + 1
                 end if
                 row_line(j) = 0
             end if
-            i = i + int(1, kind=2)
+            i = i + 1
         end do
 
         t0 = row_line(0)
