@@ -480,7 +480,7 @@ gfortran -std=f2003 -O2 fortran/2048.F03 f03deps.o -o 2048
 
 ## fortran/2048-ai.F03 + fortran/f03deps.c
 
-Fortran2003 AI实现，查表法，由于缺乏cache数据结构，搜索深度限定3。系统相关功能（无回显输入，清除屏幕），由fortran/f03deps.c提供。
+Fortran2003 AI实现，查表法，由于缺乏cache数据结构，搜索深度限定3。系统相关功能（清除屏幕），由fortran/f03deps.c提供。
 
 已测试编译器和平台：
 ```
