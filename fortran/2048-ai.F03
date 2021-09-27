@@ -42,7 +42,6 @@ real(4), parameter :: SCORE_SUM_WEIGHT = 11.0
 real(4), parameter :: SCORE_MERGES_WEIGHT = 700.0
 real(4), parameter :: SCORE_EMPTY_WEIGHT = 270.0
 real(4), parameter :: CPROB_THRESH_BASE = 0.0001
-integer(2), parameter :: CACHE_DEPTH_LIMIT = 15
 
 type eval_state
     integer(4) :: maxdepth

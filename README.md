@@ -65,6 +65,7 @@ openwatcom c++ 1.9 (dos16)
 watcom c++ 11.0 (dos16)
 ```
 
+
 ## c/2048-16b.c
 
 不使用64位整数的严格ISO C90实现，用于兼容一些老编译器，不使用查表法用以兼容16位DOS。
@@ -107,6 +108,7 @@ power c 2.2.2 (dos16)
 
 * symantec c++ 7.5支持win32目标，但产出程序无法运行，原因未知，只列dos16兼容。
 
+
 ## c/2048_kr.c
 
 在c/2048-16b.c基础上改用K&R格式。
@@ -120,6 +122,41 @@ msc 3.0/4.0 (dos16)
 * msc 3.0产出的程序无法在Windows NT系统运行。只能用于DOS、Windows 3.x、Windows 9x、Windows Me。
 
 * msc 2.0或以下版本支持的C格式是某种C方言，既不是ANSI C也不是K&R C，因此无法兼容。
+
+
+## c/2048-ai.c
+
+ISO C90 AI实现，非严格C90内容仅为64位整数。
+
+### 使用FASTMODE预处理（默认），可启用查表法，由于C语言标准库缺乏关联容器做cache，限定搜索深度为3。
+
+已测试编译器和平台：
+```
+gcc 2.0+ (linux, freebsd, macos, mingw, mingw-w64, cygwin, djgpp, openbsd, netbsd, dragonflybsd, solaris, openserver, unixware)
+clang 3.0+ (linux, macos, freebsd, win32, openbsd, netbsd, dragonflybsd)
+msvc 2.0+ (win32)
+icc 8.1+ (win32, linux)
+aocc 1.0+ (linux)
+nvhpc/pgi 20.11/21.7 (linux)
+open64 4.2.4/4.5.2.1/5.0 (linux)
+openwatcom c++ 1.9 (win32, dos32)
+watcom c++ 11.0 (win32, dos32)
+borland c++ 5.5 (win32)
+visualage c++ 3.5 (win32)
+tcc 0.9.27 (linux, win32)
+pcc 1.1.0 (linux, freebsd)
+lcc 4.0 (win32)
+dmc 8.57 (win32)
+cc (openserver, unixware)
+```
+
+* 编译器相关comments同c/2048.c。
+
+### 使用FASTMODE=0预处理（dos16目标下默认FASTMODE=0），查表法采取分表形式（单表小于64KiB），可支持dos16目标（需要compact或large内存模型），仍定搜索深度为3，额外支持：
+```
+openwatcom c++ 1.9 (dos16)
+watcom c++ 11.0 (dos16)
+```
 
 
 
@@ -213,7 +250,7 @@ dmc 8.57 (win32)
 g++-2.6.3 -I/usr/lib/gcc-lib/i686-legacy-linux-gnu/2.6.3/include/g++/stl -O2 cpp/2048-ai.cpp -lstdc++ -lm -o 2048
 ```
 
-### 若使用FASTMODE=0预处理（dos16目标下默认FASTMODE=0），不启用std::map cache，查表法采取分表形式（单表小于64KiB），可支持dos16目标（需要compact或large内存模型），由于速度很慢，因此限制搜索深度上限为3。
+### 若使用FASTMODE=0预处理（dos16目标下默认FASTMODE=0），不启用std::map cache，查表法采取分表形式（单表小于64KiB），可支持dos16目标（需要compact或large内存模型），由于速度很慢，因此限制搜索深度为3。
 
 额外支持：
 ```
@@ -480,7 +517,7 @@ gfortran -std=f2003 -O2 fortran/2048.F03 f03deps.o -o 2048
 
 ## fortran/2048-ai.F03 + fortran/f03deps.c
 
-Fortran2003 AI实现，查表法，由于缺乏cache数据结构，搜索深度限定3。系统相关功能（清除屏幕），由fortran/f03deps.c提供。
+Fortran2003 AI实现，查表法，由于缺乏cache数据结构，搜索深度限定为3。系统相关功能（清除屏幕），由fortran/f03deps.c提供。
 
 已测试编译器和平台：
 ```
