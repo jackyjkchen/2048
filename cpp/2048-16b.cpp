@@ -153,10 +153,8 @@ private:
     int count_empty(board_t x);
 
     row_t execute_move_helper(row_t row);
-    board_t execute_move_col(board_t board, int move);
-    board_t execute_move_row(board_t board, int move);
+    board_t execute_move(board_t board, int move);
     score_t score_helper(board_t board);
-    board_t execute_move(int move, board_t board);
     score_t score_board(board_t board);
 
     row_t draw_tile();
@@ -287,39 +285,31 @@ row_t Game2048::execute_move_helper(row_t row) {
     return line[0] | (line[1] << 4) | (line[2] << 8) | (line[3] << 12);
 }
 
-board_t Game2048::execute_move_col(board_t board, int move) {
+board_t Game2048::execute_move(board_t board, int move) {
     board_t ret, tran, tmp;
-    row_t *t = (row_t *)&tran;
+    row_t *t = (row_t *)&ret;
 
     ret = board;
-    tran = transpose(board);
+    if (move == UP || move == DOWN) {
+        tran = transpose(board);
+        t = (row_t *)&tran;
+    }
     for (int i = 0; i < 4; ++i) {
         row_t row = t[3 - i];
-
         if (move == UP) {
             tmp = unpack_col(row ^ execute_move_helper(row));
         } else if (move == DOWN) {
             tmp = unpack_col(row ^ reverse_row(execute_move_helper(reverse_row(row))));
-        }
-        ret.r0 ^= tmp.r0 << (i << 2);
-        ret.r1 ^= tmp.r1 << (i << 2);
-        ret.r2 ^= tmp.r2 << (i << 2);
-        ret.r3 ^= tmp.r3 << (i << 2);
-    }
-    return ret;
-}
-
-board_t Game2048::execute_move_row(board_t board, int move) {
-    board_t ret;
-    row_t *t = (row_t *)&ret;
-
-    ret = board;
-    for (int i = 0; i < 4; ++i) {
-        row_t row = t[3 - i];
-        if (move == LEFT) {
+        } else if (move == LEFT) {
             t[3 - i] ^= row ^ execute_move_helper(row);
         } else if (move == RIGHT) {
             t[3 - i] ^= row ^ reverse_row(execute_move_helper(reverse_row(row)));
+        }
+        if (move == UP || move == DOWN) {
+            ret.r0 ^= tmp.r0 << (i << 2);
+            ret.r1 ^= tmp.r1 << (i << 2);
+            ret.r2 ^= tmp.r2 << (i << 2);
+            ret.r3 ^= tmp.r3 << (i << 2);
         }
     }
     return ret;
@@ -338,22 +328,6 @@ score_t Game2048::score_helper(board_t board) {
         }
     }
     return score;
-}
-
-board_t Game2048::execute_move(int move, board_t board) {
-    board_t invalid;
-
-    switch (move) {
-    case UP:
-    case DOWN:
-        return execute_move_col(board, move);
-    case LEFT:
-    case RIGHT:
-        return execute_move_row(board, move);
-    default:
-        memset(&invalid, 0xFF, sizeof(board_t));
-        return invalid;
-    }
 }
 
 score_t Game2048::score_board(board_t board) {
@@ -444,7 +418,7 @@ void Game2048::play_game() {
 
         clear_screen();
         for (move = 0; move < 4; move++) {
-            tmp = execute_move(move, board);
+            tmp = execute_move(board, move);
             if (memcmp(&tmp, &board, sizeof(board_t)) != 0)
                 break;
         }
@@ -473,7 +447,7 @@ void Game2048::play_game() {
             continue;
         }
 
-        newboard = execute_move(move, board);
+        newboard = execute_move(board, move);
         if (memcmp(&newboard, &board, sizeof(board_t)) == 0) {
             moveno--;
             continue;

@@ -201,7 +201,7 @@
         execute_move_helper = ior(ior(ior(t0, t1), t2), t3)
       end
 
-      integer*8 function execute_move_col(board, move)
+      integer*8 function execute_move(board, move)
         integer*8 :: board
         integer*4 :: move
         integer*8 :: ret, t
@@ -212,59 +212,29 @@
         common /MASK_NUM/ ROW_MASK, COL_MASK
 
         ret = board
-        t = transpose_board(board)
+        if ((move == 0) .or. (move == 1)) then
+            t = transpose_board(board)
+        else
+            t = board
+        end if
         do i = 0, 3
           row = iand(ishft(t, -ishft(i, 4)), ROW_MASK)
           if (move == 0) then
-            ret = ieor(ret, ishft(unpack_col(
-     & ieor(row, execute_move_helper(row))), ishft(i, 2)))
+            ret = ieor(ret, ishft(unpack_col(ieor(row,
+     & execute_move_helper(row))), ishft(i, 2)))
           else if (move == 1) then
             rev_row = reverse_row(row)
             ret = ieor(ret, ishft(unpack_col(ieor(row, reverse_row(
      & execute_move_helper(rev_row)))), ishft(i, 2)))
-          end if
-        end do
-        execute_move_col = ret
-      end
-
-      integer*8 function execute_move_row(board, move)
-        integer*8 :: board
-        integer*4 :: move
-        integer*8 :: ret, t
-        integer*2 :: row, rev_row, i
-        integer*2 :: reverse_row, execute_move_helper
-        integer*8 :: ROW_MASK, COL_MASK
-        common /MASK_NUM/ ROW_MASK, COL_MASK
-
-        ret = board
-        t = 0
-        do i = 0, 3
-          row = iand(ishft(board, -ishft(i, 4)), ROW_MASK)
-          if (move == 2) then
-            t = ieor(row, execute_move_helper(row))
+          else if (move == 2) then
+            ret = ieor(ret, ishft(iand(ieor(row,
+     & execute_move_helper(row)), ROW_MASK), ishft(i, 4)))
           else if (move == 3) then
             rev_row = reverse_row(row)
-            t = ieor(row, reverse_row(execute_move_helper(rev_row)))
+            ret = ieor(ret, ishft(iand(ieor(row, reverse_row(
+     & execute_move_helper(rev_row))), ROW_MASK), ishft(i, 4)))
           end if
-          t = iand(t, ROW_MASK)
-          ret = ieor(ret, ishft(t, ishft(i, 4)))
         end do
-        execute_move_row = ret
-      end
-
-      integer*8 function execute_move(move, board)
-        integer*4 :: move
-        integer*8 :: board
-        integer*8 :: ret
-        integer*8 :: execute_move_col, execute_move_row
-
-        if ((move == 0) .or. (move == 1)) then
-          ret = execute_move_col(board, move)
-        else if ((move == 2) .or. (move == 3)) then
-          ret = execute_move_row(board, move)
-        else
-          ret = -1
-        end if
         execute_move = ret
       end
 
@@ -405,7 +375,7 @@
           call c_clear_screen()
           move = 0
           do while (move < 4)
-            if (execute_move(move, board) /= board) then
+            if (execute_move(board, move) /= board) then
               exit
             end if
             move = move + 1
@@ -441,7 +411,7 @@
             cycle
           end if
 
-          newboard = execute_move(move, board)
+          newboard = execute_move(board, move)
           if (newboard == board) then
             moveno = moveno - 1
             cycle

@@ -181,36 +181,26 @@ subroutine init_tables()
     end do
 end subroutine init_tables
 
-function execute_move_col(board, move)
+function execute_move(board, move)
     integer(8), intent(in) :: board
     integer(4), intent(in) :: move
-    integer(8) :: execute_move_col
+    integer(8) :: execute_move
     integer(8) :: ret, t
 
     ret = board
-    t = transpose_board(board)
     if (move == UP) then
+        t = transpose_board(board)
         ret = ieor(ret, unpack_col(row_table(int(iand(t, ROW_MASK), kind=2))))
         ret = ieor(ret, ishft(unpack_col(row_table(int(iand(ishft(t, -16), ROW_MASK), kind=2))), 4))
         ret = ieor(ret, ishft(unpack_col(row_table(int(iand(ishft(t, -32), ROW_MASK), kind=2))), 8))
         ret = ieor(ret, ishft(unpack_col(row_table(int(iand(ishft(t, -48), ROW_MASK), kind=2))), 12))
     else if (move == DOWN) then
+        t = transpose_board(board)
         ret = ieor(ret, unpack_col(reverse_row(row_table(reverse_row(int(iand(t, ROW_MASK), kind=2))))))
         ret = ieor(ret, ishft(unpack_col(reverse_row(row_table(reverse_row(int(iand(ishft(t, -16), ROW_MASK), kind=2))))), 4))
         ret = ieor(ret, ishft(unpack_col(reverse_row(row_table(reverse_row(int(iand(ishft(t, -32), ROW_MASK), kind=2))))), 8))
         ret = ieor(ret, ishft(unpack_col(reverse_row(row_table(reverse_row(int(iand(ishft(t, -48), ROW_MASK), kind=2))))), 12))
-    end if
-    execute_move_col = ret
-end function execute_move_col
-
-function execute_move_row(board, move)
-    integer(8), intent(in) :: board
-    integer(4), intent(in) :: move
-    integer(8) :: execute_move_row
-    integer(8) :: ret
-
-    ret = board
-    if (move == LEFT) then
+    else if (move == LEFT) then
         ret = ieor(ret, iand(int((row_table(int(iand(board, ROW_MASK), kind=2))), kind=8), ROW_MASK))
         ret = ieor(ret, ishft(iand(int((row_table(int(iand(ishft(board, -16), ROW_MASK), kind=2))), kind=8), ROW_MASK), 16))
         ret = ieor(ret, ishft(iand(int((row_table(int(iand(ishft(board, -32), ROW_MASK), kind=2))), kind=8), ROW_MASK), 32))
@@ -224,8 +214,8 @@ function execute_move_row(board, move)
         ret = ieor(ret, ishft(iand(int(reverse_row(row_table(reverse_row(int(iand(ishft(board, -48), ROW_MASK), kind=2)))), &
               & kind=8), ROW_MASK), 48))
     end if
-    execute_move_row = ret
-end function execute_move_row
+    execute_move = ret
+end function execute_move
 
 function score_helper(board)
     integer(8), intent(in) :: board
@@ -280,15 +270,19 @@ function execute_move_helper(row)
     execute_move_helper = ior(ior(ior(t0, t1), t2), t3)
 end function execute_move_helper
 
-function execute_move_col(board, move)
+function execute_move(board, move)
     integer(8), intent(in) :: board
     integer(4), intent(in) :: move
-    integer(8) :: execute_move_col
+    integer(8) :: execute_move
     integer(8) :: ret, t
     integer(2) :: row, rev_row, i
 
     ret = board
-    t = transpose_board(board)
+    if ((move == UP) .or. (move == DOWN)) then
+        t = transpose_board(board)
+    else
+        t = board
+    end if
     do i = 0, 3
         row = int(iand(ishft(t, -ishft(i, 4)), ROW_MASK), kind=2)
         if (move == UP) then
@@ -296,30 +290,15 @@ function execute_move_col(board, move)
         else if (move == DOWN) then
             rev_row = reverse_row(row)
             ret = ieor(ret, ishft(unpack_col(ieor(row, reverse_row(execute_move_helper(rev_row)))), ishft(i, 2)))
-        end if
-    end do
-    execute_move_col = ret
-end function execute_move_col
-
-function execute_move_row(board, move)
-    integer(8), intent(in) :: board
-    integer(4), intent(in) :: move
-    integer(8) :: execute_move_row
-    integer(8) :: ret
-    integer(2) :: row, rev_row, i
-
-    ret = board
-    do i = 0, 3
-        row = int(iand(ishft(board, -ishft(i, 4)), ROW_MASK), kind=2)
-        if (move == LEFT) then
+        else if (move == LEFT) then
             ret = ieor(ret, ishft(iand(int(ieor(row, execute_move_helper(row)), kind=8), ROW_MASK), ishft(i, 4)))
         else if (move == RIGHT) then
             rev_row = reverse_row(row)
             ret = ieor(ret, ishft(iand(int(ieor(row, reverse_row(execute_move_helper(rev_row))), kind=8), ROW_MASK), ishft(i, 4)))
         end if
     end do
-    execute_move_row = ret
-end function execute_move_row
+    execute_move = ret
+end function execute_move
 
 function score_helper(board)
     integer(8), intent(in) :: board
@@ -340,22 +319,6 @@ function score_helper(board)
     score_helper = score
 end function score_helper
 #endif
-
-function execute_move(move, board)
-    integer(4), intent(in) :: move
-    integer(8), intent(in) :: board
-    integer(8) :: execute_move
-    integer(8) :: ret
-
-    if ((move == UP) .or. (move == DOWN)) then
-        ret = execute_move_col(board, move)
-    else if ((move == LEFT) .or. (move == RIGHT)) then
-        ret = execute_move_row(board, move)
-    else
-        ret = -1
-    end if
-    execute_move = ret
-end function execute_move
 
 function score_board(board)
     integer(8), intent(in) :: board
@@ -471,7 +434,7 @@ subroutine play_game()
         call c_clear_screen()
         move = 0
         do while (move < 4)
-            if (execute_move(move, board) /= board) then
+            if (execute_move(board, move) /= board) then
                 exit
             end if
             move = move + 1
@@ -506,7 +469,7 @@ subroutine play_game()
             cycle
         end if
 
-        newboard = execute_move(move, board)
+        newboard = execute_move(board, move)
         if (newboard == board) then
             moveno = moveno - 1
             cycle

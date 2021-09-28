@@ -140,7 +140,8 @@ typedef struct {
 
 #if FASTMODE != 0
 #define TABLESIZE 65536
-row_t *row_table;
+row_t *row_left_table;
+row_t *row_right_table;
 score_t *score_table;
 score_heur_t *score_heur_table;
 #else
@@ -216,6 +217,10 @@ static int count_empty(board_t x) {
 static void init_tables(void) {
     row_t row = 0, result = 0;
 
+#if FASTMODE != 0
+    row_t rev_row = 0, rev_result = 0;
+#endif
+
     do {
         int i = 0, j = 0;
         row_t line[4] = { 0 };
@@ -268,22 +273,27 @@ static void init_tables(void) {
             if (line[i - 1] > line[i]) {
                 monotonicity_left +=
                     (score_heur_t)(pow((score_heur_t)line[i - 1], SCORE_MONOTONICITY_POWER) -
-                            pow((score_heur_t)line[i], SCORE_MONOTONICITY_POWER));
+                                   pow((score_heur_t)line[i], SCORE_MONOTONICITY_POWER));
             } else {
                 monotonicity_right +=
                     (score_heur_t)(pow((score_heur_t)line[i], SCORE_MONOTONICITY_POWER) -
-                            pow((score_heur_t)line[i - 1], SCORE_MONOTONICITY_POWER));
+                                   pow((score_heur_t)line[i - 1], SCORE_MONOTONICITY_POWER));
             }
         }
 
 #if FASTMODE != 0
         score_heur_table[row] =
-            (score_heur_t)(SCORE_LOST_PENALTY + SCORE_EMPTY_WEIGHT * empty + SCORE_MERGES_WEIGHT * merges -
-                    SCORE_MONOTONICITY_WEIGHT * min(monotonicity_left, monotonicity_right) - SCORE_SUM_WEIGHT * sum);
+            (score_heur_t)(SCORE_LOST_PENALTY +
+                           SCORE_EMPTY_WEIGHT * empty + SCORE_MERGES_WEIGHT * merges -
+                           SCORE_MONOTONICITY_WEIGHT * min(monotonicity_left, monotonicity_right) -
+                           SCORE_SUM_WEIGHT * sum);
 #else
         score_heur_table[row / TABLESIZE][row % TABLESIZE] =
-            (score_heur_t)(SCORE_LOST_PENALTY + SCORE_EMPTY_WEIGHT * empty + SCORE_MERGES_WEIGHT * merges -
-                    SCORE_MONOTONICITY_WEIGHT * min(monotonicity_left, monotonicity_right) - SCORE_SUM_WEIGHT * sum);
+            (score_heur_t)(SCORE_LOST_PENALTY +
+                           SCORE_EMPTY_WEIGHT * empty +
+                           SCORE_MERGES_WEIGHT * merges -
+                           SCORE_MONOTONICITY_WEIGHT *
+                           min(monotonicity_left, monotonicity_right) - SCORE_SUM_WEIGHT * sum);
 #endif
 
         for (i = 0; i < 3; ++i) {
@@ -309,7 +319,10 @@ static void init_tables(void) {
         result = line[0] | (line[1] << 4) | (line[2] << 8) | (line[3] << 12);
 
 #if FASTMODE != 0
-        row_table[row] = row ^ result;
+        rev_row = reverse_row(row);
+        rev_result = reverse_row(result);
+        row_left_table[row] = row ^ result;
+        row_right_table[rev_row] = rev_row ^ rev_result;
 #else
         row_table[row / TABLESIZE][row % TABLESIZE] = row ^ result;
 #endif
@@ -318,10 +331,11 @@ static void init_tables(void) {
 
 #if FASTMODE != 0
 static void alloc_tables(void) {
-    row_table = (row_t *)malloc(sizeof(row_t) * TABLESIZE);
+    row_left_table = (row_t *)malloc(sizeof(row_t) * TABLESIZE);
+    row_right_table = (row_t *)malloc(sizeof(row_t) * TABLESIZE);
     score_table = (score_t *)malloc(sizeof(score_t) * TABLESIZE);
     score_heur_table = (score_heur_t *)malloc(sizeof(score_heur_t) * TABLESIZE);
-    if (!row_table || !score_table || !score_heur_table) {
+    if (!row_left_table || !row_right_table || !score_table || !score_heur_table) {
         fprintf(stderr, "Not enough memory.");
         fflush(stderr);
         abort();
@@ -329,42 +343,37 @@ static void alloc_tables(void) {
 }
 
 static void free_tables(void) {
-    free(row_table);
+    free(row_left_table);
+    free(row_right_table);
     free(score_table);
     free(score_heur_table);
 }
 
-static board_t execute_move_col(board_t board, int move) {
-    board_t ret = board;
-    board_t t = transpose(board);
+static board_t execute_move(board_t board, int move) {
+    board_t ret = board, t = 0;
 
     if (move == UP) {
-        ret ^= unpack_col(row_table[t & ROW_MASK]);
-        ret ^= unpack_col(row_table[(t >> 16) & ROW_MASK]) << 4;
-        ret ^= unpack_col(row_table[(t >> 32) & ROW_MASK]) << 8;
-        ret ^= unpack_col(row_table[(t >> 48) & ROW_MASK]) << 12;
+        t = transpose(board);
+        ret ^= unpack_col(row_left_table[t & ROW_MASK]);
+        ret ^= unpack_col(row_left_table[(t >> 16) & ROW_MASK]) << 4;
+        ret ^= unpack_col(row_left_table[(t >> 32) & ROW_MASK]) << 8;
+        ret ^= unpack_col(row_left_table[(t >> 48) & ROW_MASK]) << 12;
     } else if (move == DOWN) {
-        ret ^= unpack_col(reverse_row(row_table[reverse_row(t & ROW_MASK)]));
-        ret ^= unpack_col(reverse_row(row_table[reverse_row((t >> 16) & ROW_MASK)])) << 4;
-        ret ^= unpack_col(reverse_row(row_table[reverse_row((t >> 32) & ROW_MASK)])) << 8;
-        ret ^= unpack_col(reverse_row(row_table[reverse_row((t >> 48) & ROW_MASK)])) << 12;
-    }
-    return ret;
-}
-
-static board_t execute_move_row(board_t board, int move) {
-    board_t ret = board;
-
-    if (move == LEFT) {
-        ret ^= (board_t)(row_table[board & ROW_MASK]);
-        ret ^= (board_t)(row_table[(board >> 16) & ROW_MASK]) << 16;
-        ret ^= (board_t)(row_table[(board >> 32) & ROW_MASK]) << 32;
-        ret ^= (board_t)(row_table[(board >> 48) & ROW_MASK]) << 48;
+        t = transpose(board);
+        ret ^= unpack_col(row_right_table[t & ROW_MASK]);
+        ret ^= unpack_col(row_right_table[(t >> 16) & ROW_MASK]) << 4;
+        ret ^= unpack_col(row_right_table[(t >> 32) & ROW_MASK]) << 8;
+        ret ^= unpack_col(row_right_table[(t >> 48) & ROW_MASK]) << 12;
+    } else if (move == LEFT) {
+        ret ^= (board_t)(row_left_table[board & ROW_MASK]);
+        ret ^= (board_t)(row_left_table[(board >> 16) & ROW_MASK]) << 16;
+        ret ^= (board_t)(row_left_table[(board >> 32) & ROW_MASK]) << 32;
+        ret ^= (board_t)(row_left_table[(board >> 48) & ROW_MASK]) << 48;
     } else if (move == RIGHT) {
-        ret ^= (board_t)(reverse_row(row_table[reverse_row(board & ROW_MASK)]));
-        ret ^= (board_t)(reverse_row(row_table[reverse_row((board >> 16) & ROW_MASK)])) << 16;
-        ret ^= (board_t)(reverse_row(row_table[reverse_row((board >> 32) & ROW_MASK)])) << 32;
-        ret ^= (board_t)(reverse_row(row_table[reverse_row((board >> 48) & ROW_MASK)])) << 48;
+        ret ^= (board_t)(row_right_table[board & ROW_MASK]);
+        ret ^= (board_t)(row_right_table[(board >> 16) & ROW_MASK]) << 16;
+        ret ^= (board_t)(row_right_table[(board >> 32) & ROW_MASK]) << 32;
+        ret ^= (board_t)(row_right_table[(board >> 48) & ROW_MASK]) << 48;
     }
     return ret;
 }
@@ -400,32 +409,26 @@ static void free_tables(void) {
     }
 }
 
-static board_t execute_move_col(board_t board, int move) {
+static board_t execute_move(board_t board, int move) {
     board_t ret = board;
-    board_t t = transpose(board);
     row_t row = 0;
     int i = 0;
 
     if (move == UP) {
+        board_t t = transpose(board);
+
         for (i = 0; i < 4; ++i) {
             row = (t >> (i << 4)) & ROW_MASK;
             ret ^= unpack_col(row_table[row / TABLESIZE][row % TABLESIZE]) << (i << 2);
         }
     } else if (move == DOWN) {
+        board_t t = transpose(board);
+
         for (i = 0; i < 4; ++i) {
             row = reverse_row((t >> (i << 4)) & ROW_MASK);
             ret ^= unpack_col(reverse_row(row_table[row / TABLESIZE][row % TABLESIZE])) << (i << 2);
         }
-    }
-    return ret;
-}
-
-static board_t execute_move_row(board_t board, int move) {
-    board_t ret = board;
-    row_t row = 0;
-    int i = 0;
-
-    if (move == LEFT) {
+    } else if (move == LEFT) {
         for (i = 0; i < 4; ++i) {
             row = (board >> (i << 4)) & ROW_MASK;
             ret ^= (board_t)(row_table[row / TABLESIZE][row % TABLESIZE]) << (i << 4);
@@ -469,19 +472,6 @@ static score_heur_t score_heur_helper(board_t board) {
 }
 #endif
 
-static board_t execute_move(int move, board_t board) {
-    switch (move) {
-    case UP:
-    case DOWN:
-        return execute_move_col(board, move);
-    case LEFT:
-    case RIGHT:
-        return execute_move_row(board, move);
-    default:
-        return ~W64LIT(0);
-    }
-}
-
 static score_t score_board(board_t board) {
     return score_helper(board);
 }
@@ -516,6 +506,36 @@ static board_t initial_board(void) {
     board_t board = (board_t)(draw_tile()) << (unif_random(16) << 2);
 
     return insert_tile_rand(board, draw_tile());
+}
+
+static int get_depth_limit(board_t board) {
+    row_t bitset = 0, max_limit = 0;
+    int count = 0;
+
+    while (board) {
+        bitset |= 1 << (board & 0xf);
+        board >>= 4;
+    }
+
+    if (bitset <= 2048) {
+        max_limit = 3;
+    } else if (bitset <= 2048 + 1024) {
+        max_limit = 4;
+    } else {
+        max_limit = 5;
+    }
+    bitset >>= 1;
+
+    while (bitset) {
+        bitset &= bitset - 1;
+        count++;
+    }
+    count -= 2;
+    count = max(count, 3);
+    if (max_limit) {
+        count = min(count, max_limit);
+    }
+    return count;
 }
 
 static score_heur_t score_move_node(eval_state *state, board_t board, score_heur_t cprob);
@@ -553,7 +573,7 @@ static score_heur_t score_move_node(eval_state *state, board_t board, score_heur
 
     state->curdepth++;
     for (move = 0; move < 4; ++move) {
-        board_t newboard = execute_move(move, board);
+        board_t newboard = execute_move(board, move);
 
         state->moves_evaled++;
         if (board != newboard) {
@@ -572,7 +592,7 @@ static score_heur_t score_move_node(eval_state *state, board_t board, score_heur
 }
 
 static score_heur_t _score_toplevel_move(eval_state *state, board_t board, int move) {
-    board_t newboard = execute_move(move, board);
+    board_t newboard = execute_move(board, move);
 
     if (board == newboard)
         return 0.0f;
@@ -585,7 +605,7 @@ static score_heur_t score_toplevel_move(board_t board, int move) {
     score_heur_t res = 0.0;
 
     memset(&state, 0x00, sizeof(eval_state));
-    state.depth_limit = 3;
+    state.depth_limit = get_depth_limit(board);
     res = _score_toplevel_move(&state, board, move);
 
     printf
@@ -635,7 +655,7 @@ void play_game(get_move_func_t get_move) {
 
         clear_screen();
         for (move = 0; move < 4; move++) {
-            if (execute_move(move, board) != board)
+            if (execute_move(board, move) != board)
                 break;
         }
         if (move == 4)
@@ -649,7 +669,7 @@ void play_game(get_move_func_t get_move) {
         if (move < 0)
             break;
 
-        newboard = execute_move(move, board);
+        newboard = execute_move(board, move);
         if (newboard == board) {
             moveno--;
             continue;

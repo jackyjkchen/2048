@@ -261,42 +261,32 @@ static row_t execute_move_helper(row_t row) {
     return line[0] | (line[1] << 4) | (line[2] << 8) | (line[3] << 12);
 }
 
-static board_t execute_move_col(board_t board, int move) {
+static board_t execute_move(board_t board, int move) {
     board_t ret, tran, tmp;
-    row_t *t = (row_t *)&tran;
-    row_t row = 0;
-    int i = 0;
+    row_t *t = (row_t *)&ret;
+    row_t row;
 
     ret = board;
-    tran = transpose(board);
-    for (i = 0; i < 4; ++i) {
+    if (move == UP || move == DOWN) {
+        tran = transpose(board);
+        t = (row_t *)&tran;
+    }
+    for (int i = 0; i < 4; ++i) {
         row = t[3 - i];
         if (move == UP) {
             tmp = unpack_col(row ^ execute_move_helper(row));
         } else if (move == DOWN) {
             tmp = unpack_col(row ^ reverse_row(execute_move_helper(reverse_row(row))));
-        }
-        ret.r0 ^= tmp.r0 << (i << 2);
-        ret.r1 ^= tmp.r1 << (i << 2);
-        ret.r2 ^= tmp.r2 << (i << 2);
-        ret.r3 ^= tmp.r3 << (i << 2);
-    }
-    return ret;
-}
-
-static board_t execute_move_row(board_t board, int move) {
-    board_t ret;
-    row_t *t = (row_t *)&ret;
-    row_t row = 0;
-    int i = 0;
-
-    ret = board;
-    for (i = 0; i < 4; ++i) {
-        row = t[3 - i];
-        if (move == LEFT) {
+        } else if (move == LEFT) {
             t[3 - i] ^= row ^ execute_move_helper(row);
         } else if (move == RIGHT) {
             t[3 - i] ^= row ^ reverse_row(execute_move_helper(reverse_row(row)));
+        }
+        if (move == UP || move == DOWN) {
+            ret.r0 ^= tmp.r0 << (i << 2);
+            ret.r1 ^= tmp.r1 << (i << 2);
+            ret.r2 ^= tmp.r2 << (i << 2);
+            ret.r3 ^= tmp.r3 << (i << 2);
         }
     }
     return ret;
@@ -317,22 +307,6 @@ static score_t score_helper(board_t board) {
         }
     }
     return score;
-}
-
-static board_t execute_move(int move, board_t board) {
-    board_t invalid;
-
-    switch (move) {
-    case UP:
-    case DOWN:
-        return execute_move_col(board, move);
-    case LEFT:
-    case RIGHT:
-        return execute_move_row(board, move);
-    default:
-        memset(&invalid, 0xFF, sizeof(board_t));
-        return invalid;
-    }
 }
 
 static score_t score_board(board_t board) {
@@ -423,7 +397,7 @@ void play_game(get_move_func_t get_move) {
 
         clear_screen();
         for (move = 0; move < 4; move++) {
-            tmp = execute_move(move, board);
+            tmp = execute_move(board, move);
             if (memcmp(&tmp, &board, sizeof(board_t)) != 0)
                 break;
         }
@@ -452,7 +426,7 @@ void play_game(get_move_func_t get_move) {
             continue;
         }
 
-        newboard = execute_move(move, board);
+        newboard = execute_move(board, move);
         if (memcmp(&newboard, &board, sizeof(board_t)) == 0) {
             moveno--;
             continue;

@@ -137,30 +137,23 @@ class Game2048
         } while (row++ != 0xFFFF);
     }
 
-    UInt64 execute_move_col(UInt64 board, int move)
+    UInt64 execute_move(UInt64 board, int move)
     {
         UInt64 ret = board;
-        UInt64 t = transpose(board);
 
         if (move == UP) {
+            UInt64 t = transpose(board);
             ret ^= unpack_col(row_table[t & ROW_MASK]);
             ret ^= unpack_col(row_table[(t >> 16) & ROW_MASK]) << 4;
             ret ^= unpack_col(row_table[(t >> 32) & ROW_MASK]) << 8;
             ret ^= unpack_col(row_table[(t >> 48) & ROW_MASK]) << 12;
         } else if (move == DOWN) {
+            UInt64 t = transpose(board);
             ret ^= unpack_col(reverse_row(row_table[reverse_row((UInt16)(t & ROW_MASK))]));
             ret ^= unpack_col(reverse_row(row_table[reverse_row((UInt16)((t >> 16) & ROW_MASK))])) << 4;
             ret ^= unpack_col(reverse_row(row_table[reverse_row((UInt16)((t >> 32) & ROW_MASK))])) << 8;
             ret ^= unpack_col(reverse_row(row_table[reverse_row((UInt16)((t >> 48) & ROW_MASK))])) << 12;
-        }
-        return ret;
-    }
-
-    UInt64 execute_move_row(UInt64 board, int move)
-    {
-        UInt64 ret = board;
-
-        if (move == LEFT) {
+        } else if (move == LEFT) {
             ret ^= (UInt64)(row_table[board & ROW_MASK]);
             ret ^= (UInt64)(row_table[(board >> 16) & ROW_MASK]) << 16;
             ret ^= (UInt64)(row_table[(board >> 32) & ROW_MASK]) << 32;
@@ -172,21 +165,6 @@ class Game2048
             ret ^= (UInt64)(reverse_row(row_table[reverse_row((UInt16)((board >> 48) & ROW_MASK))])) << 48;
         }
         return ret;
-    }
-
-    UInt64 execute_move(int move, UInt64 board)
-    {
-        switch (move)
-        {
-            case UP:
-            case DOWN:
-                return execute_move_col(board, move);
-            case LEFT:
-            case RIGHT:
-                return execute_move_row(board, move);
-            default:
-                return 0xFFFFFFFFFFFFFFFF;
-        }
     }
 
     UInt32 score_helper(UInt64 board)
@@ -273,7 +251,7 @@ class Game2048
             clear_screen();
             for (move = 0; move < 4; move++)
             {
-                if (execute_move(move, board) != board)
+                if (execute_move(board, move) != board)
                     break;
             }
             if (move == 4)
@@ -303,7 +281,7 @@ class Game2048
                 continue;
             }
 
-            newboard = execute_move(move, board);
+            newboard = execute_move(board, move);
             if (newboard == board)
             {
                 moveno--;

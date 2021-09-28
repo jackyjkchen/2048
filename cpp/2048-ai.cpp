@@ -193,11 +193,9 @@ private:
     void alloc_tables();
     void free_tables();
 
-    board_t execute_move_col(board_t board, int move);
-    board_t execute_move_row(board_t board, int move);
+    board_t execute_move(board_t board, int move);
     score_t score_helper(board_t board);
     score_heur_t score_heur_helper(board_t board);
-    board_t execute_move(int move, board_t board);
     score_t score_board(board_t board);
     score_heur_t score_heur_board(board_t board);
 
@@ -240,7 +238,8 @@ private:
 
 #if FASTMODE != 0
 #define TABLESIZE 65536
-    row_t *row_table;
+    row_t *row_left_table;
+    row_t *row_right_table;
     score_t *score_table;
     score_heur_t *score_heur_table;
 #else
@@ -306,6 +305,9 @@ int Game2048::count_empty(board_t x) {
 
 void Game2048::init_tables() {
     row_t row = 0, result = 0;
+#if FASTMODE != 0
+    row_t rev_row = 0, rev_result = 0;
+#endif
 
     do {
         int i = 0, j = 0;
@@ -398,7 +400,10 @@ void Game2048::init_tables() {
         result = line[0] | (line[1] << 4) | (line[2] << 8) | (line[3] << 12);
 
 #if FASTMODE != 0
-        row_table[row] = row ^ result;
+        rev_row = reverse_row(row);
+        rev_result = reverse_row(result);
+        row_left_table[row] = row ^ result;
+        row_right_table[rev_row] = rev_row ^ rev_result;
 #else
         row_table[row / TABLESIZE][row % TABLESIZE] = row ^ result;
 #endif
@@ -407,10 +412,11 @@ void Game2048::init_tables() {
 
 #if FASTMODE != 0
 void Game2048::alloc_tables() {
-    row_table = (row_t*)malloc(sizeof(row_t) * TABLESIZE);
+    row_left_table = (row_t*)malloc(sizeof(row_t) * TABLESIZE);
+    row_right_table = (row_t*)malloc(sizeof(row_t) * TABLESIZE);
     score_table = (score_t*)malloc(sizeof(score_t) * TABLESIZE);
     score_heur_table = (score_heur_t*)malloc(sizeof(score_heur_t) * TABLESIZE);
-    if (!row_table || !score_table || !score_heur_table) {
+    if (!row_left_table || !row_right_table || !score_table || !score_heur_table) {
         fprintf(stderr, "Not enough memory.");
         fflush(stderr);
         abort();
@@ -418,42 +424,37 @@ void Game2048::alloc_tables() {
 }
 
 void Game2048::free_tables() {
-    free(row_table);
+    free(row_left_table);
+    free(row_right_table);
     free(score_table);
     free(score_heur_table);
 }
 
-board_t Game2048::execute_move_col(board_t board, int move) {
+board_t Game2048::execute_move(board_t board, int move) {
     board_t ret = board;
-    board_t t = transpose(board);
 
     if (move == UP) {
-        ret ^= unpack_col(row_table[t & ROW_MASK]);
-        ret ^= unpack_col(row_table[(t >> 16) & ROW_MASK]) << 4;
-        ret ^= unpack_col(row_table[(t >> 32) & ROW_MASK]) << 8;
-        ret ^= unpack_col(row_table[(t >> 48) & ROW_MASK]) << 12;
+        board_t t = transpose(board);
+        ret ^= unpack_col(row_left_table[t & ROW_MASK]);
+        ret ^= unpack_col(row_left_table[(t >> 16) & ROW_MASK]) << 4;
+        ret ^= unpack_col(row_left_table[(t >> 32) & ROW_MASK]) << 8;
+        ret ^= unpack_col(row_left_table[(t >> 48) & ROW_MASK]) << 12;
     } else if (move == DOWN) {
-        ret ^= unpack_col(reverse_row(row_table[reverse_row(t & ROW_MASK)]));
-        ret ^= unpack_col(reverse_row(row_table[reverse_row((t >> 16) & ROW_MASK)])) << 4;
-        ret ^= unpack_col(reverse_row(row_table[reverse_row((t >> 32) & ROW_MASK)])) << 8;
-        ret ^= unpack_col(reverse_row(row_table[reverse_row((t >> 48) & ROW_MASK)])) << 12;
-    }
-    return ret;
-}
-
-board_t Game2048::execute_move_row(board_t board, int move) {
-    board_t ret = board;
-
-    if (move == LEFT) {
-        ret ^= (board_t)(row_table[board & ROW_MASK]);
-        ret ^= (board_t)(row_table[(board >> 16) & ROW_MASK]) << 16;
-        ret ^= (board_t)(row_table[(board >> 32) & ROW_MASK]) << 32;
-        ret ^= (board_t)(row_table[(board >> 48) & ROW_MASK]) << 48;
+        board_t t = transpose(board);
+        ret ^= unpack_col(row_right_table[t & ROW_MASK]);
+        ret ^= unpack_col(row_right_table[(t >> 16) & ROW_MASK]) << 4;
+        ret ^= unpack_col(row_right_table[(t >> 32) & ROW_MASK]) << 8;
+        ret ^= unpack_col(row_right_table[(t >> 48) & ROW_MASK]) << 12;
+    } else if (move == LEFT) {
+        ret ^= (board_t)(row_left_table[board & ROW_MASK]);
+        ret ^= (board_t)(row_left_table[(board >> 16) & ROW_MASK]) << 16;
+        ret ^= (board_t)(row_left_table[(board >> 32) & ROW_MASK]) << 32;
+        ret ^= (board_t)(row_left_table[(board >> 48) & ROW_MASK]) << 48;
     } else if (move == RIGHT) {
-        ret ^= (board_t)(reverse_row(row_table[reverse_row(board & ROW_MASK)]));
-        ret ^= (board_t)(reverse_row(row_table[reverse_row((board >> 16) & ROW_MASK)])) << 16;
-        ret ^= (board_t)(reverse_row(row_table[reverse_row((board >> 32) & ROW_MASK)])) << 32;
-        ret ^= (board_t)(reverse_row(row_table[reverse_row((board >> 48) & ROW_MASK)])) << 48;
+        ret ^= (board_t)(row_right_table[board & ROW_MASK]);
+        ret ^= (board_t)(row_right_table[(board >> 16) & ROW_MASK]) << 16;
+        ret ^= (board_t)(row_right_table[(board >> 32) & ROW_MASK]) << 32;
+        ret ^= (board_t)(row_right_table[(board >> 48) & ROW_MASK]) << 48;
     }
     return ret;
 }
@@ -489,28 +490,22 @@ void Game2048::free_tables() {
     }
 }
 
-board_t Game2048::execute_move_col(board_t board, int move) {
+board_t Game2048::execute_move(board_t board, int move) {
     board_t ret = board;
-    board_t t = transpose(board);
 
     if (move == UP) {
+        board_t t = transpose(board);
         for (int i = 0; i < 4; ++i) {
             row_t row = (t >> (i << 4)) & ROW_MASK;
             ret ^= unpack_col(row_table[row / TABLESIZE][row % TABLESIZE]) << (i << 2);
         }
     } else if (move == DOWN) {
+        board_t t = transpose(board);
         for (int i = 0; i < 4; ++i) {
             row_t row = reverse_row((t >> (i << 4)) & ROW_MASK);
             ret ^= unpack_col(reverse_row(row_table[row / TABLESIZE][row % TABLESIZE])) << (i << 2);
         }
-    }
-    return ret;
-}
-
-board_t Game2048::execute_move_row(board_t board, int move) {
-    board_t ret = board;
-
-    if (move == LEFT) {
+    } else if (move == LEFT) {
         for (int i = 0; i < 4; ++i) {
             row_t row = (board >> (i << 4)) & ROW_MASK;
             ret ^= (board_t)(row_table[row / TABLESIZE][row % TABLESIZE]) << (i << 4);
@@ -548,19 +543,6 @@ score_heur_t Game2048::score_heur_helper(board_t board) {
     return score_heur;
 }
 #endif
-
-board_t Game2048::execute_move(int move, board_t board) {
-    switch (move) {
-    case UP:
-    case DOWN:
-        return execute_move_col(board, move);
-    case LEFT:
-    case RIGHT:
-        return execute_move_row(board, move);
-    default:
-        return ~W64LIT(0);
-    }
-}
 
 score_t Game2048::score_board(board_t board) {
     return score_helper(board);
@@ -692,7 +674,7 @@ score_heur_t Game2048::score_move_node(eval_state &state, board_t board, score_h
 
     state.curdepth++;
     for (int move = 0; move < 4; ++move) {
-        board_t newboard = execute_move(move, board);
+        board_t newboard = execute_move(board, move);
 
         state.moves_evaled++;
         if (board != newboard) {
@@ -710,7 +692,7 @@ score_heur_t Game2048::score_move_node(eval_state &state, board_t board, score_h
 }
 
 score_heur_t Game2048::_score_toplevel_move(eval_state &state, board_t board, int move) {
-    board_t newboard = execute_move(move, board);
+    board_t newboard = execute_move(board, move);
 
     if (board == newboard)
         return 0.0f;
@@ -819,7 +801,7 @@ void Game2048::play_game() {
 
         clear_screen();
         for (move = 0; move < 4; move++) {
-            if (execute_move(move, board) != board)
+            if (execute_move(board, move) != board)
                 break;
         }
         if (move == 4)
@@ -833,7 +815,7 @@ void Game2048::play_game() {
         if (move < 0)
             break;
 
-        newboard = execute_move(move, board);
+        newboard = execute_move(board, move);
         if (newboard == board) {
             moveno--;
             continue;
