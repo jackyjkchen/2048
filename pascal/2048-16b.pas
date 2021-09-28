@@ -19,7 +19,6 @@ end;
 
 type
     board_t = array[0..3] of word;
-    row_t   = word;
 const
     UP       : integer = 0;
     DOWN     : integer = 1;
@@ -27,7 +26,7 @@ const
     RIGHT    : integer = 3;
     RETRACT  : integer = 4;
 
-procedure unpack_col(row : row_t; var board : board_t);
+procedure unpack_col(row : word; var board : board_t);
 begin
     board[0] := (row and $F000) shr 12;
     board[1] := (row and $0F00) shr 8;
@@ -35,7 +34,7 @@ begin
     board[3] := row and $000F;
 end;
 
-function reverse_row(row : row_t): row_t;
+function reverse_row(row : word): word;
 begin
     reverse_row := (row shr 12) or ((row shr 4) and $00F0)  or ((row shl 4) and $0F00) or (row shl 12);
 end;
@@ -107,7 +106,7 @@ begin
     count_empty := sum and $f;
 end;
 
-function execute_move_helper(row : row_t) : row_t;
+function execute_move_helper(row : word) : word;
 var
     i, j     : integer;
     row_line : array[0..3] of byte;
@@ -144,7 +143,7 @@ procedure execute_move_col(var board : board_t; _move : integer);
 var
     tran, tmp : board_t;
     i : integer;
-    row, rev_row : row_t;
+    row, rev_row : word;
 begin
     move(board, tran, sizeof(board_t));
     transpose(tran);
@@ -166,7 +165,7 @@ end;
 procedure execute_move_row(var board : board_t; _move : integer);
 var
     i : integer;
-    row, rev_row : row_t;
+    row, rev_row : word;
 begin
     for i := 0 to 3 do begin
         row := board[3-i];
@@ -191,7 +190,7 @@ function score_helper(board : board_t) : longint;
 var
     i, j : integer;
     score : longint;
-    row : row_t;
+    row : word;
     rank : dword;
 begin
     score := 0;

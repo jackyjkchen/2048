@@ -14,11 +14,8 @@ import (
 	"time"
 )
 
-type board_t uint64
-type row_t uint16
-
-const ROW_MASK board_t = 0xFFFF
-const COL_MASK board_t = 0x000F000F000F000F
+const ROW_MASK uint64 = 0xFFFF
+const COL_MASK uint64 = 0x000F000F000F000F
 
 const (
 	UP    = 0
@@ -27,11 +24,11 @@ const (
 	RIGHT = 3
 )
 
-type get_move_func_t func(board board_t) int
+type get_move_func_t func(board uint64) int
 
 const TABLESIZE = 65536
 
-var row_table [TABLESIZE]row_t
+var uint16able [TABLESIZE]uint16
 var score_table [TABLESIZE]uint32
 var score_heur_table [TABLESIZE]float64
 
@@ -41,7 +38,7 @@ type trans_table_entry_t struct {
 }
 
 type eval_state struct {
-	trans_table  map[board_t]trans_table_entry_t
+	trans_table  map[uint64]trans_table_entry_t
 	maxdepth     int
 	curdepth     int
 	nomoves      int
@@ -67,17 +64,17 @@ func unif_random(n uint32) uint32 {
 	return rd.Uint32() % n
 }
 
-func unpack_col(row row_t) board_t {
-	var tmp board_t = board_t(row)
+func unpack_col(row uint16) uint64 {
+	var tmp uint64 = uint64(row)
 
 	return (tmp | (tmp << 12) | (tmp << 24) | (tmp << 36)) & COL_MASK
 }
 
-func reverse_row(row row_t) row_t {
+func reverse_row(row uint16) uint16 {
 	return (row >> 12) | ((row >> 4) & 0x00F0) | ((row << 4) & 0x0F00) | (row << 12)
 }
 
-func print_board(board board_t) {
+func print_board(board uint64) {
 	fmt.Printf("-----------------------------\n")
 	for i := 0; i < 4; i++ {
 		for j := 0; j < 4; j++ {
@@ -95,7 +92,7 @@ func print_board(board board_t) {
 	fmt.Printf("-----------------------------\n")
 }
 
-func transpose(x board_t) board_t {
+func transpose(x uint64) uint64 {
 	a1 := x & 0xF0F00F0FF0F00F0F
 	a2 := x & 0x0000F0F00000F0F0
 	a3 := x & 0x0F0F00000F0F0000
@@ -107,7 +104,7 @@ func transpose(x board_t) board_t {
 	return b1 | (b2 >> 24) | (b3 << 24)
 }
 
-func count_empty(x board_t) uint32 {
+func count_empty(x uint64) uint32 {
 	x |= (x >> 2) & 0x3333333333333333
 	x |= (x >> 1)
 	x = ^x & 0x1111111111111111
@@ -119,12 +116,12 @@ func count_empty(x board_t) uint32 {
 }
 
 func init_tables() {
-	var row, result row_t = 0, 0
+	var row, result uint16 = 0, 0
 
 	for true {
 		i := 0
 		j := 0
-		var line [4]row_t
+		var line [4]uint16
 		var score uint32 = 0
 
 		line[0] = row & 0xf
@@ -206,7 +203,7 @@ func init_tables() {
 		}
 
 		result = line[0] | (line[1] << 4) | (line[2] << 8) | (line[3] << 12)
-		row_table[row] = row ^ result
+		uint16able[row] = row ^ result
 
 		if row == TABLESIZE-1 {
 			break
@@ -215,42 +212,42 @@ func init_tables() {
 	}
 }
 
-func execute_move_col(board board_t, move int) board_t {
-	var ret board_t = board
-	var t board_t = transpose(board)
+func execute_move_col(board uint64, move int) uint64 {
+	var ret uint64 = board
+	var t uint64 = transpose(board)
 
 	if move == UP {
-		ret ^= unpack_col(row_table[t&ROW_MASK])
-		ret ^= unpack_col(row_table[(t>>16)&ROW_MASK]) << 4
-		ret ^= unpack_col(row_table[(t>>32)&ROW_MASK]) << 8
-		ret ^= unpack_col(row_table[(t>>48)&ROW_MASK]) << 12
+		ret ^= unpack_col(uint16able[t&ROW_MASK])
+		ret ^= unpack_col(uint16able[(t>>16)&ROW_MASK]) << 4
+		ret ^= unpack_col(uint16able[(t>>32)&ROW_MASK]) << 8
+		ret ^= unpack_col(uint16able[(t>>48)&ROW_MASK]) << 12
 	} else if move == DOWN {
-		ret ^= unpack_col(reverse_row(row_table[reverse_row(row_t(t&ROW_MASK))]))
-		ret ^= unpack_col(reverse_row(row_table[reverse_row(row_t((t>>16)&ROW_MASK))])) << 4
-		ret ^= unpack_col(reverse_row(row_table[reverse_row(row_t((t>>32)&ROW_MASK))])) << 8
-		ret ^= unpack_col(reverse_row(row_table[reverse_row(row_t((t>>48)&ROW_MASK))])) << 12
+		ret ^= unpack_col(reverse_row(uint16able[reverse_row(uint16(t&ROW_MASK))]))
+		ret ^= unpack_col(reverse_row(uint16able[reverse_row(uint16((t>>16)&ROW_MASK))])) << 4
+		ret ^= unpack_col(reverse_row(uint16able[reverse_row(uint16((t>>32)&ROW_MASK))])) << 8
+		ret ^= unpack_col(reverse_row(uint16able[reverse_row(uint16((t>>48)&ROW_MASK))])) << 12
 	}
 	return ret
 }
 
-func execute_move_row(board board_t, move int) board_t {
-	var ret board_t = board
+func execute_move_row(board uint64, move int) uint64 {
+	var ret uint64 = board
 
 	if move == LEFT {
-		ret ^= board_t(row_table[board&ROW_MASK])
-		ret ^= board_t(row_table[(board>>16)&ROW_MASK]) << 16
-		ret ^= board_t(row_table[(board>>32)&ROW_MASK]) << 32
-		ret ^= board_t(row_table[(board>>48)&ROW_MASK]) << 48
+		ret ^= uint64(uint16able[board&ROW_MASK])
+		ret ^= uint64(uint16able[(board>>16)&ROW_MASK]) << 16
+		ret ^= uint64(uint16able[(board>>32)&ROW_MASK]) << 32
+		ret ^= uint64(uint16able[(board>>48)&ROW_MASK]) << 48
 	} else if move == RIGHT {
-		ret ^= board_t(reverse_row(row_table[reverse_row(row_t(board&ROW_MASK))]))
-		ret ^= board_t(reverse_row(row_table[reverse_row(row_t((board>>16)&ROW_MASK))])) << 16
-		ret ^= board_t(reverse_row(row_table[reverse_row(row_t((board>>32)&ROW_MASK))])) << 32
-		ret ^= board_t(reverse_row(row_table[reverse_row(row_t((board>>48)&ROW_MASK))])) << 48
+		ret ^= uint64(reverse_row(uint16able[reverse_row(uint16(board&ROW_MASK))]))
+		ret ^= uint64(reverse_row(uint16able[reverse_row(uint16((board>>16)&ROW_MASK))])) << 16
+		ret ^= uint64(reverse_row(uint16able[reverse_row(uint16((board>>32)&ROW_MASK))])) << 32
+		ret ^= uint64(reverse_row(uint16able[reverse_row(uint16((board>>48)&ROW_MASK))])) << 48
 	}
 	return ret
 }
 
-func execute_move(move int, board board_t) board_t {
+func execute_move(move int, board uint64) uint64 {
 	if move == UP || move == DOWN {
 		return execute_move_col(board, move)
 	} else if move == LEFT || move == RIGHT {
@@ -260,34 +257,34 @@ func execute_move(move int, board board_t) board_t {
 	}
 }
 
-func score_helper(board board_t) uint32 {
+func score_helper(board uint64) uint32 {
 	return score_table[board&ROW_MASK] + score_table[(board>>16)&ROW_MASK] +
 		score_table[(board>>32)&ROW_MASK] + score_table[(board>>48)&ROW_MASK]
 }
 
-func score_heur_helper(board board_t) float64 {
+func score_heur_helper(board uint64) float64 {
 	return score_heur_table[board&ROW_MASK] + score_heur_table[(board>>16)&ROW_MASK] +
 		score_heur_table[(board>>32)&ROW_MASK] + score_heur_table[(board>>48)&ROW_MASK]
 }
 
-func score_board(board board_t) uint32 {
+func score_board(board uint64) uint32 {
 	return score_helper(board)
 }
 
-func score_heur_board(board board_t) float64 {
+func score_heur_board(board uint64) float64 {
 	return score_heur_helper(board) + score_heur_helper(transpose(board))
 }
 
-func draw_tile() board_t {
+func draw_tile() uint64 {
 	if unif_random(10) < 9 {
 		return 1
 	}
 	return 2
 }
 
-func insert_tile_rand(board, tile board_t) board_t {
+func insert_tile_rand(board, tile uint64) uint64 {
 	index := unif_random(count_empty(board))
-	var tmp board_t = board
+	var tmp uint64 = board
 
 	for true {
 		for (tmp & 0xf) != 0 {
@@ -304,13 +301,13 @@ func insert_tile_rand(board, tile board_t) board_t {
 	return board | tile
 }
 
-func initial_board() board_t {
-	var board board_t = board_t(draw_tile()) << (unif_random(16) << 2)
+func initial_board() uint64 {
+	var board uint64 = uint64(draw_tile()) << (unif_random(16) << 2)
 
 	return insert_tile_rand(board, draw_tile())
 }
 
-func get_depth_limit(board board_t) int {
+func get_depth_limit(board uint64) int {
 	var bitset uint16 = 0
 	var max_limit = 0
 
@@ -346,7 +343,7 @@ func get_depth_limit(board board_t) int {
 	return count
 }
 
-func score_tilechoose_node(state *eval_state, board board_t, cprob float64) float64 {
+func score_tilechoose_node(state *eval_state, board uint64, cprob float64) float64 {
 	if cprob < CPROB_THRESH_BASE || state.curdepth >= state.depth_limit {
 		if state.curdepth > state.maxdepth {
 			state.maxdepth = state.curdepth
@@ -369,8 +366,8 @@ func score_tilechoose_node(state *eval_state, board board_t, cprob float64) floa
 	cprob /= num_open
 
 	res := 0.0
-	var tmp board_t = board
-	var tile_2 board_t = 1
+	var tmp uint64 = board
+	var tile_2 uint64 = 1
 
 	for tile_2 != 0 {
 		if (tmp & 0xf) == 0 {
@@ -390,12 +387,12 @@ func score_tilechoose_node(state *eval_state, board board_t, cprob float64) floa
 	return res
 }
 
-func score_move_node(state *eval_state, board board_t, cprob float64) float64 {
+func score_move_node(state *eval_state, board uint64, cprob float64) float64 {
 	var best float64 = 0.0
 
 	state.curdepth++
 	for move := 0; move < 4; move++ {
-		var newboard board_t = execute_move(move, board)
+		var newboard uint64 = execute_move(move, board)
 
 		state.moves_evaled++
 
@@ -410,8 +407,8 @@ func score_move_node(state *eval_state, board board_t, cprob float64) float64 {
 	return best
 }
 
-func _score_toplevel_move(state *eval_state, board board_t, move int) float64 {
-	var newboard board_t = execute_move(move, board)
+func _score_toplevel_move(state *eval_state, board uint64, move int) float64 {
+	var newboard uint64 = execute_move(move, board)
 
 	if board == newboard {
 		return 0.0
@@ -420,11 +417,11 @@ func _score_toplevel_move(state *eval_state, board board_t, move int) float64 {
 	return score_tilechoose_node(state, newboard, 1.0) + 0.000001
 }
 
-func score_toplevel_move(board board_t, move int, res *float64, wg *sync.WaitGroup) {
+func score_toplevel_move(board uint64, move int, res *float64, wg *sync.WaitGroup) {
 	defer wg.Done()
 	var state eval_state
 
-	state.trans_table = make(map[board_t]trans_table_entry_t)
+	state.trans_table = make(map[uint64]trans_table_entry_t)
 	state.depth_limit = get_depth_limit(board)
 
 	*res = _score_toplevel_move(&state, board, move)
@@ -433,7 +430,7 @@ func score_toplevel_move(board board_t, move int, res *float64, wg *sync.WaitGro
 		state.moves_evaled, state.nomoves, state.tablehits, state.cachehits, len(state.trans_table), state.maxdepth)
 }
 
-func find_best_move(board board_t) int {
+func find_best_move(board uint64) int {
 	best := 0.0
 	bestmove := -1
 
@@ -460,7 +457,7 @@ func find_best_move(board board_t) int {
 }
 
 func play_game(get_move get_move_func_t) {
-	var board board_t = initial_board()
+	var board uint64 = initial_board()
 	var scorepenalty int32 = 0
 	var current_score int32 = 0
 	var last_score int32 = 0
@@ -469,8 +466,8 @@ func play_game(get_move get_move_func_t) {
 	init_tables()
 	for true {
 		move := 0
-		var tile board_t = 0
-		var newboard board_t = 0
+		var tile uint64 = 0
+		var newboard uint64 = 0
 
 		C.clear_screen()
 		for move = 0; move < 4; move++ {

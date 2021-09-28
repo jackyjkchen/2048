@@ -15,20 +15,19 @@
 #define FASTMODE 1
 #endif
 
-typedef unsigned char uint8;
-typedef unsigned short uint16;
+typedef unsigned short row_t;
 
 #ifdef _M_I86
-typedef unsigned long uint32;
+typedef unsigned long score_t;
 #else
-typedef unsigned int uint32;
+typedef unsigned int score_t;
 #endif
 #if defined(_MSC_VER) || defined(__BORLANDC__) || defined(__WATCOMC__)
-typedef unsigned __int64 uint64;
+typedef unsigned __int64 board_t;
 
 #define W64LIT(x) x##ui64
 #else
-typedef unsigned long long uint64;
+typedef unsigned long long board_t;
 
 #define W64LIT(x) x##ULL
 #endif
@@ -55,9 +54,6 @@ typedef unsigned long long uint64;
 #elif defined(__WATCOMC__) && __WATCOMC__ < 1100
 #define GETCH_USE 1
 #endif
-
-typedef uint64 board_t;
-typedef uint16 row_t;
 
 static const board_t ROW_MASK = W64LIT(0xFFFF);
 static const board_t COL_MASK = W64LIT(0x000F000F000F000F);
@@ -223,15 +219,15 @@ static int count_empty(board_t x) {
 #if FASTMODE != 0
 #define TABLESIZE 65536
 static row_t row_table[TABLESIZE];
-static uint32 score_table[TABLESIZE];
+static score_t score_table[TABLESIZE];
 
 static void init_tables(void) {
     row_t row = 0, result = 0;
 
     do {
         int i = 0, j = 0;
-        uint8 line[4] = { 0 };
-        uint32 score = 0;
+        row_t line[4] = { 0 };
+        score_t score = 0, rank = 0;
 
         line[0] = row & 0xf;
         line[1] = (row >> 4) & 0xf;
@@ -239,8 +235,7 @@ static void init_tables(void) {
         line[3] = (row >> 12) & 0xf;
 
         for (i = 0; i < 4; ++i) {
-            uint32 rank = line[i];
-
+            rank = line[i];
             if (rank >= 2) {
                 score += (rank - 1) * (1 << rank);
             }
@@ -308,14 +303,14 @@ static board_t execute_move_row(board_t board, int move) {
     return ret;
 }
 
-static uint32 score_helper(board_t board) {
+static score_t score_helper(board_t board) {
     return score_table[board & ROW_MASK] + score_table[(board >> 16) & ROW_MASK] +
         score_table[(board >> 32) & ROW_MASK] + score_table[(board >> 48) & ROW_MASK];
 }
 #else
 static row_t execute_move_helper(row_t row) {
     int i = 0, j = 0;
-    uint8 line[4] = { 0 };
+    row_t line[4] = { 0 };
 
     line[0] = row & 0xf;
     line[1] = (row >> 4) & 0xf;
@@ -348,11 +343,11 @@ static row_t execute_move_helper(row_t row) {
 static board_t execute_move_col(board_t board, int move) {
     board_t ret = board;
     board_t t = transpose(board);
+    row_t row = 0;
     int i = 0;
 
     for (i = 0; i < 4; ++i) {
-        row_t row = (row_t)((t >> (i << 4)) & ROW_MASK);
-
+        row = (row_t)((t >> (i << 4)) & ROW_MASK);
         if (move == UP) {
             ret ^= unpack_col(row ^ execute_move_helper(row)) << (i << 2);
         } else if (move == DOWN) {
@@ -364,11 +359,11 @@ static board_t execute_move_col(board_t board, int move) {
 
 static board_t execute_move_row(board_t board, int move) {
     board_t ret = board;
+    row_t row = 0;
     int i = 0;
 
     for (i = 0; i < 4; ++i) {
-        row_t row = (row_t)((board >> (i << 4)) & ROW_MASK);
-
+        row = (row_t)((board >> (i << 4)) & ROW_MASK);
         if (move == LEFT) {
             ret ^= (board_t)(row ^ execute_move_helper(row)) << (i << 4);
         } else if (move == RIGHT) {
@@ -378,16 +373,15 @@ static board_t execute_move_row(board_t board, int move) {
     return ret;
 }
 
-static uint32 score_helper(board_t board) {
+static score_t score_helper(board_t board) {
+    score_t score = 0, rank = 0;
+    row_t row = 0;
     int i = 0, j = 0;
-    uint32 score = 0;
 
     for (j = 0; j < 4; ++j) {
-        row_t row = (row_t)((board >> (j << 4)) & ROW_MASK);
-
+        row = (row_t)((board >> (j << 4)) & ROW_MASK);
         for (i = 0; i < 4; ++i) {
-            uint32 rank = (row >> (i << 2)) & 0xf;
-
+            rank = (row >> (i << 2)) & 0xf;
             if (rank >= 2) {
                 score += (rank - 1) * (1 << rank);
             }
@@ -410,11 +404,11 @@ static board_t execute_move(int move, board_t board) {
     }
 }
 
-static uint32 score_board(board_t board) {
+static score_t score_board(board_t board) {
     return score_helper(board);
 }
 
-static uint16 draw_tile(void) {
+static row_t draw_tile(void) {
     return (unif_random(10) < 9) ? 1 : 2;
 }
 
@@ -467,7 +461,7 @@ void play_game(get_move_func_t get_move) {
     int scorepenalty = 0;
     long last_score = 0, current_score = 0, moveno = 0;
     board_t retract_vec[MAX_RETRACT] = { 0 };
-    uint8 retract_penalty_vec[MAX_RETRACT] = { 0 };
+    row_t retract_penalty_vec[MAX_RETRACT] = { 0 };
     int retract_pos = 0, retract_num = 0;
 
 #if FASTMODE != 0
@@ -475,7 +469,7 @@ void play_game(get_move_func_t get_move) {
 #endif
     while (1) {
         int move = 0;
-        uint16 tile = 0;
+        row_t tile = 0;
         board_t newboard;
 
         clear_screen();

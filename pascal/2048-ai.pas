@@ -19,31 +19,28 @@ begin
     clrscr;
 end;
 
-type
-    board_t = qword;
-    row_t   = word;
 const
-    ROW_MASK : row_t   = $FFFF;
-    COL_MASK : board_t = $000F000F000F000F;
+    ROW_MASK : qword   = $FFFF;
+    COL_MASK : qword = $000F000F000F000F;
     UP       : integer = 0;
     DOWN     : integer = 1;
     LEFT     : integer = 2;
     RIGHT    : integer = 3;
 
-function unpack_col(row : row_t) : board_t;
+function unpack_col(row : word) : qword;
 var
-    tmp : board_t;
+    tmp : qword;
 begin
     tmp := row;
     unpack_col := (tmp or (tmp shl 12) or (tmp shl 24) or (tmp shl 36)) and COL_MASK;
 end;
 
-function reverse_row(row : row_t): row_t;
+function reverse_row(row : word): word;
 begin
     reverse_row := (row shr 12) or ((row shr 4) and $00F0)  or ((row shl 4) and $0F00) or (row shl 12);
 end;
 
-procedure print_board(board : board_t);
+procedure print_board(board : qword);
 var
     i, j, power_val : integer;
 begin
@@ -62,9 +59,9 @@ begin
     writeln('-----------------------------');
 end;
 
-function transpose(x : board_t) : board_t;
+function transpose(x : qword) : qword;
 var
-    a1, a2, a3, a, b1, b2, b3 : board_t;
+    a1, a2, a3, a, b1, b2, b3 : qword;
 begin
     a1 := x and $F0F00F0FF0F00F0F;
     a2 := x and $0000F0F00000F0F0;
@@ -76,7 +73,7 @@ begin
     transpose := b1 or (b2 shr 24) or (b3 shl 24);
 end;
 
-function count_empty(x : board_t) : integer;
+function count_empty(x : qword) : integer;
 begin
     x := x or ((x shr 2) and $3333333333333333);
     x := x or (x shr 1);
@@ -104,7 +101,7 @@ type
          depth : integer;
          heuristic : real;
     end;
-    trans_table_t = specialize TDictionary<board_t, trans_table_entry_t>;
+    trans_table_t = specialize TDictionary<qword, trans_table_entry_t>;
     eval_state = record
         trans_table  : trans_table_t;
         maxdepth     : integer;
@@ -119,17 +116,17 @@ type
 const
     TABLESIZE = 65536;
 type
-    row_table_t   =  array[0..(TABLESIZE)-1] of word;
+    wordable_t   =  array[0..(TABLESIZE)-1] of word;
     score_table_t =  array[0..(TABLESIZE)-1] of dword;
     heur_table_t  =  array[0..(TABLESIZE)-1] of real;
 var
-    row_table        : row_table_t;
+    wordable        : wordable_t;
     score_table      : score_table_t;
     score_heur_table : heur_table_t;
 
 procedure init_tables;
 var
-    row, row_result : row_t;
+    row, row_result : word;
     i, j        : integer;
     row_line    : array[0..3] of byte;
     score, rank : dword;
@@ -215,82 +212,82 @@ begin
         end;
 
         row_result := row_line[0] or (row_line[1] shl 4) or (row_line[2] shl 8) or (row_line[3] shl 12);
-        row_table[row] := row xor row_result;
+        wordable[row] := row xor row_result;
 
         row := row + 1;
     until row = 0;
 end;
 
-function execute_move_col(board : board_t; _move : integer) : board_t;
+function execute_move_col(board : qword; _move : integer) : qword;
 var
-    ret, t : board_t;
+    ret, t : qword;
 begin
     ret := board;
     t := transpose(board);
     if _move = UP then begin
-        ret := ret xor unpack_col(row_table[t and ROW_MASK]);
-        ret := ret xor (unpack_col(row_table[(t shr 16) and ROW_MASK]) shl 4);
-        ret := ret xor (unpack_col(row_table[(t shr 32) and ROW_MASK]) shl 8);
-        ret := ret xor (unpack_col(row_table[(t shr 48) and ROW_MASK]) shl 12);
+        ret := ret xor unpack_col(wordable[t and ROW_MASK]);
+        ret := ret xor (unpack_col(wordable[(t shr 16) and ROW_MASK]) shl 4);
+        ret := ret xor (unpack_col(wordable[(t shr 32) and ROW_MASK]) shl 8);
+        ret := ret xor (unpack_col(wordable[(t shr 48) and ROW_MASK]) shl 12);
     end else if _move = DOWN then begin
-        ret := ret xor unpack_col(reverse_row(row_table[reverse_row(t and ROW_MASK)]));
-        ret := ret xor (unpack_col(reverse_row(row_table[reverse_row((t shr 16) and ROW_MASK)])) shl 4);
-        ret := ret xor (unpack_col(reverse_row(row_table[reverse_row((t shr 32) and ROW_MASK)])) shl 8);
-        ret := ret xor (unpack_col(reverse_row(row_table[reverse_row((t shr 48) and ROW_MASK)])) shl 12);
+        ret := ret xor unpack_col(reverse_row(wordable[reverse_row(t and ROW_MASK)]));
+        ret := ret xor (unpack_col(reverse_row(wordable[reverse_row((t shr 16) and ROW_MASK)])) shl 4);
+        ret := ret xor (unpack_col(reverse_row(wordable[reverse_row((t shr 32) and ROW_MASK)])) shl 8);
+        ret := ret xor (unpack_col(reverse_row(wordable[reverse_row((t shr 48) and ROW_MASK)])) shl 12);
     end;
     execute_move_col := ret;
 end;
 
-function execute_move_row(board : board_t; _move : integer) : board_t;
+function execute_move_row(board : qword; _move : integer) : qword;
 var
-    ret : board_t;
+    ret : qword;
 begin
     ret := board;
     if _move = LEFT then begin
-        ret := ret xor board_t(row_table[board and ROW_MASK]);
-        ret := ret xor (board_t(row_table[(board shr 16) and ROW_MASK]) shl 16);
-        ret := ret xor (board_t(row_table[(board shr 32) and ROW_MASK]) shl 32);
-        ret := ret xor (board_t(row_table[(board shr 48) and ROW_MASK]) shl 48);
+        ret := ret xor qword(wordable[board and ROW_MASK]);
+        ret := ret xor (qword(wordable[(board shr 16) and ROW_MASK]) shl 16);
+        ret := ret xor (qword(wordable[(board shr 32) and ROW_MASK]) shl 32);
+        ret := ret xor (qword(wordable[(board shr 48) and ROW_MASK]) shl 48);
     end else if _move = RIGHT then begin
-        ret := ret xor board_t(reverse_row(row_table[reverse_row(board and ROW_MASK)]));
-        ret := ret xor (board_t(reverse_row(row_table[reverse_row((board shr 16) and ROW_MASK)])) shl 16);
-        ret := ret xor (board_t(reverse_row(row_table[reverse_row((board shr 32) and ROW_MASK)])) shl 32);
-        ret := ret xor (board_t(reverse_row(row_table[reverse_row((board shr 48) and ROW_MASK)])) shl 48);
+        ret := ret xor qword(reverse_row(wordable[reverse_row(board and ROW_MASK)]));
+        ret := ret xor (qword(reverse_row(wordable[reverse_row((board shr 16) and ROW_MASK)])) shl 16);
+        ret := ret xor (qword(reverse_row(wordable[reverse_row((board shr 32) and ROW_MASK)])) shl 32);
+        ret := ret xor (qword(reverse_row(wordable[reverse_row((board shr 48) and ROW_MASK)])) shl 48);
     end;
     execute_move_row := ret;
 end;
 
-function score_helper(board : board_t) : dword;
+function score_helper(board : qword) : dword;
 begin
     score_helper := score_table[board and ROW_MASK] + score_table[(board shr 16) and ROW_MASK] +
         score_table[(board shr 32) and ROW_MASK] + score_table[(board shr 48) and ROW_MASK];
 end;
 
-function score_heur_helper(board : board_t) : real;
+function score_heur_helper(board : qword) : real;
 begin
     score_heur_helper := score_heur_table[board and ROW_MASK] + score_heur_table[(board shr 16) and ROW_MASK] +
         score_heur_table[(board shr 32) and ROW_MASK] + score_heur_table[(board shr 48) and ROW_MASK];
 end;
 
-function execute_move(_move : integer; board : board_t) : board_t;
+function execute_move(_move : integer; board : qword) : qword;
 var
-    ret : board_t;
+    ret : qword;
 begin
     if (_move = UP) or (_move = DOWN) then
         ret := execute_move_col(board, _move)
     else if (_move = LEFT) or (_move = RIGHT) then
         ret := execute_move_row(board, _move)
     else
-        ret := not board_t(0);
+        ret := not qword(0);
     execute_move := ret
 end;
 
-function score_board(board : board_t) : dword;
+function score_board(board : qword) : dword;
 begin
     score_board := score_helper(board);
 end;
 
-function score_heur_board(board : board_t) : real;
+function score_heur_board(board : qword) : real;
 begin
     score_heur_board := score_heur_helper(board) + score_heur_helper(transpose(board));
 end;
@@ -307,10 +304,10 @@ begin
     draw_tile := ret;
 end;
 
-function insert_tile_rand(board : board_t; tile : board_t) : board_t;
+function insert_tile_rand(board : qword; tile : qword) : qword;
 var
     index : integer;
-    tmp : board_t;
+    tmp : qword;
 begin
     index := unif_random(count_empty(board));
     tmp := board;
@@ -327,15 +324,15 @@ begin
     insert_tile_rand := board or tile;
 end;
 
-function initial_board : board_t;
+function initial_board : qword;
 var
-    board : board_t;
+    board : qword;
 begin
-    board := board_t((draw_tile) shl (unif_random(16) shl 2));
+    board := qword((draw_tile) shl (unif_random(16) shl 2));
     initial_board := insert_tile_rand(board, draw_tile);
 end;
 
-function get_depth_limit(board : board_t) : integer;
+function get_depth_limit(board : qword) : integer;
 var
     bitset    : word;
     max_limit : integer;
@@ -369,13 +366,13 @@ begin
     get_depth_limit := count;
 end;
 
-function score_move_node(var state : eval_state; board : board_t; cprob : real) : real; forward;
+function score_move_node(var state : eval_state; board : qword; cprob : real) : real; forward;
 
-function score_tilechoose_node(var state : eval_state; board : board_t; cprob : real) : real;
+function score_tilechoose_node(var state : eval_state; board : qword; cprob : real) : real;
 var
     res   : real;
     entry : trans_table_entry_t;
-    tile_2, tmp : board_t;
+    tile_2, tmp : qword;
     num_open    : integer;
 begin
     if (cprob < CPROB_THRESH_BASE) or (state.curdepth >= state.depth_limit) then begin
@@ -416,11 +413,11 @@ begin
     score_tilechoose_node := res;
 end;
 
-function score_move_node(var state : eval_state; board : board_t; cprob : real) : real;
+function score_move_node(var state : eval_state; board : qword; cprob : real) : real;
 var
     _move : integer;
     best, tmp : real;
-    newboard : board_t;
+    newboard : qword;
 begin
     best := 0.0;
     state.curdepth := state.curdepth + 1;
@@ -439,9 +436,9 @@ begin
     score_move_node := best;
 end;
 
-function _score_toplevel_move(var state : eval_state; board : board_t; _move : integer) : real;
+function _score_toplevel_move(var state : eval_state; board : qword; _move : integer) : real;
 var
-    newboard : board_t;
+    newboard : qword;
 begin
     newboard := execute_move(_move, board);
     if board = newboard then
@@ -450,7 +447,7 @@ begin
         _score_toplevel_move := score_tilechoose_node(state, newboard, 1.0) + 0.000001;
 end;
 
-function score_toplevel_move(board : board_t; _move : integer; var msg : string) : real;
+function score_toplevel_move(board : qword; _move : integer; var msg : string) : real;
 var
     state : eval_state;
     res : real;
@@ -474,7 +471,7 @@ end;
 
 type
     thrd_context = record
-        board : board_t;
+        board : qword;
         _move : integer;
         res : real;
         msg : string;
@@ -489,7 +486,7 @@ begin
     thrd_worker := 0
 end;
 
-function find_best_move(board : board_t) : integer;
+function find_best_move(board : qword) : integer;
 var
     _move, bestmove : integer;
     best : real;
@@ -532,12 +529,12 @@ begin
 end;
 
 type
-    get_move_func_t = function(board : board_t) : integer;
+    get_move_func_t = function(board : qword) : integer;
 
 procedure play_game(get_move : get_move_func_t);
 var
-    board               : board_t;
-    newboard            : board_t;
+    board               : qword;
+    newboard            : qword;
     scorepenalty        : longint;
     current_score       : longint;
     last_score          : longint;

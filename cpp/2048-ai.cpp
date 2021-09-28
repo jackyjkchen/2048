@@ -15,20 +15,20 @@
 #define FASTMODE 1
 #endif
 
-typedef unsigned char uint8;
-typedef unsigned short uint16;
+typedef unsigned short row_t;
 #ifdef _M_I86
-typedef unsigned long uint32;
+typedef unsigned long score_t;
 #else
-typedef unsigned int uint32;
+typedef unsigned int score_t;
 #endif
 #if defined(_MSC_VER) || defined(__BORLANDC__) || defined(__WATCOMC__)
-typedef unsigned __int64 uint64;
+typedef unsigned __int64 board_t;
 #define W64LIT(x) x##ui64
 #else
-typedef unsigned long long uint64;
+typedef unsigned long long board_t;
 #define W64LIT(x) x##ULL
 #endif
+typedef float score_heur_t;
 
 #if defined(__TINYC__)
 #define NOT_USE_WIN32_SDK 1
@@ -42,9 +42,6 @@ typedef unsigned long long uint64;
 #elif defined(__BORLANDC__) || defined (__TURBOC__) || defined(__DJGPP__)
 #include <conio.h>
 #endif
-
-typedef uint64 board_t;
-typedef uint16 row_t;
 
 static const board_t ROW_MASK = W64LIT(0xFFFF);
 static const board_t COL_MASK = W64LIT(0x000F000F000F000F);
@@ -74,8 +71,8 @@ enum {
 
 #if FASTMODE != 0
 typedef struct {
-    uint8 depth;
-    float heuristic;
+    int depth;
+    score_heur_t heuristic;
 } trans_table_entry_t;
 
 #if __cplusplus >= 201103L
@@ -157,15 +154,15 @@ static void clear_screen(void) {
 #endif
 }
 
-const float SCORE_LOST_PENALTY = 200000.0f;
-const float SCORE_MONOTONICITY_POWER = 4.0f;
-const float SCORE_MONOTONICITY_WEIGHT = 47.0f;
-const float SCORE_SUM_POWER = 3.5f;
-const float SCORE_SUM_WEIGHT = 11.0f;
-const float SCORE_MERGES_WEIGHT = 700.0f;
-const float SCORE_EMPTY_WEIGHT = 270.0f;
-const float CPROB_THRESH_BASE = 0.0001f;
-const uint16 CACHE_DEPTH_LIMIT = 15;
+const score_heur_t SCORE_LOST_PENALTY = 200000.0f;
+const score_heur_t SCORE_MONOTONICITY_POWER = 4.0f;
+const score_heur_t SCORE_MONOTONICITY_WEIGHT = 47.0f;
+const score_heur_t SCORE_SUM_POWER = 3.5f;
+const score_heur_t SCORE_SUM_WEIGHT = 11.0f;
+const score_heur_t SCORE_MERGES_WEIGHT = 700.0f;
+const score_heur_t SCORE_EMPTY_WEIGHT = 270.0f;
+const score_heur_t CPROB_THRESH_BASE = 0.0001f;
+const row_t CACHE_DEPTH_LIMIT = 15;
 
 class Game2048 {
 public:
@@ -198,13 +195,13 @@ private:
 
     board_t execute_move_col(board_t board, int move);
     board_t execute_move_row(board_t board, int move);
-    uint32 score_helper(board_t board);
-    float score_heur_helper(board_t board);
+    score_t score_helper(board_t board);
+    score_heur_t score_heur_helper(board_t board);
     board_t execute_move(int move, board_t board);
-    uint32 score_board(board_t board);
-    float score_heur_board(board_t board);
+    score_t score_board(board_t board);
+    score_heur_t score_heur_board(board_t board);
 
-    uint16 draw_tile();
+    row_t draw_tile();
     board_t insert_tile_rand(board_t board, board_t tile);
     board_t initial_board();
 
@@ -223,17 +220,17 @@ private:
         eval_state() : maxdepth(0), curdepth(0), nomoves(0), tablehits(0), cachehits(0), moves_evaled(0), depth_limit(0) {}
     };
     int get_depth_limit(board_t board);
-    float score_move_node(eval_state &state, board_t board, float cprob);
-    float score_tilechoose_node(eval_state &state, board_t board, float cprob);
-    float _score_toplevel_move(eval_state &state, board_t board, int move);
-    float score_toplevel_move(board_t board, int move);
+    score_heur_t score_move_node(eval_state &state, board_t board, score_heur_t cprob);
+    score_heur_t score_tilechoose_node(eval_state &state, board_t board, score_heur_t cprob);
+    score_heur_t _score_toplevel_move(eval_state &state, board_t board, int move);
+    score_heur_t score_toplevel_move(board_t board, int move);
 
 #if defined(MULTI_THREAD)
     typedef struct {
         Game2048 *pthis;
         board_t board;
         int move;
-        float res;
+        score_heur_t res;
     } thrd_context;
 
     static void thrd_worker(void *param);
@@ -244,12 +241,12 @@ private:
 #if FASTMODE != 0
 #define TABLESIZE 65536
     row_t *row_table;
-    uint32 *score_table;
-    float *score_heur_table;
+    score_t *score_table;
+    score_heur_t *score_heur_table;
 #else
 #define TABLESIZE 8192
     row_t* row_table[8];
-    float* score_heur_table[8];
+    score_heur_t* score_heur_table[8];
 #endif
 };
 
@@ -312,7 +309,7 @@ void Game2048::init_tables() {
 
     do {
         int i = 0, j = 0;
-        uint8 line[4] = { 0 };
+        row_t line[4] = { 0 };
 
         line[0] = row & 0xf;
         line[1] = (row >> 4) & 0xf;
@@ -320,9 +317,9 @@ void Game2048::init_tables() {
         line[3] = (row >> 12) & 0xf;
 
 #if FASTMODE != 0
-        uint32 score = 0;
+        score_t score = 0;
         for (i = 0; i < 4; ++i) {
-            uint32 rank = line[i];
+            score_t rank = line[i];
 
             if (rank >= 2) {
                 score += (rank - 1) * (1 << rank);
@@ -331,16 +328,16 @@ void Game2048::init_tables() {
         score_table[row] = score;
 #endif
 
-        float sum = 0.0f;
-        uint32 empty = 0;
-        uint32 merges = 0;
-        uint32 prev = 0;
-        uint32 counter = 0;
+        score_heur_t sum = 0.0f;
+        score_t empty = 0;
+        score_t merges = 0;
+        score_t prev = 0;
+        score_t counter = 0;
 
         for (i = 0; i < 4; ++i) {
-            uint32 rank = line[i];
+            score_t rank = line[i];
 
-            sum += (float)pow((float)rank, SCORE_SUM_POWER);
+            sum += (score_heur_t)pow((score_heur_t)rank, SCORE_SUM_POWER);
             if (rank == 0) {
                 empty++;
             } else {
@@ -357,24 +354,24 @@ void Game2048::init_tables() {
             merges += 1 + counter;
         }
 
-        float monotonicity_left = 0.0f;
-        float monotonicity_right = 0.0f;
+        score_heur_t monotonicity_left = 0.0f;
+        score_heur_t monotonicity_right = 0.0f;
 
         for (i = 1; i < 4; ++i) {
             if (line[i - 1] > line[i]) {
                 monotonicity_left +=
-                    (float)(pow((float)line[i - 1], SCORE_MONOTONICITY_POWER) - pow((float)line[i], SCORE_MONOTONICITY_POWER));
+                    (score_heur_t)(pow((score_heur_t)line[i - 1], SCORE_MONOTONICITY_POWER) - pow((score_heur_t)line[i], SCORE_MONOTONICITY_POWER));
             } else {
                 monotonicity_right +=
-                    (float)(pow((float)line[i], SCORE_MONOTONICITY_POWER) - pow((float)line[i - 1], SCORE_MONOTONICITY_POWER));
+                    (score_heur_t)(pow((score_heur_t)line[i], SCORE_MONOTONICITY_POWER) - pow((score_heur_t)line[i - 1], SCORE_MONOTONICITY_POWER));
             }
         }
 
 #if FASTMODE != 0
-        score_heur_table[row] = (float)(SCORE_LOST_PENALTY + SCORE_EMPTY_WEIGHT * empty + SCORE_MERGES_WEIGHT * merges -
+        score_heur_table[row] = (score_heur_t)(SCORE_LOST_PENALTY + SCORE_EMPTY_WEIGHT * empty + SCORE_MERGES_WEIGHT * merges -
             SCORE_MONOTONICITY_WEIGHT * min(monotonicity_left, monotonicity_right) - SCORE_SUM_WEIGHT * sum);
 #else
-        score_heur_table[row / TABLESIZE][row % TABLESIZE] = (float)(SCORE_LOST_PENALTY + SCORE_EMPTY_WEIGHT * empty + SCORE_MERGES_WEIGHT * merges -
+        score_heur_table[row / TABLESIZE][row % TABLESIZE] = (score_heur_t)(SCORE_LOST_PENALTY + SCORE_EMPTY_WEIGHT * empty + SCORE_MERGES_WEIGHT * merges -
             SCORE_MONOTONICITY_WEIGHT * min(monotonicity_left, monotonicity_right) - SCORE_SUM_WEIGHT * sum);
 #endif
 
@@ -411,8 +408,8 @@ void Game2048::init_tables() {
 #if FASTMODE != 0
 void Game2048::alloc_tables() {
     row_table = (row_t*)malloc(sizeof(row_t) * TABLESIZE);
-    score_table = (uint32*)malloc(sizeof(uint32) * TABLESIZE);
-    score_heur_table = (float*)malloc(sizeof(float) * TABLESIZE);
+    score_table = (score_t*)malloc(sizeof(score_t) * TABLESIZE);
+    score_heur_table = (score_heur_t*)malloc(sizeof(score_heur_t) * TABLESIZE);
     if (!row_table || !score_table || !score_heur_table) {
         fprintf(stderr, "Not enough memory.");
         fflush(stderr);
@@ -461,12 +458,12 @@ board_t Game2048::execute_move_row(board_t board, int move) {
     return ret;
 }
 
-uint32 Game2048::score_helper(board_t board) {
+score_t Game2048::score_helper(board_t board) {
     return score_table[board & ROW_MASK] + score_table[(board >> 16) & ROW_MASK] +
         score_table[(board >> 32) & ROW_MASK] + score_table[(board >> 48) & ROW_MASK];
 }
 
-float Game2048::score_heur_helper(board_t board) {
+score_heur_t Game2048::score_heur_helper(board_t board) {
     return score_heur_table[board & ROW_MASK] + score_heur_table[(board >> 16) & ROW_MASK] +
         score_heur_table[(board >> 32) & ROW_MASK] + score_heur_table[(board >> 48) & ROW_MASK];
 }
@@ -476,7 +473,7 @@ void Game2048::alloc_tables() {
     memset(score_heur_table, 0x00, sizeof(score_heur_table));
     for (int i = 0; i < 8; ++i) {
         row_table[i] = (row_t*)malloc(sizeof(row_t) * TABLESIZE);
-        score_heur_table[i] = (float*)malloc(sizeof(float) * TABLESIZE);
+        score_heur_table[i] = (score_heur_t*)malloc(sizeof(score_heur_t) * TABLESIZE);
         if (!row_table[i] || !score_heur_table[i]) {
             fprintf(stderr, "Not enough memory.");
             fflush(stderr);
@@ -527,15 +524,13 @@ board_t Game2048::execute_move_row(board_t board, int move) {
     return ret;
 }
 
-uint32 Game2048::score_helper(board_t board) {
-    uint32 score = 0;
+score_t Game2048::score_helper(board_t board) {
+    score_t score = 0;
 
     for (int j = 0; j < 4; ++j) {
         row_t row = (row_t)((board >> (j << 4)) & ROW_MASK);
-
         for (int i = 0; i < 4; ++i) {
-            uint32 rank = (row >> (i << 2)) & 0xf;
-
+            score_t rank = (row >> (i << 2)) & 0xf;
             if (rank >= 2) {
                 score += (rank - 1) * (1 << rank);
             }
@@ -544,8 +539,8 @@ uint32 Game2048::score_helper(board_t board) {
     return score;
 }
 
-float Game2048::score_heur_helper(board_t board) {
-    float score_heur = 0.0f;
+score_heur_t Game2048::score_heur_helper(board_t board) {
+    score_heur_t score_heur = 0.0f;
     for (int i = 0; i < 4; ++i) {
         row_t row = (board >> (i << 4)) & ROW_MASK;
         score_heur += score_heur_table[row / TABLESIZE][row % TABLESIZE];
@@ -567,15 +562,15 @@ board_t Game2048::execute_move(int move, board_t board) {
     }
 }
 
-uint32 Game2048::score_board(board_t board) {
+score_t Game2048::score_board(board_t board) {
     return score_helper(board);
 }
 
-float Game2048::score_heur_board(board_t board) {
+score_heur_t Game2048::score_heur_board(board_t board) {
     return score_heur_helper(board) + score_heur_helper(transpose(board));
 }
 
-uint16 Game2048::draw_tile() {
+row_t Game2048::draw_tile() {
     return (unif_random(10) < 9) ? 1 : 2;
 }
 
@@ -604,7 +599,7 @@ board_t Game2048::initial_board() {
 }
 
 int Game2048::get_depth_limit(board_t board) {
-    uint16 bitset = 0, max_limit = 0;
+    row_t bitset = 0, max_limit = 0;
 
     while (board) {
         bitset |= 1 << (board & 0xf);
@@ -636,7 +631,7 @@ int Game2048::get_depth_limit(board_t board) {
     return count;
 }
 
-float Game2048::score_tilechoose_node(eval_state &state, board_t board, float cprob) {
+score_heur_t Game2048::score_tilechoose_node(eval_state &state, board_t board, score_heur_t cprob) {
     if (cprob < CPROB_THRESH_BASE || state.curdepth >= state.depth_limit) {
         state.maxdepth = max(state.curdepth, state.maxdepth);
         state.tablehits++;
@@ -668,7 +663,7 @@ float Game2048::score_tilechoose_node(eval_state &state, board_t board, float cp
 
     cprob /= num_open;
 
-    float res = 0.0f;
+    score_heur_t res = 0.0f;
     board_t tmp = board;
     board_t tile_2 = 1;
 
@@ -684,7 +679,7 @@ float Game2048::score_tilechoose_node(eval_state &state, board_t board, float cp
 
 #if FASTMODE != 0
     if (state.curdepth < CACHE_DEPTH_LIMIT) {
-        trans_table_entry_t entry = { (uint8)(state.curdepth), res };
+        trans_table_entry_t entry = { state.curdepth, res };
         state.trans_table[board] = entry;
     }
 #endif
@@ -692,8 +687,8 @@ float Game2048::score_tilechoose_node(eval_state &state, board_t board, float cp
     return res;
 }
 
-float Game2048::score_move_node(eval_state &state, board_t board, float cprob) {
-    float best = 0.0f;
+score_heur_t Game2048::score_move_node(eval_state &state, board_t board, score_heur_t cprob) {
+    score_heur_t best = 0.0f;
 
     state.curdepth++;
     for (int move = 0; move < 4; ++move) {
@@ -701,7 +696,7 @@ float Game2048::score_move_node(eval_state &state, board_t board, float cprob) {
 
         state.moves_evaled++;
         if (board != newboard) {
-            float tmp = score_tilechoose_node(state, newboard, cprob);
+            score_heur_t tmp = score_tilechoose_node(state, newboard, cprob);
             if (best < tmp) {
                 best = tmp;
             }
@@ -714,7 +709,7 @@ float Game2048::score_move_node(eval_state &state, board_t board, float cprob) {
     return best;
 }
 
-float Game2048::_score_toplevel_move(eval_state &state, board_t board, int move) {
+score_heur_t Game2048::_score_toplevel_move(eval_state &state, board_t board, int move) {
     board_t newboard = execute_move(move, board);
 
     if (board == newboard)
@@ -723,7 +718,7 @@ float Game2048::_score_toplevel_move(eval_state &state, board_t board, int move)
     return score_tilechoose_node(state, newboard, 1.0f) + 1e-6f;
 }
 
-float Game2048::score_toplevel_move(board_t board, int move) {
+score_heur_t Game2048::score_toplevel_move(board_t board, int move) {
     eval_state state;
 
 #if FASTMODE != 0
@@ -732,7 +727,7 @@ float Game2048::score_toplevel_move(board_t board, int move) {
     state.depth_limit = 3;
 #endif
 
-    float res = _score_toplevel_move(state, board, move);
+    score_heur_t res = _score_toplevel_move(state, board, move);
 
 #if FASTMODE != 0
     printf("Move %d: result %f: eval'd %ld moves (%ld no moves, %ld table hits, %ld cache hits, %ld cache size) (maxdepth=%d)\n", move, res,
@@ -759,7 +754,7 @@ ThreadPool &Game2048::get_thrd_pool() {
 
 int Game2048::find_best_move(board_t board) {
     int move = 0;
-    float best = 0.0f;
+    score_heur_t best = 0.0f;
     int bestmove = -1;
 
     print_board(board);
@@ -783,7 +778,7 @@ int Game2048::find_best_move(board_t board) {
         }
     }
 #else
-    float res[4] = { 0.0f };
+    score_heur_t res[4] = { 0.0f };
 #if defined(OPENMP_THREAD)
 #pragma omp parallel for
 #endif
@@ -819,7 +814,7 @@ void Game2048::play_game() {
     init_tables();
     while (1) {
         int move;
-        uint16 tile;
+        row_t tile;
         board_t newboard;
 
         clear_screen();

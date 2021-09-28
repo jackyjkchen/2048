@@ -8,14 +8,19 @@
 #endif
 #endif
 
-typedef unsigned char uint8;
-typedef unsigned short uint16;
+typedef unsigned short row_t;
 
 #ifdef _M_I86
-typedef unsigned long uint32;
+typedef unsigned long score_t;
 #else
-typedef unsigned int uint32;
+typedef unsigned int score_t;
 #endif
+typedef struct {
+    row_t r0;
+    row_t r1;
+    row_t r2;
+    row_t r3;
+} board_t;
 
 #if defined(__TINYC__)
 #define NOT_USE_WIN32_SDK 1
@@ -39,14 +44,6 @@ typedef unsigned int uint32;
 #elif defined(__WATCOMC__) && __WATCOMC__ < 1100
 #define GETCH_USE 1
 #endif
-
-typedef struct {
-    uint16 r0;
-    uint16 r1;
-    uint16 r2;
-    uint16 r3;
-} board_t;
-typedef uint16 row_t;
 
 #define UP 0
 #define DOWN 1
@@ -173,7 +170,7 @@ static void print_board(board)
      board_t board;
 {
     int i = 0, j = 0;
-    uint16 *t = (uint16 *)&board;
+    row_t *t = (row_t *)&board;
 
     printf("-----------------------------\n");
     for (i = 0; i < 4; i++) {
@@ -195,26 +192,26 @@ static void print_board(board)
 static board_t transpose(x)
      board_t x;
 {
-    uint16 a1_0 = x.r0 & 0xF0F0;
-    uint16 a1_1 = x.r1 & 0x0F0F;
-    uint16 a1_2 = x.r2 & 0xF0F0;
-    uint16 a1_3 = x.r3 & 0x0F0F;
-    uint16 a2_1 = x.r1 & 0xF0F0;
-    uint16 a2_3 = x.r3 & 0xF0F0;
-    uint16 a3_0 = x.r0 & 0x0F0F;
-    uint16 a3_2 = x.r2 & 0x0F0F;
-    uint16 r0 = a1_0 | (a2_1 >> 4);
-    uint16 r1 = a1_1 | (a3_0 << 4);
-    uint16 r2 = a1_2 | (a2_3 >> 4);
-    uint16 r3 = a1_3 | (a3_2 << 4);
-    uint16 b1_0 = r0 & 0xFF00;
-    uint16 b1_1 = r1 & 0xFF00;
-    uint16 b1_2 = r2 & 0x00FF;
-    uint16 b1_3 = r3 & 0x00FF;
-    uint16 b2_0 = r0 & 0x00FF;
-    uint16 b2_1 = r1 & 0x00FF;
-    uint16 b3_2 = r2 & 0xFF00;
-    uint16 b3_3 = r3 & 0xFF00;
+    row_t a1_0 = x.r0 & 0xF0F0;
+    row_t a1_1 = x.r1 & 0x0F0F;
+    row_t a1_2 = x.r2 & 0xF0F0;
+    row_t a1_3 = x.r3 & 0x0F0F;
+    row_t a2_1 = x.r1 & 0xF0F0;
+    row_t a2_3 = x.r3 & 0xF0F0;
+    row_t a3_0 = x.r0 & 0x0F0F;
+    row_t a3_2 = x.r2 & 0x0F0F;
+    row_t r0 = a1_0 | (a2_1 >> 4);
+    row_t r1 = a1_1 | (a3_0 << 4);
+    row_t r2 = a1_2 | (a2_3 >> 4);
+    row_t r3 = a1_3 | (a3_2 << 4);
+    row_t b1_0 = r0 & 0xFF00;
+    row_t b1_1 = r1 & 0xFF00;
+    row_t b1_2 = r2 & 0x00FF;
+    row_t b1_3 = r3 & 0x00FF;
+    row_t b2_0 = r0 & 0x00FF;
+    row_t b2_1 = r1 & 0x00FF;
+    row_t b3_2 = r2 & 0xFF00;
+    row_t b3_3 = r3 & 0xFF00;
 
     x.r0 = b1_0 | (b3_2 >> 8);
     x.r1 = b1_1 | (b3_3 >> 8);
@@ -226,10 +223,10 @@ static board_t transpose(x)
 static int count_empty(board)
      board_t board;
 {
-    uint16 sum = 0, x = 0, i = 0;
+    row_t sum = 0, x = 0, i = 0;
 
     for (i = 0; i < 4; i++) {
-        x = ((uint16 *)&board)[i];
+        x = ((row_t *)&board)[i];
         x |= (x >> 2) & 0x3333;
         x |= (x >> 1);
         x = ~x & 0x1111;
@@ -244,7 +241,7 @@ static row_t execute_move_helper(row)
      row_t row;
 {
     int i = 0, j = 0;
-    uint8 line[4];
+    row_t line[4];
 
     line[0] = row & 0xf;
     line[1] = (row >> 4) & 0xf;
@@ -279,14 +276,14 @@ static board_t execute_move_col(board, move)
      int move;
 {
     board_t ret, tran, tmp;
-    uint16 *t = (uint16 *)&tran;
+    row_t *t = (row_t *)&tran;
+    row_t row = 0;
     int i = 0;
 
     ret = board;
     tran = transpose(board);
     for (i = 0; i < 4; ++i) {
-        row_t row = t[3 - i];
-
+        row = t[3 - i];
         if (move == UP) {
             tmp = unpack_col(row ^ execute_move_helper(row));
         } else if (move == DOWN) {
@@ -305,13 +302,13 @@ static board_t execute_move_row(board, move)
      int move;
 {
     board_t ret;
-    uint16 *t = (uint16 *)&ret;
+    row_t *t = (row_t *)&ret;
+    row_t row = 0;
     int i = 0;
 
     ret = board;
     for (i = 0; i < 4; ++i) {
-        row_t row = t[3 - i];
-
+        row = t[3 - i];
         if (move == LEFT) {
             t[3 - i] ^= row ^ execute_move_helper(row);
         } else if (move == RIGHT) {
@@ -321,17 +318,17 @@ static board_t execute_move_row(board, move)
     return ret;
 }
 
-static uint32 score_helper(board)
+static score_t score_helper(board)
      board_t board;
 {
+    score_t score = 0;
+    row_t row = 0;
     int i = 0, j = 0;
-    uint32 score = 0;
 
     for (j = 0; j < 4; ++j) {
-        uint16 row = ((uint16 *)&board)[3 - j];
-
+        row = ((row_t *)&board)[3 - j];
         for (i = 0; i < 4; ++i) {
-            uint32 rank = (row >> (i << 2)) & 0xf;
+            score_t rank = (row >> (i << 2)) & 0xf;
 
             if (rank >= 2) {
                 score += (rank - 1) * (1 << rank);
@@ -360,25 +357,25 @@ static board_t execute_move(move, board)
     }
 }
 
-static uint32 score_board(board)
+static score_t score_board(board)
      board_t board;
 {
     return score_helper(board);
 }
 
-static uint16 draw_tile() {
+static row_t draw_tile() {
     return (unif_random(10) < 9) ? 1 : 2;
 }
 
 static board_t insert_tile_rand(board, tile)
      board_t board;
-     uint16 tile;
+     row_t tile;
 {
     int index = unif_random(count_empty(board));
     int shift = 0;
-    uint16 *t = (uint16 *)&board;
-    uint16 tmp = t[3];
-    uint16 orig_tile = tile;
+    row_t *t = (row_t *)&board;
+    row_t tmp = t[3];
+    row_t orig_tile = tile;
 
     while (1) {
         while ((tmp & 0xf) != 0) {
@@ -407,9 +404,9 @@ static board_t insert_tile_rand(board, tile)
 
 static board_t initial_board() {
     board_t board;
-    uint16 shift = unif_random(16) << 2;
-    uint16 *t = (uint16 *)&board;
-    uint16 t1, t2;
+    row_t shift = unif_random(16) << 2;
+    row_t *t = (row_t *)&board;
+    row_t t1, t2;
 
     memset(&board, 0x00, sizeof(board_t));
     t1 = shift >> 4;
@@ -445,15 +442,15 @@ void play_game() {
     int scorepenalty = 0;
     long last_score = 0, current_score = 0, moveno = 0;
     board_t retract_vec[MAX_RETRACT];
-    uint8 retract_penalty_vec[MAX_RETRACT];
+    row_t retract_penalty_vec[MAX_RETRACT];
     int retract_pos = 0, retract_num = 0;
 
     board = initial_board();
     memset(retract_vec, 0x00, MAX_RETRACT * sizeof(board_t));
-    memset(retract_penalty_vec, 0x00, MAX_RETRACT * sizeof(uint8));
+    memset(retract_penalty_vec, 0x00, MAX_RETRACT * sizeof(row_t));
     while (1) {
         int move = 0;
-        uint16 tile = 0;
+        row_t tile = 0;
         board_t newboard;
 
         clear_screen();
