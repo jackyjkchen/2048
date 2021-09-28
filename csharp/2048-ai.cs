@@ -216,6 +216,7 @@ class Game2048
                 }
             }
             result = (UInt16)(line[0] | (line[1] << 4) | (line[2] << 8) | (line[3] << 12));
+
             rev_row = reverse_row(row);
             rev_result = reverse_row(result);
             row_left_table[row] = (UInt16)(row ^ result);

@@ -27,7 +27,8 @@ LEFT = 2
 RIGHT = 3
 
 TABLESIZE = 65536
-row_table = [0] * TABLESIZE
+row_left_table = [0] * TABLESIZE
+row_right_table = [0] * TABLESIZE
 score_table = [0] * TABLESIZE
 score_heur_table = [0] * TABLESIZE
 
@@ -99,6 +100,8 @@ class eval_state:
 def init_tables():
     for row in range(0, 65536):
         result = 0
+        rev_row = 0
+        rev_result = 0
         score = 0
         line = [row & 0xf, (row >> 4) & 0xf, (row >> 8) & 0xf, (row >> 12) & 0xf]
 
@@ -161,46 +164,38 @@ def init_tables():
                     line[i] += 1
                 line[j] = 0
             i += 1
-
         result = line[0] | (line[1] << 4) | (line[2] << 8) | (line[3] << 12)
-        row_table[row] = row ^ result
 
-def execute_move_col(board, move):
+        rev_row = reverse_row(row)
+        rev_result = reverse_row(result)
+        row_left_table[row] = row ^ result
+        row_right_table[rev_row] = rev_row ^ rev_result
+
+def execute_move(board, move):
     ret = board
-    t = transpose(board)
     if move == UP:
-        ret ^= unpack_col(row_table[t & ROW_MASK])
-        ret ^= unpack_col(row_table[(t >> 16) & ROW_MASK]) << 4
-        ret ^= unpack_col(row_table[(t >> 32) & ROW_MASK]) << 8
-        ret ^= unpack_col(row_table[(t >> 48) & ROW_MASK]) << 12
+        t = transpose(board)
+        ret ^= unpack_col(row_left_table[t & ROW_MASK])
+        ret ^= unpack_col(row_left_table[(t >> 16) & ROW_MASK]) << 4
+        ret ^= unpack_col(row_left_table[(t >> 32) & ROW_MASK]) << 8
+        ret ^= unpack_col(row_left_table[(t >> 48) & ROW_MASK]) << 12
     elif move == DOWN:
-        ret ^= unpack_col(reverse_row(row_table[reverse_row(t & ROW_MASK)]))
-        ret ^= unpack_col(reverse_row(row_table[reverse_row((t >> 16) & ROW_MASK)])) << 4
-        ret ^= unpack_col(reverse_row(row_table[reverse_row((t >> 32) & ROW_MASK)])) << 8
-        ret ^= unpack_col(reverse_row(row_table[reverse_row((t >> 48) & ROW_MASK)])) << 12
-    return ret
-
-def execute_move_row(board, move):
-    ret = board
-    if move == LEFT:
-        ret ^= row_table[board & ROW_MASK]
-        ret ^= row_table[(board >> 16) & ROW_MASK] << 16
-        ret ^= row_table[(board >> 32) & ROW_MASK] << 32
-        ret ^= row_table[(board >> 48) & ROW_MASK] << 48
+        t = transpose(board)
+        ret ^= unpack_col(row_right_table[t & ROW_MASK])
+        ret ^= unpack_col(row_right_table[(t >> 16) & ROW_MASK]) << 4
+        ret ^= unpack_col(row_right_table[(t >> 32) & ROW_MASK]) << 8
+        ret ^= unpack_col(row_right_table[(t >> 48) & ROW_MASK]) << 12
+    elif move == LEFT:
+        ret ^= row_left_table[board & ROW_MASK]
+        ret ^= row_left_table[(board >> 16) & ROW_MASK] << 16
+        ret ^= row_left_table[(board >> 32) & ROW_MASK] << 32
+        ret ^= row_left_table[(board >> 48) & ROW_MASK] << 48
     elif move == RIGHT:
-        ret ^= reverse_row(row_table[reverse_row(board & ROW_MASK)])
-        ret ^= reverse_row(row_table[reverse_row((board >> 16) & ROW_MASK)]) << 16
-        ret ^= reverse_row(row_table[reverse_row((board >> 32) & ROW_MASK)]) << 32
-        ret ^= reverse_row(row_table[reverse_row((board >> 48) & ROW_MASK)]) << 48
+        ret ^= row_right_table[board & ROW_MASK]
+        ret ^= row_right_table[(board >> 16) & ROW_MASK] << 16
+        ret ^= row_right_table[(board >> 32) & ROW_MASK] << 32
+        ret ^= row_right_table[(board >> 48) & ROW_MASK] << 48
     return ret
-
-def execute_move(move, board):
-    if move == UP or move == DOWN:
-        return execute_move_col(board, move)
-    elif move == LEFT or move == RIGHT:
-        return execute_move_row(board, move)
-    else:
-        return INT64_MASK
 
 def score_helper(board, table):
     return table[board & ROW_MASK] + table[(board >> 16) & ROW_MASK] + \
@@ -274,7 +269,7 @@ def score_move_node(state, board, cprob):
     best = 0.0
     state.curdepth += 1
     for move in range(0, 4):
-        newboard = execute_move(move, board)
+        newboard = execute_move(board, move)
         state.moves_evaled += 1
         if board != newboard:
             best = max(best, score_tilechoose_node(state, newboard, cprob))
@@ -284,7 +279,7 @@ def score_move_node(state, board, cprob):
     return best
 
 def _score_toplevel_move(state, board, move):
-    newboard = execute_move(move, board)
+    newboard = execute_move(board, move)
     if (board == newboard):
         return 0.0
     return score_tilechoose_node(state, newboard, 1.0) + 0.000001
@@ -323,7 +318,7 @@ def play_game(get_move):
         clear_screen()
         move = 0
         while move < 4:
-            if execute_move(move, board) != board:
+            if execute_move(board, move) != board:
                 break
             move += 1
         if move == 4:
@@ -339,7 +334,7 @@ def play_game(get_move):
         if move < 0:
             break
 
-        newboard = execute_move(move, board)
+        newboard = execute_move(board, move)
         if newboard == board:
             moveno -= 1
             continue

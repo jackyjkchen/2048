@@ -46,8 +46,6 @@ class _get_ch:
         
 get_ch = _get_ch()
 
-board_t = [0] * 4
-
 UP = 0
 DOWN = 1
 LEFT = 2
@@ -144,38 +142,27 @@ def execute_move_helper(row):
 
     return  line[0] | (line[1] << 4) | (line[2] << 8) | (line[3] << 12)
 
-def execute_move_col(board, move):
+def execute_move(board, move):
     ret = copy.deepcopy(board)
-    t = transpose(board)
+    t = ret
+    if (move == UP) or (move == DOWN):
+        t = transpose(board)
     for i in range(0, 4):
         row = t[3 - i]
         if move == UP:
             tmp = unpack_col(row ^ execute_move_helper(row))
         elif move == DOWN:
             tmp = unpack_col(row ^ reverse_row(execute_move_helper(reverse_row(row))))
-        ret[0] = ret[0] ^ (tmp[0] << (i << 2))
-        ret[1] = ret[1] ^ (tmp[1] << (i << 2))
-        ret[2] = ret[2] ^ (tmp[2] << (i << 2))
-        ret[3] = ret[3] ^ (tmp[3] << (i << 2))
-    return ret
-
-def execute_move_row(board, move):
-    t = copy.deepcopy(board)
-    for i in range(0, 4):
-        row = t[3 - i]
-        if move == LEFT:
+        elif move == LEFT:
             t[3 - i] = t[3 - i] ^ (row ^ execute_move_helper(row))
         elif move == RIGHT:
             t[3 - i] = t[3 - i] ^ (row ^ reverse_row(execute_move_helper(reverse_row(row))))
-    return t
-
-def execute_move(move, board):
-    if (move == UP) or (move == DOWN):
-        return execute_move_col(board, move)
-    elif (move == LEFT) or (move == RIGHT):
-        return execute_move_row(board, move)
-    else:
-        raise
+        if (move == UP) or (move == DOWN):
+            ret[0] = ret[0] ^ (tmp[0] << (i << 2))
+            ret[1] = ret[1] ^ (tmp[1] << (i << 2))
+            ret[2] = ret[2] ^ (tmp[2] << (i << 2))
+            ret[3] = ret[3] ^ (tmp[3] << (i << 2))
+    return ret
 
 def score_helper(board):
     score = 0
@@ -260,7 +247,7 @@ def play_game(get_move):
         clear_screen()
         move = 0
         while move < 4:
-            if execute_move(move, board) != board:
+            if execute_move(board, move) != board:
                 break
             move = move + 1
         if move == 4:
@@ -289,7 +276,7 @@ def play_game(get_move):
             retract_num = retract_pos - 1
             continue
 
-        newboard = execute_move(move, board)
+        newboard = execute_move(board, move)
         if newboard == board:
             moveno = moveno - 1
             continue

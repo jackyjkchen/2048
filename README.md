@@ -129,7 +129,7 @@ msc 3.0/4.0 (dos16)
 
 ## c/2048-ai.c
 
-ISO C90 AI实现，非严格C90内容仅为64位整数，由于C语言标准库缺乏关联容器做cache，限定搜索深度为3。可选支持OpenMP多线程（预处理OPENMP_THREAD控制）。
+ISO C90 AI实现，非严格C90内容仅为64位整数，由于C语言标准库缺乏关联容器做cache，限定搜索深度为5。可选支持OpenMP多线程（预处理OPENMP_THREAD控制）。
 
 ### 使用FASTMODE预处理（默认），可启用查表法。
 
@@ -502,16 +502,25 @@ quick pascal 1.0 (dos16)
 
 ## pascal/2048-ai.pas
 
-Pascal AI实现，查表法 + TDictionary，由预处理MULTI_THREAD决定是否使用多线程（默认不启用）。
+Pascal AI实现，查表法，由预处理FASTMODE决定是否使用TDictionary cache（默认不启用），由预处理MULTI_THREAD决定是否使用多线程（默认不启用）。
+
+## 默认不启用FASTMODE时，搜索深度限定为5。编译器支持范围更宽。
+
+已测试编译器和平台：
+```
+free pascal 2.2+ (linux, win32, freebsd, macos, dos32)
+```
+
+## 启用FASTMODE，依赖TDictionary，搜索深度不限，编译器支持范围较窄。
 
 已测试编译器和平台：
 ```
 free pascal 3.2+ (linux, win32, freebsd, macos, dos32)
 ```
 
-使用多线程的编译命令行示例：
+使用TDictionary+多线程的编译命令行示例：
 ```
-fpc -dMULTI_THREAD -O2 pascal/2048-ai.pas
+fpc -dMULTI_THREAD -dFASTMODE:=1 -O2 pascal/2048-ai.pas
 ```
 
 
@@ -536,7 +545,7 @@ gfortran -std=f2003 -O2 fortran/2048.F03 f03deps.o -o 2048
 
 ## fortran/2048-ai.F03 + fortran/f03deps.c
 
-Fortran2003 AI实现，查表法，由于缺乏cache数据结构，搜索深度限定为3。系统相关功能（清除屏幕），由fortran/f03deps.c提供。
+Fortran2003 AI实现，查表法，由于缺乏cache数据结构，搜索深度限定为5。系统相关功能（清除屏幕），由fortran/f03deps.c提供。
 
 已测试编译器和平台：
 ```
@@ -595,7 +604,7 @@ gfortran -std=gnu -O2 fortran/2048.f f90deps.o -o 2048
 
 ## python/2048.py
 
-Python实现，由于脚本语言初始化大数组较慢，因此不使用查表法。
+Python实现，不使用查表法。
 
 已测试Python版本和平台：
 ```
@@ -605,12 +614,6 @@ pypy/pypy3 all (linux, win32, macos)
 ```
 
 * 在amd64 + linux平台，python 2.2/2.3也可以运行，由于缺乏可移植性，不例入兼容列表。
-
-## python/2048-tab.py
-
-Python实现，使用查表法，在低配置设备上启动较慢，但执行较快。
-
-Python版本和平台支持同上。
 
 
 ## python/2048-ai.py
@@ -639,7 +642,7 @@ pypy/pypy3 all (linux, win32, macos)
 
 ## lua/2048.lua + lua/luadeps.c
 
-Lua 5.3+实现，依赖Lua 5.3或以上版本提供的原生64位整数运算支持，由于原生Lua对操作系统判定和无回显输入不支持，相关功能由lua/luadeps.c提供。由于脚本语言初始化大数组较慢，因此不使用查表法。
+Lua 5.3+实现，使用查表法，依赖Lua 5.3或以上版本提供的原生64位整数运算支持，由于原生Lua对操作系统判定和无回显输入不支持，相关功能由lua/luadeps.c提供。
 
 已测试Lua版本和平台：
 ```
@@ -651,13 +654,6 @@ lua-5.3+ (linux, win32, freebsd, macos)
 gcc -std=c99 -I/usr/include/lua5.4 -shared -fPIC -O2 lua/luadeps.c  -o luadeps.so
 ./lua/2048.lua
 ```
-
-
-## lua/2048-tab.lua + lua/luadeps.c
-
-Lua 5.3+实现，依赖Lua 5.3或以上版本提供的原生64位整数运算支持，由于原生Lua对操作系统判定和无回显输入不支持，相关功能由lua/luadeps.c提供。使用查表法，低配置设备上启动较慢，但执行较快。
-
-Lua版本和平台支持同上。
 
 
 ## lua/2048-ai.lua + lua/luadeps.c

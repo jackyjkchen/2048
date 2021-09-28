@@ -9,6 +9,11 @@ uses
     {$endif}
     crt, sysutils, strings, math, generics.collections;
 
+{$macro on}
+{$if not defined(FASTMODE)}
+{$define FASTMODE := 0}
+{$endif}
+
 function unif_random(n : integer) : integer;
 begin
     unif_random := random(n);
@@ -21,7 +26,7 @@ end;
 
 const
     ROW_MASK : qword   = $FFFF;
-    COL_MASK : qword = $000F000F000F000F;
+    COL_MASK : qword   = $000F000F000F000F;
     UP       : integer = 0;
     DOWN     : integer = 1;
     LEFT     : integer = 2;
@@ -97,13 +102,17 @@ const
     CACHE_DEPTH_LIMIT                = 15;
 
 type
+{$if FASTMODE <> 0}
     trans_table_entry_t = record
          depth : integer;
          heuristic : real;
     end;
     trans_table_t = specialize TDictionary<qword, trans_table_entry_t>;
+{$endif}
     eval_state = record
+{$if FASTMODE <> 0}
         trans_table  : trans_table_t;
+{$endif}
         maxdepth     : integer;
         curdepth     : integer;
         nomoves      : longint;
@@ -116,17 +125,18 @@ type
 const
     TABLESIZE = 65536;
 type
-    wordable_t   =  array[0..(TABLESIZE)-1] of word;
+    row_table_t   =  array[0..(TABLESIZE)-1] of word;
     score_table_t =  array[0..(TABLESIZE)-1] of dword;
     heur_table_t  =  array[0..(TABLESIZE)-1] of real;
 var
-    wordable        : wordable_t;
+    row_left_table   : row_table_t;
+    row_right_table  : row_table_t;
     score_table      : score_table_t;
     score_heur_table : heur_table_t;
 
 procedure init_tables;
 var
-    row, row_result : word;
+    row, row_result, rev_row, rev_result : word;
     i, j        : integer;
     row_line    : array[0..3] of byte;
     score, rank : dword;
@@ -210,51 +220,46 @@ begin
             end;
             i := i + 1;
         end;
-
         row_result := row_line[0] or (row_line[1] shl 4) or (row_line[2] shl 8) or (row_line[3] shl 12);
-        wordable[row] := row xor row_result;
+
+        rev_row := reverse_row(row);
+        rev_result := reverse_row(row_result);
+        row_left_table[row] := row xor row_result;
+        row_right_table[rev_row] := rev_row xor rev_result;
 
         row := row + 1;
     until row = 0;
 end;
 
-function execute_move_col(board : qword; _move : integer) : qword;
+function execute_move(board : qword; _move : integer) : qword;
 var
     ret, t : qword;
 begin
     ret := board;
-    t := transpose(board);
     if _move = UP then begin
-        ret := ret xor unpack_col(wordable[t and ROW_MASK]);
-        ret := ret xor (unpack_col(wordable[(t shr 16) and ROW_MASK]) shl 4);
-        ret := ret xor (unpack_col(wordable[(t shr 32) and ROW_MASK]) shl 8);
-        ret := ret xor (unpack_col(wordable[(t shr 48) and ROW_MASK]) shl 12);
+        t := transpose(board);
+        ret := ret xor unpack_col(row_left_table[t and ROW_MASK]);
+        ret := ret xor (unpack_col(row_left_table[(t shr 16) and ROW_MASK]) shl 4);
+        ret := ret xor (unpack_col(row_left_table[(t shr 32) and ROW_MASK]) shl 8);
+        ret := ret xor (unpack_col(row_left_table[(t shr 48) and ROW_MASK]) shl 12);
     end else if _move = DOWN then begin
-        ret := ret xor unpack_col(reverse_row(wordable[reverse_row(t and ROW_MASK)]));
-        ret := ret xor (unpack_col(reverse_row(wordable[reverse_row((t shr 16) and ROW_MASK)])) shl 4);
-        ret := ret xor (unpack_col(reverse_row(wordable[reverse_row((t shr 32) and ROW_MASK)])) shl 8);
-        ret := ret xor (unpack_col(reverse_row(wordable[reverse_row((t shr 48) and ROW_MASK)])) shl 12);
-    end;
-    execute_move_col := ret;
-end;
-
-function execute_move_row(board : qword; _move : integer) : qword;
-var
-    ret : qword;
-begin
-    ret := board;
-    if _move = LEFT then begin
-        ret := ret xor qword(wordable[board and ROW_MASK]);
-        ret := ret xor (qword(wordable[(board shr 16) and ROW_MASK]) shl 16);
-        ret := ret xor (qword(wordable[(board shr 32) and ROW_MASK]) shl 32);
-        ret := ret xor (qword(wordable[(board shr 48) and ROW_MASK]) shl 48);
+        t := transpose(board);
+        ret := ret xor unpack_col(row_right_table[t and ROW_MASK]);
+        ret := ret xor (unpack_col(row_right_table[(t shr 16) and ROW_MASK]) shl 4);
+        ret := ret xor (unpack_col(row_right_table[(t shr 32) and ROW_MASK]) shl 8);
+        ret := ret xor (unpack_col(row_right_table[(t shr 48) and ROW_MASK]) shl 12);
+    end else if _move = LEFT then begin
+        ret := ret xor qword(row_left_table[board and ROW_MASK]);
+        ret := ret xor (qword(row_left_table[(board shr 16) and ROW_MASK]) shl 16);
+        ret := ret xor (qword(row_left_table[(board shr 32) and ROW_MASK]) shl 32);
+        ret := ret xor (qword(row_left_table[(board shr 48) and ROW_MASK]) shl 48);
     end else if _move = RIGHT then begin
-        ret := ret xor qword(reverse_row(wordable[reverse_row(board and ROW_MASK)]));
-        ret := ret xor (qword(reverse_row(wordable[reverse_row((board shr 16) and ROW_MASK)])) shl 16);
-        ret := ret xor (qword(reverse_row(wordable[reverse_row((board shr 32) and ROW_MASK)])) shl 32);
-        ret := ret xor (qword(reverse_row(wordable[reverse_row((board shr 48) and ROW_MASK)])) shl 48);
+        ret := ret xor qword(row_right_table[board and ROW_MASK]);
+        ret := ret xor (qword(row_right_table[(board shr 16) and ROW_MASK]) shl 16);
+        ret := ret xor (qword(row_right_table[(board shr 32) and ROW_MASK]) shl 32);
+        ret := ret xor (qword(row_right_table[(board shr 48) and ROW_MASK]) shl 48);
     end;
-    execute_move_row := ret;
+    execute_move := ret;
 end;
 
 function score_helper(board : qword) : dword;
@@ -267,19 +272,6 @@ function score_heur_helper(board : qword) : real;
 begin
     score_heur_helper := score_heur_table[board and ROW_MASK] + score_heur_table[(board shr 16) and ROW_MASK] +
         score_heur_table[(board shr 32) and ROW_MASK] + score_heur_table[(board shr 48) and ROW_MASK];
-end;
-
-function execute_move(_move : integer; board : qword) : qword;
-var
-    ret : qword;
-begin
-    if (_move = UP) or (_move = DOWN) then
-        ret := execute_move_col(board, _move)
-    else if (_move = LEFT) or (_move = RIGHT) then
-        ret := execute_move_row(board, _move)
-    else
-        ret := not qword(0);
-    execute_move := ret
 end;
 
 function score_board(board : qword) : dword;
@@ -349,10 +341,15 @@ begin
         max_limit := 3
     else if bitset <= 2048 + 1024 then
         max_limit := 4
+{$if FASTMODE <> 0}
     else if bitset <= 4096 then
         max_limit := 5
     else if bitset <= 4096 + 1024 then
         max_limit := 6;
+{$else}
+    else
+        max_limit := 5;
+{$endif}
     bitset := bitset shr 1;
     count := 0;
     while bitset <> 0 do begin
@@ -371,7 +368,9 @@ function score_move_node(var state : eval_state; board : qword; cprob : real) : 
 function score_tilechoose_node(var state : eval_state; board : qword; cprob : real) : real;
 var
     res   : real;
+{$if FASTMODE <> 0}
     entry : trans_table_entry_t;
+{$endif}
     tile_2, tmp : qword;
     num_open    : integer;
 begin
@@ -380,6 +379,7 @@ begin
         state.tablehits := state.tablehits + 1;
         exit(score_heur_board(board));
     end;
+{$if FASTMODE <> 0}
     if state.curdepth < CACHE_DEPTH_LIMIT then begin
         if state.trans_table.ContainsKey(board) then begin
             entry := state.trans_table[board];
@@ -389,6 +389,7 @@ begin
             end;
         end;
     end;
+{$endif}
 
     num_open := count_empty(board);
     cprob := cprob / num_open;
@@ -404,11 +405,14 @@ begin
         tile_2 := tile_2 shl 4;
     end;
     res := res / num_open;
+
+{$if FASTMODE <> 0}
     if state.curdepth < CACHE_DEPTH_LIMIT then begin
         entry.depth := state.curdepth;
         entry.heuristic := res;
         state.trans_table.AddOrSetValue(board, entry);
     end;
+{$endif}
 
     score_tilechoose_node := res;
 end;
@@ -422,7 +426,7 @@ begin
     best := 0.0;
     state.curdepth := state.curdepth + 1;
     for _move := 0 to 3 do begin
-        newboard := execute_move(_move, board);
+        newboard := execute_move(board, _move);
         state.moves_evaled := state.moves_evaled + 1;
         if board <> newboard then begin
             tmp := score_tilechoose_node(state, newboard, cprob);
@@ -440,7 +444,7 @@ function _score_toplevel_move(var state : eval_state; board : qword; _move : int
 var
     newboard : qword;
 begin
-    newboard := execute_move(_move, board);
+    newboard := execute_move(board, _move);
     if board = newboard then
         _score_toplevel_move := 0.0
     else
@@ -452,7 +456,9 @@ var
     state : eval_state;
     res : real;
 begin
+{$if FASTMODE <> 0}
     state.trans_table := trans_table_t.Create();
+{$endif}
     state.maxdepth := 0;
     state.curdepth := 0;
     state.cachehits := 0;
@@ -460,12 +466,17 @@ begin
     state.depth_limit := get_depth_limit(board);
 
     res := _score_toplevel_move(state, board, _move);
+{$if FASTMODE <> 0}
     msg := format('Move %d: result %f: eval''d %d moves (%d no moves, %d table hits, %d cache hits, %d cache size) (maxdepth=%d)', [_move, res,
            state.moves_evaled, state.nomoves, state.tablehits, state.cachehits, state.trans_table.Count, state.maxdepth]);
+    state.trans_table.Free();
+{$else}
+    msg := format('Move %d: result %f: eval''d %d moves (%d no moves, %d table hits, %d cache hits, %d cache size) (maxdepth=%d)', [_move, res,
+           state.moves_evaled, state.nomoves, state.tablehits, state.cachehits, 0, state.maxdepth]);
+{$endif}
 {$ifndef MULTI_THREAD}
     writeln(msg);
 {$endif}
-    state.trans_table.Free();
     score_toplevel_move := res;
 end;
 
@@ -554,7 +565,7 @@ begin
         clear_screen;
         _move := 0;
         while _move < 4 do begin
-            if execute_move(_move, board) <> board then
+            if execute_move(board, _move) <> board then
                 break;
             _move := _move + 1;
         end;
@@ -568,7 +579,7 @@ begin
         _move := get_move(board);
         if _move < 0 then break;
 
-        newboard := execute_move(_move, board);
+        newboard := execute_move(board, _move);
         if newboard = board then begin
             moveno := moveno - 1;
             continue;

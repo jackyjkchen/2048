@@ -124,47 +124,32 @@ Public Module Game2048
         Loop While row <> &HFFFF
     End Sub
 
-    Private Function execute_move_col(board As ULong, _move As Integer) As ULong
+    Private Function execute_move(board As ULong, move As Integer) As ULong
         Dim ret As ULong = board
-        Dim t As ULong = transpose(board)
-        If _move = UP Then
+        If move = UP Then
+            Dim t As ULong = transpose(board)
             ret = ret Xor unpack_col(row_table(t And ROW_MASK))
             ret = ret Xor (unpack_col(row_table((t >> 16) And ROW_MASK)) << 4)
             ret = ret Xor (unpack_col(row_table((t >> 32) And ROW_MASK)) << 8)
             ret = ret Xor (unpack_col(row_table((t >> 48) And ROW_MASK)) << 12)
-        ElseIf _move = DOWN Then
+        ElseIf move = DOWN Then
+            Dim t As ULong = transpose(board)
             ret = ret Xor unpack_col(reverse_row(row_table(reverse_row(t And ROW_MASK))))
             ret = ret Xor (unpack_col(reverse_row(row_table(reverse_row((t >> 16) And ROW_MASK)))) << 4)
             ret = ret Xor (unpack_col(reverse_row(row_table(reverse_row((t >> 32) And ROW_MASK)))) << 8)
             ret = ret Xor (unpack_col(reverse_row(row_table(reverse_row((t >> 48) And ROW_MASK)))) << 12)
-        End If
-        Return ret
-    End Function
-
-    Private Function execute_move_row(board As ULong, _move As Integer ) As ULong
-        Dim ret As ULong = board
-        If _move = LEFT Then
+        ElseIf move = LEFT Then
             ret = ret Xor CULng(row_table(board And ROW_MASK))
             ret = ret Xor (CULng(row_table((board >> 16) And ROW_MASK)) << 16)
             ret = ret Xor (CULng(row_table((board >> 32) And ROW_MASK)) << 32)
             ret = ret Xor (CULng(row_table((board >> 48) And ROW_MASK)) << 48)
-        ElseIf _move = RIGHT Then
+        ElseIf move = RIGHT Then
             ret = ret Xor CULng(reverse_row(row_table(reverse_row(board And ROW_MASK))))
             ret = ret Xor (CULng(reverse_row(row_table(reverse_row((board >> 16) And ROW_MASK)))) << 16)
             ret = ret Xor (CULng(reverse_row(row_table(reverse_row((board >> 32) And ROW_MASK)))) << 32)
             ret = ret Xor (CULng(reverse_row(row_table(reverse_row((board >> 48) And ROW_MASK)))) << 48)
         End If
         Return ret
-    End Function
-
-    Private Function execute_move(_move As Integer, board As ULong) As ULong
-        If _move = UP OrElse _move = DOWN Then
-            Return execute_move_col(board, _move)
-        ElseIf _move = LEFT OrElse _move = RIGHT Then
-            Return execute_move_row(board, _move)
-        Else
-            Return &HFFFFFFFFFFFFFFFFUL
-        End If
     End Function
 
     Private Function score_helper(board As ULong) As UInteger
@@ -222,6 +207,7 @@ Public Module Game2048
                 Return pos Mod 4
             End If
         End While
+        Return -1
     End Function
 
     Private Sub play_game(get_move As get_move_func_t)
@@ -235,24 +221,24 @@ Public Module Game2048
 
         init_tables()
         While True
-            Dim _move As Integer = 0
+            Dim move As Integer = 0
             Dim tile As ULong = 0
             Dim newboard As ULong
             clear_screen()
 
-            For _move = 0 To 3
-                If execute_move(_move, board) <> board Then Exit For
+            For move = 0 To 3
+                If execute_move(board, move) <> board Then Exit For
             Next
 
-            If _move = 4 Then Exit While
+            If move = 4 Then Exit While
             current_score = CInt(score_board(board) - scorepenalty)
             moveno += 1
             Console.WriteLine("Move #{0}, current score={1}(+{2})", moveno, current_score, current_score - last_score)
             last_score = current_score
-            _move = get_move(board)
-            If _move < 0 Then Exit While
+            move = get_move(board)
+            If move < 0 Then Exit While
 
-            If _move = RETRACT Then
+            If move = RETRACT Then
                 If moveno <= 1 OrElse retract_num <= 0 Then
                     moveno -= 1
                     Continue While
@@ -266,7 +252,7 @@ Public Module Game2048
                 Continue While
             End If
 
-            newboard = execute_move(_move, board)
+            newboard = execute_move(board, move)
             If newboard = board Then
                 moveno -= 1
                 Continue While

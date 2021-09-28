@@ -141,14 +141,15 @@ begin
     execute_move_helper := row_line[0] or (row_line[1] shl 4) or (row_line[2] shl 8) or (row_line[3] shl 12);
 end;
 
-procedure execute_move_col(var board : board_t; _move : integer);
+procedure execute_move(var board : board_t; _move : integer);
 var
-  tran, tmp : board_t;
-  i : integer;
-  row, rev_row : word;
+    tran, tmp : board_t;
+    i : integer;
+    row, rev_row : word;
 begin
     move(board, tran, sizeof(board_t));
-    transpose(tran);
+    if (_move = UP) or (_move = DOWN) then
+        transpose(tran);
     for i := 0 to 3 do begin
         row := tran[3-i];
         if _move = UP then begin
@@ -156,36 +157,19 @@ begin
         end else if _move = DOWN then begin
             rev_row := reverse_row(row);
             unpack_col(row xor reverse_row(execute_move_helper(rev_row)), tmp);
-        end;
-        board[0] := board[0] xor (tmp[0] shl (i shl 2));
-        board[1] := board[1] xor (tmp[1] shl (i shl 2));
-        board[2] := board[2] xor (tmp[2] shl (i shl 2));
-        board[3] := board[3] xor (tmp[3] shl (i shl 2));
-    end;
-end;
-
-procedure execute_move_row(var board : board_t; _move : integer);
-var
-  i : integer;
-  row, rev_row : word;
-begin
-    for i := 0 to 3 do begin
-        row := board[3-i];
-        if _move = LEFT then begin
+        end else if _move = LEFT then begin
             board[3-i] := board[3-i] xor (row xor execute_move_helper(row));
         end else if _move = RIGHT then begin
             rev_row := reverse_row(row);
             board[3-i] := board[3-i] xor (row xor reverse_row(execute_move_helper(rev_row)));
         end;
+        if (_move = UP) or (_move = DOWN) then begin
+            board[0] := board[0] xor (tmp[0] shl (i shl 2));
+            board[1] := board[1] xor (tmp[1] shl (i shl 2));
+            board[2] := board[2] xor (tmp[2] shl (i shl 2));
+            board[3] := board[3] xor (tmp[3] shl (i shl 2));
+        end;
     end;
-end;
-
-procedure execute_move(_move : integer; var board : board_t);
-begin
-    if (_move = UP) or (_move = DOWN) then
-        execute_move_col(board, _move)
-    else if (_move = LEFT) or (_move = RIGHT) then
-        execute_move_row(board, _move);
 end;
 
 function score_helper(board : board_t) : longint;
@@ -361,7 +345,7 @@ begin
         _move := 0;
         while _move < 4 do begin
             move(board, newboard, sizeof(board_t));
-            execute_move(_move, newboard);
+            execute_move(newboard, _move);
             if not compare_board(board, newboard) then
                 goto 2;
             _move := _move + 1;
@@ -393,7 +377,7 @@ begin
         end;
 
         move(board, newboard, sizeof(board_t));
-        execute_move(_move, newboard);
+        execute_move(newboard, _move);
         if compare_board(board, newboard) then begin
             moveno := moveno - 1;
             goto 1;

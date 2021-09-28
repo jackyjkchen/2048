@@ -101,10 +101,13 @@ function execute_move_helper(row)
     return line[0] | (line[1] << 4) | (line[2] << 8) | (line[3] << 12)
 end
 
-function execute_move_col(board, move)
-    ret = board
-    t = transpose(board)
+function execute_move(board, move)
+    local ret = board
+    local t = board
 
+    if ((move == UP) or (move == DOWN)) then
+        t = transpose(board)
+    end
     for i = 0, 3, 1 do
         row = (t >> (i << 4)) & ROW_MASK
         if (move == UP) then
@@ -112,17 +115,7 @@ function execute_move_col(board, move)
         elseif (move == DOWN) then
             rev_row = reverse_row(row)
             ret = ret ~ (unpack_col(row ~ reverse_row(execute_move_helper(rev_row))) << (i << 2))
-        end
-    end
-    return ret
-end
-
-function execute_move_row(board, move)
-    ret = board
-
-    for i = 0, 3, 1 do
-        row = (board >> (i << 4)) & ROW_MASK
-        if (move == LEFT) then
+        elseif (move == LEFT) then
             ret = ret ~ ((row ~ execute_move_helper(row)) << (i << 4))
         elseif (move == RIGHT) then
             rev_row = reverse_row(row)
@@ -130,16 +123,6 @@ function execute_move_row(board, move)
         end
     end
     return ret
-end
-
-function execute_move(move, board)
-    if ((move == UP) or (move == DOWN) ) then
-        return execute_move_col(board, move)
-    elseif ((move == LEFT) or (move == RIGHT) ) then
-        return execute_move_row(board, move)
-    else
-        return 0xFFFFFFFFFFFFFFFF
-    end
 end
 
 function score_helper(board)
@@ -231,7 +214,7 @@ function play_game(get_move)
         luadeps.c_clear_screen()
         local move = 0
         while (move < 4) do
-            if (execute_move(move, board) ~= board) then
+            if (execute_move(board, move) ~= board) then
                 break
             end
             move = move + 1
@@ -267,7 +250,7 @@ function play_game(get_move)
                 break
             end
 
-            local newboard = execute_move(move, board)
+            local newboard = execute_move(board, move)
             if (newboard == board) then
                 moveno = moveno - 1
                 break

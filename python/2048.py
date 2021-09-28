@@ -116,9 +116,11 @@ def execute_move_helper(row):
         i += 1
     return  line[0] | (line[1] << 4) | (line[2] << 8) | (line[3] << 12)
 
-def execute_move_col(board, move):
+def execute_move(board, move):
     ret = board
-    t = transpose(board)
+    t = board
+    if (move == UP) or (move == DOWN):
+        t = transpose(board)
     for i in range(0, 4):
         row = (t >> (i << 4)) & ROW_MASK
         if move == UP:
@@ -126,26 +128,12 @@ def execute_move_col(board, move):
         elif move == DOWN:
             rev_row = reverse_row(row)
             ret ^= unpack_col(row ^ reverse_row(execute_move_helper(rev_row))) << (i << 2)
-    return ret
-
-def execute_move_row(board, move):
-    ret = board
-    for i in range(0, 4):
-        row = (board >> (i << 4)) & ROW_MASK
-        if move == LEFT:
+        elif move == LEFT:
             ret ^= (row ^ execute_move_helper(row)) << (i << 4)
         elif move == RIGHT:
             rev_row = reverse_row(row)
             ret ^= (row ^ reverse_row(execute_move_helper(rev_row))) << (i << 4)
     return ret
-
-def execute_move(move, board):
-    if (move == UP) or (move == DOWN):
-        return execute_move_col(board, move)
-    elif (move == LEFT) or (move == RIGHT):
-        return execute_move_row(board, move)
-    else:
-        raise
 
 def score_helper(board):
     score = 0
@@ -216,7 +204,7 @@ def play_game(get_move):
         clear_screen()
         move = 0
         while move < 4:
-            if execute_move(move, board) != board:
+            if execute_move(board, move) != board:
                 break
             move += 1
         if move == 4:
@@ -245,7 +233,7 @@ def play_game(get_move):
             retract_num -= 1
             continue
 
-        newboard = execute_move(move, board)
+        newboard = execute_move(board, move)
         if newboard == board:
             moveno -= 1
             continue

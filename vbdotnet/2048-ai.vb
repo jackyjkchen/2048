@@ -7,7 +7,8 @@ Public Module Game2048
     Const ROW_MASK As ULong = &HFFFFUL
     Const COL_MASK As ULong = &HF000F000F000FUL
     Const TABLESIZE As Integer = 65536
-    Private row_table As UShort() = New UShort(TABLESIZE - 1) {}
+    Private row_left_table As UShort() = New UShort(TABLESIZE - 1) {}
+    Private row_right_table As UShort() = New UShort(TABLESIZE - 1) {}
     Private score_table As UInteger() = New UInteger(TABLESIZE - 1) {}
     Private score_heur_table As Double() = New Double(TABLESIZE - 1) {}
     Delegate Function get_move_func_t(board As ULong) As Integer
@@ -106,6 +107,8 @@ Public Module Game2048
     Private Sub init_tables()
         Dim row As UShort = 0
         Dim result As UShort = 0
+        Dim rev_row As UShort = 0
+        Dim rev_result As UShort = 0
         Dim line As UShort() = New UShort(3) {}
 
         Do
@@ -189,53 +192,42 @@ Public Module Game2048
                 i += 1
             End While
             result = line(0) Or (line(1) << 4) Or (line(2) << 8) Or (line(3) << 12)
-            row_table(row) = row Xor result
+
+            rev_row = reverse_row(row)
+            rev_result = reverse_row(result)
+            row_left_table(row) = row Xor result
+            row_right_table(rev_row) = rev_row Xor rev_result
 
             row += 1
         Loop While row <> &HFFFF
     End Sub
 
-    Private Function execute_move_col(board As ULong, _move As Integer) As ULong
+    Private Function execute_move(board As ULong, move As Integer) As ULong
         Dim ret As ULong = board
-        Dim t As ULong = transpose(board)
-        If _move = UP Then
-            ret = ret Xor unpack_col(row_table(t And ROW_MASK))
-            ret = ret Xor (unpack_col(row_table((t >> 16) And ROW_MASK)) << 4)
-            ret = ret Xor (unpack_col(row_table((t >> 32) And ROW_MASK)) << 8)
-            ret = ret Xor (unpack_col(row_table((t >> 48) And ROW_MASK)) << 12)
-        ElseIf _move = DOWN Then
-            ret = ret Xor unpack_col(reverse_row(row_table(reverse_row(t And ROW_MASK))))
-            ret = ret Xor (unpack_col(reverse_row(row_table(reverse_row((t >> 16) And ROW_MASK)))) << 4)
-            ret = ret Xor (unpack_col(reverse_row(row_table(reverse_row((t >> 32) And ROW_MASK)))) << 8)
-            ret = ret Xor (unpack_col(reverse_row(row_table(reverse_row((t >> 48) And ROW_MASK)))) << 12)
+        If move = UP Then
+            Dim t As ULong = transpose(board)
+            ret = ret Xor unpack_col(row_left_table(t And ROW_MASK))
+            ret = ret Xor (unpack_col(row_left_table((t >> 16) And ROW_MASK)) << 4)
+            ret = ret Xor (unpack_col(row_left_table((t >> 32) And ROW_MASK)) << 8)
+            ret = ret Xor (unpack_col(row_left_table((t >> 48) And ROW_MASK)) << 12)
+        ElseIf move = DOWN Then
+            Dim t As ULong = transpose(board)
+            ret = ret Xor unpack_col(row_right_table(t And ROW_MASK))
+            ret = ret Xor (unpack_col(row_right_table((t >> 16) And ROW_MASK)) << 4)
+            ret = ret Xor (unpack_col(row_right_table((t >> 32) And ROW_MASK)) << 8)
+            ret = ret Xor (unpack_col(row_right_table((t >> 48) And ROW_MASK)) << 12)
+        ElseIf move = LEFT Then
+            ret = ret Xor CULng(row_left_table(board And ROW_MASK))
+            ret = ret Xor (CULng(row_left_table((board >> 16) And ROW_MASK)) << 16)
+            ret = ret Xor (CULng(row_left_table((board >> 32) And ROW_MASK)) << 32)
+            ret = ret Xor (CULng(row_left_table((board >> 48) And ROW_MASK)) << 48)
+        ElseIf move = RIGHT Then
+            ret = ret Xor CULng(row_right_table(board And ROW_MASK))
+            ret = ret Xor (CULng(row_right_table((board >> 16) And ROW_MASK)) << 16)
+            ret = ret Xor (CULng(row_right_table((board >> 32) And ROW_MASK)) << 32)
+            ret = ret Xor (CULng(row_right_table((board >> 48) And ROW_MASK)) << 48)
         End If
         Return ret
-    End Function
-
-    Private Function execute_move_row(board As ULong, _move As Integer ) As ULong
-        Dim ret As ULong = board
-        If _move = LEFT Then
-            ret = ret Xor CULng(row_table(board And ROW_MASK))
-            ret = ret Xor (CULng(row_table((board >> 16) And ROW_MASK)) << 16)
-            ret = ret Xor (CULng(row_table((board >> 32) And ROW_MASK)) << 32)
-            ret = ret Xor (CULng(row_table((board >> 48) And ROW_MASK)) << 48)
-        ElseIf _move = RIGHT Then
-            ret = ret Xor CULng(reverse_row(row_table(reverse_row(board And ROW_MASK))))
-            ret = ret Xor (CULng(reverse_row(row_table(reverse_row((board >> 16) And ROW_MASK)))) << 16)
-            ret = ret Xor (CULng(reverse_row(row_table(reverse_row((board >> 32) And ROW_MASK)))) << 32)
-            ret = ret Xor (CULng(reverse_row(row_table(reverse_row((board >> 48) And ROW_MASK)))) << 48)
-        End If
-        Return ret
-    End Function
-
-    Private Function execute_move(_move As Integer, board As ULong) As ULong
-        If _move = UP OrElse _move = DOWN Then
-            Return execute_move_col(board, _move)
-        ElseIf _move = LEFT OrElse _move = RIGHT Then
-            Return execute_move_row(board, _move)
-        Else
-            Return &HFFFFFFFFFFFFFFFFUL
-        End If
     End Function
 
     Private Function score_helper(board As ULong) As UInteger
@@ -360,48 +352,48 @@ Public Module Game2048
     Private Function score_move_node(ByRef state As eval_state, board As ULong, cprob As Double) As Double
         Dim best As Double = 0.0F
         state.curdepth += 1
-        Dim _move As Integer = 0
+        Dim move As Integer = 0
 
-        While _move < 4
-            Dim newboard As ULong = execute_move(_move, board)
+        While move < 4
+            Dim newboard As ULong = execute_move(board, move)
             state.moves_evaled += 1
             If board <> newboard Then
                 best = Math.Max(best, score_tilechoose_node(state, newboard, cprob))
             Else
                 state.nomoves += 1
             End If
-            _move += 1
+            move += 1
         End While
 
         state.curdepth -= 1
         Return best
     End Function
 
-    Private Function _score_toplevel_move(ByRef state As eval_state, board As ULong, _move As Integer) As Double
-        Dim newboard As ULong = execute_move(_move, board)
+    Private Function _score_toplevel_move(ByRef state As eval_state, board As ULong, move As Integer) As Double
+        Dim newboard As ULong = execute_move(board, move)
         If board = newboard Then Return 0.0F
         Return score_tilechoose_node(state, newboard, 1.0F) + 0.000001F
     End Function
 
-    Private Function score_toplevel_move(board As ULong, _move As Integer) As Double
+    Private Function score_toplevel_move(board As ULong, move As Integer) As Double
         Dim res As Double = 0.0F
         Dim state As eval_state = New eval_state()
         state.depth_limit = get_depth_limit(board)
-        res = _score_toplevel_move(state, board, _move)
-        Console.WriteLine("Move {0}: result {1}: eval'd {2} moves ({3} no moves, {4} table hits, {5} cache hits, {6} cache size) (maxdepth={7})", _move, res, state.moves_evaled, state.nomoves, state.tablehits, state.cachehits, state.trans_table.Count, state.maxdepth)
+        res = _score_toplevel_move(state, board, move)
+        Console.WriteLine("Move {0}: result {1}: eval'd {2} moves ({3} no moves, {4} table hits, {5} cache hits, {6} cache size) (maxdepth={7})", move, res, state.moves_evaled, state.nomoves, state.tablehits, state.cachehits, state.trans_table.Count, state.maxdepth)
         Return res
     End Function
 
     Friend Class thrd_context
         Public board As UInt64
-        Public _move As Integer
+        Public move As Integer
         Public res As Double
         Public ev As AutoResetEvent = New AutoResetEvent(False)
     End Class
 
     Private Sub thrd_worker(state As Object)
         Dim context As thrd_context = state
-        context.res = score_toplevel_move(context.board, context._move)
+        context.res = score_toplevel_move(context.board, context.move)
         context.ev.Set()
     End Sub
 
@@ -412,18 +404,18 @@ Public Module Game2048
         Console.WriteLine("Current scores: heur {0}, actual {1}", CUInt(score_heur_board(board)), score_board(board))
 
         Dim context As thrd_context() = New thrd_context(3) {}
-        For _move As Integer = 0 To 3
-            context(_move) = New thrd_context()
-            context(_move).board = board
-            context(_move)._move = _move
-            context(_move).res = 0.0F
-            ThreadPool.QueueUserWorkItem(AddressOf thrd_worker, context(_move))
+        For move As Integer = 0 To 3
+            context(move) = New thrd_context()
+            context(move).board = board
+            context(move).move = move
+            context(move).res = 0.0F
+            ThreadPool.QueueUserWorkItem(AddressOf thrd_worker, context(move))
         Next
-        For _move As Integer = 0 To 3
-            context(_move).ev.WaitOne()
-            If context(_move).res > best Then
-                best = context(_move).res
-                bestmove = _move
+        For move As Integer = 0 To 3
+            context(move).ev.WaitOne()
+            If context(move).res > best Then
+                best = context(move).res
+                bestmove = move
             End If
         Next
 
@@ -438,24 +430,24 @@ Public Module Game2048
 
         init_tables()
         While True
-            Dim _move As Integer = 0
+            Dim move As Integer = 0
             Dim tile As ULong = 0
             Dim newboard As ULong
             clear_screen()
 
-            For _move = 0 To 3
-                If execute_move(_move, board) <> board Then Exit For
+            For move = 0 To 3
+                If execute_move(board, move) <> board Then Exit For
             Next
 
-            If _move = 4 Then Exit While
+            If move = 4 Then Exit While
             current_score = CInt(score_board(board) - scorepenalty)
             moveno += 1
             Console.WriteLine("Move #{0}, current score={1}(+{2})", moveno, current_score, current_score - last_score)
             last_score = current_score
-            _move = get_move(board)
-            If _move < 0 Then Exit While
+            move = get_move(board)
+            If move < 0 Then Exit While
 
-            newboard = execute_move(_move, board)
+            newboard = execute_move(board, move)
             If newboard = board Then
                 moveno -= 1
                 Continue While

@@ -104,15 +104,18 @@ function execute_move_helper() {
     echo $((line[0] | (line[1] << 4) | (line[2] << 8) | (line[3] << 12)))
 }
 
-function execute_move_col() {
+function execute_move() {
     local board=$1
     local move=$2
     local ret=$((board))
-    local t=$(transpose $((board)))
+    local t=$((board))
     local row
     local rev_row
     local i=0
 
+    if [[ $((move)) -eq 0 || $((move)) -eq 1 ]]; then
+        t=$(transpose $((board)))
+    fi
     while [ $((i)) -lt 4 ]; do
         row=$(((t >> (i << 4)) & ROW_MASK))
         if [ $((move)) -eq 0 ]; then
@@ -120,23 +123,7 @@ function execute_move_col() {
         elif [ $((move)) -eq 1 ]; then
             rev_row=$(reverse_row $((row)))
             ret=$((ret ^ ($(unpack_col $((row ^ $(reverse_row $(execute_move_helper $((rev_row))))))) << (i << 2))))
-        fi
-        i=$((i + 1))
-    done
-    echo $((ret))
-}
-
-function execute_move_row() {
-    local board=$1
-    local move=$2
-    local ret=$((board))
-    local row
-    local rev_row
-    local i=0
-
-    while [ $((i)) -lt 4 ]; do
-        row=$(((board >> (i << 4)) & ROW_MASK))
-        if [ $((move)) -eq 2 ]; then
+        elif [ $((move)) -eq 2 ]; then
             ret=$((ret ^ ((row ^ $(execute_move_helper $((row)))) << (i << 4))))
         elif [ $((move)) -eq 3 ]; then
             rev_row=$(reverse_row $((row)))
@@ -145,22 +132,6 @@ function execute_move_row() {
         i=$((i + 1))
     done
     echo $((ret))
-}
-
-function execute_move() {
-    local move=$1
-    local board=$2
-
-    if [[ ($((move)) -eq 0) || ($((move)) -eq 1) ]]; then
-        echo $(execute_move_col $((board)) $((move)))
-        return
-    elif [[ ($((move)) -eq 2) || ($((move)) -eq 3) ]]; then
-        echo $(execute_move_row $((board)) $((move)))
-        return
-    else
-        echo $((0xFFFFFFFFFFFFFFFF))
-        return
-    fi
 }
 
 function score_helper() {
@@ -273,7 +244,7 @@ function play_game() {
         printf "\033[2J\033[H"
         move=0
         while [ $((move)) -lt 4 ]; do
-            if [ $(($(execute_move $move $board))) -ne $((board)) ]; then
+            if [ $(($(execute_move $board $move))) -ne $((board)) ]; then
                 break
             fi
             move=$((move + 1))
@@ -309,7 +280,7 @@ function play_game() {
             continue
         fi
 
-        newboard=$(execute_move $((move)) $((board)))
+        newboard=$(execute_move $((board)) $((move)))
         if [ $((newboard)) -eq $((board)) ]; then
             moveno=$((moveno - 1))
             continue

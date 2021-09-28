@@ -14,9 +14,6 @@ import (
 	"time"
 )
 
-type uint64 uint64
-type uint16 uint16
-
 const ROW_MASK uint64 = 0xFFFF
 const COL_MASK uint64 = 0x000F000F000F000F
 
@@ -32,7 +29,7 @@ type get_move_func_t func(board uint64) int
 
 const TABLESIZE = 65536
 
-var uint16able [TABLESIZE]uint16
+var row_table [TABLESIZE]uint16
 var score_table [TABLESIZE]uint32
 
 var rd = rand.New(rand.NewSource(time.Now().UnixNano()))
@@ -138,7 +135,7 @@ func init_tables() {
 		}
 
 		result = line[0] | (line[1] << 4) | (line[2] << 8) | (line[3] << 12)
-		uint16able[row] = row ^ result
+		row_table[row] = row ^ result
 
 		if row == TABLESIZE-1 {
 			break
@@ -147,49 +144,33 @@ func init_tables() {
 	}
 }
 
-func execute_move_col(board uint64, move int) uint64 {
+func execute_move(board uint64, move int) uint64 {
 	var ret uint64 = board
-	var t uint64 = transpose(board)
 
 	if move == UP {
-		ret ^= unpack_col(uint16able[t&ROW_MASK])
-		ret ^= unpack_col(uint16able[(t>>16)&ROW_MASK]) << 4
-		ret ^= unpack_col(uint16able[(t>>32)&ROW_MASK]) << 8
-		ret ^= unpack_col(uint16able[(t>>48)&ROW_MASK]) << 12
+		var t uint64 = transpose(board)
+		ret ^= unpack_col(row_table[t&ROW_MASK])
+		ret ^= unpack_col(row_table[(t>>16)&ROW_MASK]) << 4
+		ret ^= unpack_col(row_table[(t>>32)&ROW_MASK]) << 8
+		ret ^= unpack_col(row_table[(t>>48)&ROW_MASK]) << 12
 	} else if move == DOWN {
-		ret ^= unpack_col(reverse_row(uint16able[reverse_row(uint16(t&ROW_MASK))]))
-		ret ^= unpack_col(reverse_row(uint16able[reverse_row(uint16((t>>16)&ROW_MASK))])) << 4
-		ret ^= unpack_col(reverse_row(uint16able[reverse_row(uint16((t>>32)&ROW_MASK))])) << 8
-		ret ^= unpack_col(reverse_row(uint16able[reverse_row(uint16((t>>48)&ROW_MASK))])) << 12
-	}
-	return ret
-}
-
-func execute_move_row(board uint64, move int) uint64 {
-	var ret uint64 = board
-
-	if move == LEFT {
-		ret ^= uint64(uint16able[board&ROW_MASK])
-		ret ^= uint64(uint16able[(board>>16)&ROW_MASK]) << 16
-		ret ^= uint64(uint16able[(board>>32)&ROW_MASK]) << 32
-		ret ^= uint64(uint16able[(board>>48)&ROW_MASK]) << 48
+		var t uint64 = transpose(board)
+		ret ^= unpack_col(reverse_row(row_table[reverse_row(uint16(t&ROW_MASK))]))
+		ret ^= unpack_col(reverse_row(row_table[reverse_row(uint16((t>>16)&ROW_MASK))])) << 4
+		ret ^= unpack_col(reverse_row(row_table[reverse_row(uint16((t>>32)&ROW_MASK))])) << 8
+		ret ^= unpack_col(reverse_row(row_table[reverse_row(uint16((t>>48)&ROW_MASK))])) << 12
+	} else if move == LEFT {
+		ret ^= uint64(row_table[board&ROW_MASK])
+		ret ^= uint64(row_table[(board>>16)&ROW_MASK]) << 16
+		ret ^= uint64(row_table[(board>>32)&ROW_MASK]) << 32
+		ret ^= uint64(row_table[(board>>48)&ROW_MASK]) << 48
 	} else if move == RIGHT {
-		ret ^= uint64(reverse_row(uint16able[reverse_row(uint16(board&ROW_MASK))]))
-		ret ^= uint64(reverse_row(uint16able[reverse_row(uint16((board>>16)&ROW_MASK))])) << 16
-		ret ^= uint64(reverse_row(uint16able[reverse_row(uint16((board>>32)&ROW_MASK))])) << 32
-		ret ^= uint64(reverse_row(uint16able[reverse_row(uint16((board>>48)&ROW_MASK))])) << 48
+		ret ^= uint64(reverse_row(row_table[reverse_row(uint16(board&ROW_MASK))]))
+		ret ^= uint64(reverse_row(row_table[reverse_row(uint16((board>>16)&ROW_MASK))])) << 16
+		ret ^= uint64(reverse_row(row_table[reverse_row(uint16((board>>32)&ROW_MASK))])) << 32
+		ret ^= uint64(reverse_row(row_table[reverse_row(uint16((board>>48)&ROW_MASK))])) << 48
 	}
 	return ret
-}
-
-func execute_move(move int, board uint64) uint64 {
-	if move == UP || move == DOWN {
-		return execute_move_col(board, move)
-	} else if move == LEFT || move == RIGHT {
-		return execute_move_row(board, move)
-	} else {
-		return 0xFFFFFFFFFFFFFFFF
-	}
 }
 
 func score_helper(board uint64) uint32 {
@@ -275,7 +256,7 @@ func play_game(get_move get_move_func_t) {
 
 		C.clear_screen()
 		for move = 0; move < 4; move++ {
-			if execute_move(move, board) != board {
+			if execute_move(board, move) != board {
 				break
 			}
 		}
@@ -309,7 +290,7 @@ func play_game(get_move get_move_func_t) {
 			continue
 		}
 
-		newboard = execute_move(move, board)
+		newboard = execute_move(board, move)
 		if newboard == board {
 			moveno--
 			continue

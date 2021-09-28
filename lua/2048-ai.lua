@@ -9,7 +9,8 @@ LEFT = 2
 RIGHT = 3
 
 TABLESIZE = 65536
-row_table = {}
+row_left_table = {}
+row_right_table = {}
 score_table = {}
 score_heur_table ={}
 
@@ -79,8 +80,10 @@ function count_empty(x)
 end
 
 function init_tables()
-    for row = 0, 65535, 1 do
+    for row = 0, 0xFFFF, 1 do
         local result = 0
+        local rev_row = 0
+        local rev_result = 0
         local score = 0.0
         local line = {}
         line[0] = row & 0xf
@@ -163,53 +166,41 @@ function init_tables()
             end
             i = i + 1
         end
-
         result = line[0] | (line[1] << 4) | (line[2] << 8) | (line[3] << 12)
-        row_table[row] = row ~ result
+
+        rev_row = reverse_row(row)
+        rev_result = reverse_row(result)
+        row_left_table[row] = row ~ result
+        row_right_table[rev_row] = rev_row ~ rev_result
     end
 end
 
-function execute_move_col(board, move)
+function execute_move(board, move)
     local ret = board
-    local t = transpose(board)
     if (move == UP) then
-        ret = ret ~ unpack_col(row_table[t & ROW_MASK])
-        ret = ret ~ (unpack_col(row_table[(t >> 16) & ROW_MASK]) << 4)
-        ret = ret ~ (unpack_col(row_table[(t >> 32) & ROW_MASK]) << 8)
-        ret = ret ~ (unpack_col(row_table[(t >> 48) & ROW_MASK]) << 12)
+        local t = transpose(board)
+        ret = ret ~ unpack_col(row_left_table[t & ROW_MASK])
+        ret = ret ~ (unpack_col(row_left_table[(t >> 16) & ROW_MASK]) << 4)
+        ret = ret ~ (unpack_col(row_left_table[(t >> 32) & ROW_MASK]) << 8)
+        ret = ret ~ (unpack_col(row_left_table[(t >> 48) & ROW_MASK]) << 12)
     elseif (move == DOWN) then
-        ret = ret ~ unpack_col(reverse_row(row_table[reverse_row(t & ROW_MASK)]))
-        ret = ret ~ (unpack_col(reverse_row(row_table[reverse_row((t >> 16) & ROW_MASK)])) << 4)
-        ret = ret ~ (unpack_col(reverse_row(row_table[reverse_row((t >> 32) & ROW_MASK)])) << 8)
-        ret = ret ~ (unpack_col(reverse_row(row_table[reverse_row((t >> 48) & ROW_MASK)])) << 12)
-    end
-    return ret
-end
-
-function execute_move_row(board, move)
-    local ret = board
-    if (move == LEFT) then
-        ret = ret ~ row_table[board & ROW_MASK]
-        ret = ret ~ (row_table[(board >> 16) & ROW_MASK] << 16)
-        ret = ret ~ (row_table[(board >> 32) & ROW_MASK] << 32)
-        ret = ret ~ (row_table[(board >> 48) & ROW_MASK] << 48)
+        local t = transpose(board)
+        ret = ret ~ unpack_col(row_right_table[t & ROW_MASK])
+        ret = ret ~ (unpack_col(row_right_table[(t >> 16) & ROW_MASK]) << 4)
+        ret = ret ~ (unpack_col(row_right_table[(t >> 32) & ROW_MASK]) << 8)
+        ret = ret ~ (unpack_col(row_right_table[(t >> 48) & ROW_MASK]) << 12)
+    elseif (move == LEFT) then
+        ret = ret ~ row_left_table[board & ROW_MASK]
+        ret = ret ~ (row_left_table[(board >> 16) & ROW_MASK] << 16)
+        ret = ret ~ (row_left_table[(board >> 32) & ROW_MASK] << 32)
+        ret = ret ~ (row_left_table[(board >> 48) & ROW_MASK] << 48)
     elseif (move == RIGHT) then
-        ret = ret ~ reverse_row(row_table[reverse_row(board & ROW_MASK)])
-        ret = ret ~ (reverse_row(row_table[reverse_row((board >> 16) & ROW_MASK)]) << 16)
-        ret = ret ~ (reverse_row(row_table[reverse_row((board >> 32) & ROW_MASK)]) << 32)
-        ret = ret ~ (reverse_row(row_table[reverse_row((board >> 48) & ROW_MASK)]) << 48)
+        ret = ret ~ row_right_table[board & ROW_MASK]
+        ret = ret ~ (row_right_table[(board >> 16) & ROW_MASK] << 16)
+        ret = ret ~ (row_right_table[(board >> 32) & ROW_MASK] << 32)
+        ret = ret ~ (row_right_table[(board >> 48) & ROW_MASK] << 48)
     end
     return ret
-end
-
-function execute_move(move, board)
-    if (move == UP) or (move == DOWN) then
-        return execute_move_col(board, move)
-    elseif (move == LEFT) or (move == RIGHT) then
-        return execute_move_row(board, move)
-    else
-        return 0xFFFFFFFFFFFFFFFF
-    end
 end
 
 function score_helper(board, table)
@@ -307,7 +298,7 @@ function score_move_node(state, board, cprob)
 
     state.curdepth = state.curdepth + 1
     for move = 0, 3, 1 do
-        newboard = execute_move(move, board)
+        newboard = execute_move(board, move)
 
         state.moves_evaled = state.moves_evaled + 1
         if (board ~= newboard) then
@@ -322,7 +313,7 @@ function score_move_node(state, board, cprob)
 end
 
 function _score_toplevel_move(state, board, move)
-    local newboard = execute_move(move, board)
+    local newboard = execute_move(board, move)
 
     if (board == newboard) then
         return 0.0
@@ -388,7 +379,7 @@ function play_game(get_move)
         luadeps.c_clear_screen()
         local move = 0
         while (move < 4) do
-            if (execute_move(move, board) ~= board) then
+            if (execute_move(board, move) ~= board) then
                 break
             end
             move = move + 1
@@ -408,7 +399,7 @@ function play_game(get_move)
         end
 
         repeat
-            local newboard = execute_move(move, board)
+            local newboard = execute_move(board, move)
             if (newboard == board) then
                 moveno = moveno - 1
                 break

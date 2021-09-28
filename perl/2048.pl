@@ -120,12 +120,15 @@ sub execute_move_helper {
     return $line[0] | ($line[1] << 4) | ($line[2] << 8) | ($line[3] << 12);
 }
 
-sub execute_move_col {
+sub execute_move {
     my $board = $_[0];
     my $move = $_[1];
     my $ret = $board;
-    my $t = transpose($board);
+    my $t = $board;
 
+    if ($move == $UP || $move == $DOWN) {
+        $t = transpose($board);
+    }
     for (my $i=0; $i<4; ++$i) {
         my $row = ($t >> ($i << 4)) & $ROW_MASK;
         if ($move == $UP) {
@@ -133,19 +136,7 @@ sub execute_move_col {
         } elsif ($move == $DOWN) {
             my $rev_row = reverse_row($row);
             $ret ^= unpack_col($row ^ reverse_row(execute_move_helper($rev_row))) << ($i << 2);
-        }
-    }
-    return $ret;
-}
-
-sub execute_move_row {
-    my $board = $_[0];
-    my $move = $_[1];
-    my $ret = $board;
-
-    for (my $i=0; $i<4; ++$i) {
-        my $row = ($board >> ($i << 4)) & $ROW_MASK;
-        if ($move == $LEFT) {
+        } elsif ($move == $LEFT) {
             $ret ^= ($row ^ execute_move_helper($row)) << ($i << 4);
         } elsif ($move == $RIGHT) {
             my $rev_row = reverse_row($row);
@@ -153,18 +144,6 @@ sub execute_move_row {
         }
     }
     return $ret;
-}
-
-sub execute_move {
-    my $move = $_[0];
-    my $board = $_[1];
-    if ($move == $UP || $move == $DOWN) {
-        return execute_move_col($board, $move);
-    } elsif ($move == $LEFT || $move == $RIGHT) {
-        return execute_move_row($board, $move);
-    } else {
-        return 0xFFFFFFFFFFFFFFFF;
-    }
 }
 
 sub score_helper {
@@ -258,7 +237,7 @@ sub play_game {
 
         clear_screen();
         for ($move=0; $move<4; $move++) {
-            if (execute_move($move, $board) != $board) {
+            if (execute_move($board, $move) != $board) {
                 last;
             }
         }
@@ -290,7 +269,7 @@ sub play_game {
             next;
         }
 
-        $newboard = execute_move($move, $board);
+        $newboard = execute_move($board, $move);
         if ($newboard == $board) {
             $moveno--;
             next;
