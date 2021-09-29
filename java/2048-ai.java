@@ -286,14 +286,19 @@ class Game2048
 
     int get_depth_limit(long board)
     {
-        int bitset = 0, max_limit = 0;
+        int bitset = 0, max_limit = 0, count = 0;
+
         while (board != 0) {
             bitset |= 1 << (board & 0xf);
             board >>>= 4;
         }
 
-        if (bitset <= 2048) {
-            max_limit = 3;
+        if (bitset <= 128) {
+            return 1;
+        } else if (bitset <= 512) {
+            return 2;
+        } else if (bitset <= 2048) {
+            return 3;
         } else if (bitset <= 2048 + 1024) {
             max_limit = 4;
         } else if (bitset <= 4096) {
@@ -301,8 +306,8 @@ class Game2048
         } else if (bitset <= 4096 + 2048) {
             max_limit = 6;
         }
+
         bitset >>>= 1;
-        int count = 0;
         while (bitset != 0) {
             bitset &= bitset - 1;
             count++;

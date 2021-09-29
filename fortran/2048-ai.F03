@@ -372,8 +372,8 @@ end function initial_board
 function get_depth_limit(board)
     integer(8), value :: board
     integer(4) :: get_depth_limit
-    integer(2) :: bitset, max_limit
-    integer(4) :: count_
+    integer(2) :: bitset
+    integer(4) :: count_, max_limit
 
     bitset = 0
     max_limit = 0
@@ -383,24 +383,29 @@ function get_depth_limit(board)
         board = ishft(board, -4)
     end do
 
-    if (bitset <= 2048) then
-        max_limit = 3
+    if (bitset <= 128) then
+        get_depth_limit = 1
+        return
+    else if (bitset <= 512) then
+        get_depth_limit = 2
+        return
+    else if (bitset <= 2048) then
+        get_depth_limit = 3
+        return
     else if (bitset <= 2048 + 1024) then
         max_limit = 4
     else
         max_limit = 5
     end if
-    bitset = ishft(bitset, -1)
 
+    bitset = ishft(bitset, -1)
     do while (bitset /= 0)
         bitset = iand(bitset, bitset - int(1, kind=2))
         count_ = count_ + 1
     end do
     count_ = count_ - 2
     count_ = max(count_, 3)
-    if (max_limit /= 0) then
-        count_ = min(count_, max_limit)
-    end if
+    count_ = min(count_, max_limit)
     get_depth_limit = count_
 end function get_depth_limit
 

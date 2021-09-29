@@ -513,25 +513,43 @@ static int get_depth_limit(board_t board) {
         board >>= 4;
     }
 
-    if (bitset <= 2048) {
-        max_limit = 3;
+    if (bitset <= 128) {
+        return 1;
+    } else if (bitset <= 512) {
+        return 2;
+    } else if (bitset <= 2048) {
+        return 3;
     } else if (bitset <= 2048 + 1024) {
         max_limit = 4;
     } else {
         max_limit = 5;
     }
-    bitset >>= 1;
 
+    bitset >>= 1;
     while (bitset) {
         bitset &= bitset - 1;
         count++;
     }
     count -= 2;
-    count = _max(count, 3);
-    if (max_limit) {
-        count = _min(count, max_limit);
-    }
+    count = _max(count, 1);
+    count = _min(count, max_limit);
     return count;
+}
+#else
+static int get_depth_limit(board_t board) {
+    row_t bitset = 0;
+
+    while (board) {
+        bitset |= 1 << (board & 0xf);
+        board >>= 4;
+    }
+
+    if (bitset <= 128) {
+        return 1;
+    } else if (bitset <= 512) {
+        return 2;
+    }
+    return 3;
 }
 #endif
 
@@ -602,11 +620,7 @@ static score_heur_t score_toplevel_move(board_t board, int move) {
     score_heur_t res = 0.0;
 
     memset(&state, 0x00, sizeof(eval_state));
-#if FASTMODE != 0
     state.depth_limit = get_depth_limit(board);
-#else
-    state.depth_limit = 3;
-#endif
     res = _score_toplevel_move(&state, board, move);
 
     printf

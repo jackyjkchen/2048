@@ -219,9 +219,7 @@ private:
 
         eval_state() : maxdepth(0), curdepth(0), nomoves(0), tablehits(0), cachehits(0), moves_evaled(0), depth_limit(0) {}
     };
-#if FASTMODE != 0
     int get_depth_limit(board_t board);
-#endif
     score_heur_t score_move_node(eval_state &state, board_t board, score_heur_t cprob);
     score_heur_t score_tilechoose_node(eval_state &state, board_t board, score_heur_t cprob);
     score_heur_t _score_toplevel_move(eval_state &state, board_t board, int move);
@@ -587,14 +585,19 @@ board_t Game2048::initial_board() {
 #if FASTMODE != 0
 int Game2048::get_depth_limit(board_t board) {
     row_t bitset = 0, max_limit = 0;
+    int count = 0;
 
     while (board) {
         bitset |= 1 << (board & 0xf);
         board >>= 4;
     }
 
-    if (bitset <= 2048) {
-        max_limit = 3;
+    if (bitset <= 128) {
+        return 1;
+    } else if (bitset <= 512) {
+        return 2;
+    } else if (bitset <= 2048) {
+        return 3;
     } else if (bitset <= 2048 + 1024) {
         max_limit = 4;
     } else if (bitset <= 4096) {
@@ -602,10 +605,8 @@ int Game2048::get_depth_limit(board_t board) {
     } else if (bitset <= 4096 + 2048) {
         max_limit = 6;
     }
+
     bitset >>= 1;
-
-    int count = 0;
-
     while (bitset) {
         bitset &= bitset - 1;
         count++;
@@ -616,6 +617,22 @@ int Game2048::get_depth_limit(board_t board) {
         count = _min(count, max_limit);
     }
     return count;
+}
+#else
+int Game2048::get_depth_limit(board_t board) {
+    row_t bitset = 0;
+
+    while (board) {
+        bitset |= 1 << (board & 0xf);
+        board >>= 4;
+    }
+
+    if (bitset <= 128) {
+        return 1;
+    } else if (bitset <= 512) {
+        return 2;
+    }
+    return 3;
 }
 #endif
 
@@ -709,11 +726,7 @@ score_heur_t Game2048::_score_toplevel_move(eval_state &state, board_t board, in
 score_heur_t Game2048::score_toplevel_move(board_t board, int move) {
     eval_state state;
 
-#if FASTMODE != 0
     state.depth_limit = get_depth_limit(board);
-#else
-    state.depth_limit = 3;
-#endif
 
     score_heur_t res = _score_toplevel_move(state, board, move);
 

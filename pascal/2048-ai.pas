@@ -337,8 +337,12 @@ begin
         board := board shr 4;
     end;
 
-    if bitset <= 2048 then
-        max_limit := 3
+    if bitset <= 128 then
+        exit(1)
+    else if bitset <= 512 then
+        exit(2)
+    else if bitset <= 2048 then
+        exit(3)
     else if bitset <= 2048 + 1024 then
         max_limit := 4
 {$if FASTMODE <> 0}
@@ -350,6 +354,7 @@ begin
     else
         max_limit := 5;
 {$endif}
+
     bitset := bitset shr 1;
     count := 0;
     while bitset <> 0 do begin

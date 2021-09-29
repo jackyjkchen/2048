@@ -154,6 +154,7 @@ private:
 
         eval_state() : maxdepth(0), curdepth(0), nomoves(0), tablehits(0), cachehits(0), moves_evaled(0), depth_limit(0) {}
     };  
+    int get_depth_limit(board_t board);
     score_heur_t score_move_node(eval_state &state, board_t board, score_heur_t cprob);
     score_heur_t score_tilechoose_node(eval_state &state, board_t board, score_heur_t cprob);
     score_heur_t _score_toplevel_move(eval_state &state, board_t board, int move);
@@ -476,6 +477,25 @@ board_t Game2048::initial_board(void) {
     return insert_tile_rand(board, draw_tile());
 }
 
+int Game2048::get_depth_limit(board_t board) {
+    row_t bitset = 0;
+
+    for (int i = 0; i < 4; ++i) {
+        row_t row = ((row_t *)&board)[3 - i];
+        while (row) {
+            bitset |= 1 << (row & 0xf);
+            row >>= 4;
+        }
+    }
+
+    if (bitset <= 128) {
+        return 1;
+    } else if (bitset <= 512) {
+        return 2;
+    }
+    return 3;
+}
+
 static board_t board_bitor(board_t i1, row_t i2, int i) {
     row_t *t = (row_t *)&i1;
 
@@ -486,10 +506,7 @@ static board_t board_bitor(board_t i1, row_t i2, int i) {
 score_heur_t Game2048::score_tilechoose_node(eval_state &state, board_t board, score_heur_t cprob) {
     int num_open = 0;
     score_heur_t res = 0.0f;
-    board_t tmp;
-    board_t tile_2;
-    row_t *t1 = (row_t *)&tmp;
-    row_t *t2 = (row_t *)&tile_2;
+    row_t t1, t2;
 
     if (cprob < CPROB_THRESH_BASE || state.curdepth >= state.depth_limit) {
         state.maxdepth = _max(state.curdepth, state.maxdepth);
@@ -500,16 +517,16 @@ score_heur_t Game2048::score_tilechoose_node(eval_state &state, board_t board, s
     num_open = count_empty(board);
     cprob /= num_open;
 
-    tmp = board;
     for (int i = 0; i < 4; ++i) {
-        t2[3 - i] = 1;
-        while (t2[3 - i]) {
-            if ((t1[3 - i] & 0xf) == 0) {
-                res += score_move_node(state, board_bitor(board, t2[3 - i], i), cprob * 0.9f) * 0.9f;
-                res += score_move_node(state, board_bitor(board, t2[3 - i] << 1, i), cprob * 0.1f) * 0.1f;
+        t1 = ((row_t *)&board)[3 - i];
+        t2 = 1;
+        while (t2) {
+            if ((t1 & 0xf) == 0) {
+                res += score_move_node(state, board_bitor(board, t2, i), cprob * 0.9f) * 0.9f;
+                res += score_move_node(state, board_bitor(board, t2 << 1, i), cprob * 0.1f) * 0.1f;
             }
-            t1[3 - i] >>= 4;
-            t2[3 - i] <<= 4;
+            t1 >>= 4;
+            t2 <<= 4;
         }
     }
     res = res / num_open;
@@ -554,7 +571,7 @@ score_heur_t Game2048::score_toplevel_move(board_t board, int move) {
     score_heur_t res = 0.0;
 
     memset(&state, 0x00, sizeof(eval_state));
-    state.depth_limit = 3;
+    state.depth_limit = get_depth_limit(board);
     res = _score_toplevel_move(state, board, move);
 
     printf
