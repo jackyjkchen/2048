@@ -16,7 +16,7 @@ AI实现需要关联容器、字典或哈希表做cache以提升性能，考验�
 
 对于脚本语言或16位DOS目标，限定搜索深度上限为3，此时100%能算到2048，但通常只能算到4096-8192，小概率算到16384。
 
-对于标准库中缺乏关联容器、字典或哈希表的语言（如C、Fortran），限定搜索深度上限为5，此时100%能算到4096，通常能算到8192-16384，小概率算到32768。
+对于标准库中缺乏关联容器、字典或哈希表的编译型语言（如C、Fortran），限定搜索深度上限为5，此时100%能算到4096，通常能算到8192-16384，小概率算到32768。
 
 对于标准库拥有关联容器、字典或哈希表的语言的编译型语言（如C++、C#、Go、Java、VB.net、Pascal），不限定算法搜索深度（实际上限为12），此时100%能算到8192，16384概率超过90%，32768概率超过30%。
 
@@ -134,7 +134,7 @@ msc 3.0/4.0 (dos16)
 
 ISO C90 AI实现，非严格C90内容仅为64位整数。可选支持OpenMP多线程（预处理OPENMP_THREAD控制）。
 
-### 使用FASTMODE预处理（默认），可启用查表法，限定搜索深度为5。
+### 使用FASTMODE预处理（默认），可启用查表法，限定搜索深度上限为5。
 
 已测试编译器和平台：
 ```
@@ -158,7 +158,7 @@ cc (openserver, unixware)
 
 * 编译器相关comments同c/2048.c。
 
-### 使用FASTMODE=0预处理（dos16目标下默认FASTMODE=0），查表法采取分表形式（单表小于64KiB，总内存需求384KiB），可支持dos16目标（需要compact或large内存模型），限定搜索深度为3，额外支持：
+### 使用FASTMODE=0预处理（dos16目标下默认FASTMODE=0），查表法采取分表形式（单表小于64KiB，总内存需求384KiB），可支持dos16目标（需要compact或large内存模型），限定搜索深度上限为3，额外支持：
 ```
 openwatcom c++ 1.9 (dos16)
 watcom c++ 11.0 (dos16)
@@ -183,7 +183,7 @@ gcc -DOPENMP_THREAD -O2 -fopenmp c/2048-ai.c -o 2048 -lm
 
 ## c/2048ai16.c
 
-不使用64位整数的严格ISO C90 AI实现，查表法采取分表形式（单表小于64KiB，总内存需求256KiB），支持dos16目标（需要compact或large内存模型），限定搜索深度为3。
+不使用64位整数的严格ISO C90 AI实现，查表法采取分表形式（单表小于64KiB，总内存需求256KiB），支持dos16目标（需要compact或large内存模型），限定搜索深度上限为3。
 
 已测试编译器和平台：
 ```
@@ -307,7 +307,7 @@ dmc 8.57 (win32)
 g++-2.6.3 -I/usr/lib/gcc-lib/i686-legacy-linux-gnu/2.6.3/include/g++/stl -O2 cpp/2048-ai.cpp -lstdc++ -lm -o 2048
 ```
 
-### 若使用FASTMODE=0预处理（dos16目标下默认FASTMODE=0），不启用std::map cache，查表法采取分表形式（单表小于64KiB，总内存需求384KiB），可支持dos16目标（需要compact或large内存模型），由于速度很慢，因此限制搜索深度为3。
+### 若使用FASTMODE=0预处理（dos16目标下默认FASTMODE=0），不启用std::map cache，查表法采取分表形式（单表小于64KiB，总内存需求384KiB），可支持dos16目标（需要compact或large内存模型），由于速度很慢，因此限制搜索深度上限为3。
 
 额外支持：
 ```
@@ -363,7 +363,7 @@ g++ -DOPENMP_THREAD -O2 -fopenmp cpp/2048-ai.cpp -o 2048
 
 ## cpp/2048ai16.cpp
 
-不使用64位整数的严格ISO C++98 AI实现，查表法采取分表形式（单表小于64KiB，总内存需求256KiB），支持dos16目标（需要compact或large内存模型），限定搜索深度为3。
+不使用64位整数的严格ISO C++98 AI实现，查表法采取分表形式（单表小于64KiB，总内存需求256KiB），支持dos16目标（需要compact或large内存模型），限定搜索深度上限为3。
 
 已测试编译器和平台：
 ```
@@ -568,7 +568,7 @@ quick pascal 1.0 (dos16)
 
 Pascal AI实现，查表法，由预处理FASTMODE决定是否使用TDictionary cache（默认不启用），由预处理MULTI_THREAD决定是否使用多线程（默认不启用）。
 
-## 默认不启用FASTMODE时，搜索深度限定为5。编译器支持范围更宽。
+## 默认不启用FASTMODE时，限定搜索深度上限为5。编译器支持范围更宽。
 
 已测试编译器和平台：
 ```
@@ -609,7 +609,7 @@ gfortran -std=f2003 -O2 fortran/2048.F03 f03deps.o -o 2048
 
 ## fortran/2048-ai.F03 + fortran/f03deps.c
 
-Fortran2003 AI实现，查表法，由于缺乏cache数据结构，搜索深度限定为5。系统相关功能（清除屏幕），由fortran/f03deps.c提供。
+Fortran2003 AI实现，查表法，由于缺乏cache数据结构，限定搜索深度上限为5。系统相关功能（清除屏幕），由fortran/f03deps.c提供。
 
 已测试编译器和平台：
 ```
@@ -682,7 +682,7 @@ pypy/pypy3 all (linux, win32, macos)
 
 ## python/2048-ai.py
 
-Python AI实现，查表法 + 原生dict cache，建议使用pypy速度较快。
+Python AI实现，查表法 + 原生dict cache，限定搜索深度上限为3。建议使用pypy速度较快。
 
 Python版本和平台支持同上。
 
@@ -722,7 +722,7 @@ gcc -std=c99 -I/usr/include/lua5.4 -shared -fPIC -O2 lua/luadeps.c  -o luadeps.s
 
 ## lua/2048-ai.lua + lua/luadeps.c
 
-AI实现。查表法 + 原生table cache，依赖Lua 5.3或以上版本提供的原生64位整数运算支持，由于原生Lua对操作系统判定和无回显输入不支持，相关功能由lua/luadeps.c提供。
+AI实现。查表法 + 原生table cache，限定搜索深度上限为3，依赖Lua 5.3或以上版本提供的原生64位整数运算支持，由于原生Lua对操作系统判定和无回显输入不支持，相关功能由lua/luadeps.c提供。
 
 Lua版本和平台支持同上。
 
