@@ -363,7 +363,7 @@ g++ -DOPENMP_THREAD -O2 -fopenmp cpp/2048-ai.cpp -o 2048
 
 ## cpp/2048ai16.cpp
 
-不使用64位整数的严格ISO C++98 AI实现，查表法采取分表形式（单表小于64KiB，总内存需求256KiB），支持dos16目标（需要compact或large内存模型），限定搜索深度上限为3。
+不使用64位整数的ISO C++98 AI实现，查表法采取分表形式（单表小于64KiB，总内存需求256KiB），支持dos16目标（需要compact或large内存模型），限定搜索深度上限为3。
 
 已测试编译器和平台：
 ```
