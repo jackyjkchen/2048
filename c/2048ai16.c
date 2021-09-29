@@ -285,6 +285,7 @@ static void init_tables(void) {
 
 static void alloc_tables(void) {
     int i = 0;
+
     memset(score_heur_table, 0x00, sizeof(score_heur_table));
     for (i = 0; i < 8; ++i) {
         score_heur_table[i] = (score_heur_t *)malloc(sizeof(score_heur_t) * TABLESIZE);
@@ -298,6 +299,7 @@ static void alloc_tables(void) {
 
 static void free_tables(void) {
     int i = 0;
+
     for (i = 0; i < 8; ++i) {
         free(score_heur_table[i]);
     }
@@ -452,6 +454,7 @@ static board_t initial_board(void) {
 
 static board_t board_bitor(board_t *i1, board_t *i2, int i2_lshift) {
     board_t ret;
+
     ret.r0 = i1->r0 | (i2->r0 << i2_lshift);
     ret.r1 = i1->r1 | (i2->r1 << i2_lshift);
     ret.r2 = i1->r2 | (i2->r2 << i2_lshift);

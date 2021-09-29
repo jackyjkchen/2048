@@ -390,6 +390,7 @@ static score_heur_t score_heur_helper(board_t board) {
 #else
 static void alloc_tables(void) {
     int i = 0;
+
     memset(row_table, 0x00, sizeof(row_table));
     memset(score_heur_table, 0x00, sizeof(score_heur_table));
     for (i = 0; i < 8; ++i) {
@@ -405,6 +406,7 @@ static void alloc_tables(void) {
 
 static void free_tables(void) {
     int i = 0;
+
     for (i = 0; i < 8; ++i) {
         free(row_table[i]);
         free(score_heur_table[i]);

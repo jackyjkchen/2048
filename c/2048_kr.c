@@ -407,7 +407,7 @@ int ask_for_move(board)
 
 #define MAX_RETRACT 64
 void play_game() {
-    board_t board, tmp;
+    board_t board;
     int scorepenalty = 0;
     long last_score = 0, current_score = 0, moveno = 0;
     board_t retract_vec[MAX_RETRACT];
@@ -424,8 +424,8 @@ void play_game() {
 
         clear_screen();
         for (move = 0; move < 4; move++) {
-            tmp = execute_move(board, move);
-            if (memcmp(&tmp, &board, sizeof(board_t)) != 0)
+            newboard = execute_move(board, move);
+            if (memcmp(&newboard, &board, sizeof(board_t)) != 0)
                 break;
         }
         if (move == 4)
