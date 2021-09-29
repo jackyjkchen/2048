@@ -1,6 +1,12 @@
-#include <stdlib.h>
-#include <stdio.h>
 #include "thread_pool.h"
+
+#if defined(__MINGW64__) || defined(__MINGW32__)
+#undef __USE_MINGW_ANSI_STDIO
+#define __USE_MINGW_ANSI_STDIO 0
+#endif
+#include <stdio.h>
+#include <stdlib.h>
+
 #if defined(__GLIBC__) && __GLIBC__ >= 2 && __GLIBC_MINOR__ >= 2
 #include <sys/sysinfo.h>
 #define USE_SYSINFO 1

@@ -410,20 +410,18 @@ static void free_tables(void) {
 }
 
 static board_t execute_move(board_t board, int move) {
-    board_t ret = board;
+    board_t ret = board, t = 0;
     row_t row = 0;
     int i = 0;
 
     if (move == UP) {
-        board_t t = transpose(board);
-
+        t = transpose(board);
         for (i = 0; i < 4; ++i) {
             row = (t >> (i << 4)) & ROW_MASK;
             ret ^= unpack_col(row_table[row / TABLESIZE][row % TABLESIZE]) << (i << 2);
         }
     } else if (move == DOWN) {
-        board_t t = transpose(board);
-
+        t = transpose(board);
         for (i = 0; i < 4; ++i) {
             row = reverse_row((t >> (i << 4)) & ROW_MASK);
             ret ^= unpack_col(reverse_row(row_table[row / TABLESIZE][row % TABLESIZE])) << (i << 2);
@@ -508,6 +506,7 @@ static board_t initial_board(void) {
     return insert_tile_rand(board, draw_tile());
 }
 
+#if FASTMODE != 0
 static int get_depth_limit(board_t board) {
     row_t bitset = 0, max_limit = 0;
     int count = 0;
@@ -537,6 +536,7 @@ static int get_depth_limit(board_t board) {
     }
     return count;
 }
+#endif
 
 static score_heur_t score_move_node(eval_state *state, board_t board, score_heur_t cprob);
 static score_heur_t score_tilechoose_node(eval_state *state, board_t board, score_heur_t cprob) {
@@ -605,7 +605,11 @@ static score_heur_t score_toplevel_move(board_t board, int move) {
     score_heur_t res = 0.0;
 
     memset(&state, 0x00, sizeof(eval_state));
+#if FASTMODE != 0
     state.depth_limit = get_depth_limit(board);
+#else
+    state.depth_limit = 3;
+#endif
     res = _score_toplevel_move(&state, board, move);
 
     printf

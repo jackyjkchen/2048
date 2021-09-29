@@ -217,7 +217,9 @@ private:
 
         eval_state() : maxdepth(0), curdepth(0), nomoves(0), tablehits(0), cachehits(0), moves_evaled(0), depth_limit(0) {}
     };
+#if FASTMODE != 0
     int get_depth_limit(board_t board);
+#endif
     score_heur_t score_move_node(eval_state &state, board_t board, score_heur_t cprob);
     score_heur_t score_tilechoose_node(eval_state &state, board_t board, score_heur_t cprob);
     score_heur_t _score_toplevel_move(eval_state &state, board_t board, int move);
@@ -580,6 +582,7 @@ board_t Game2048::initial_board() {
     return insert_tile_rand(board, draw_tile());
 }
 
+#if FASTMODE != 0
 int Game2048::get_depth_limit(board_t board) {
     row_t bitset = 0, max_limit = 0;
 
@@ -612,6 +615,7 @@ int Game2048::get_depth_limit(board_t board) {
     }
     return count;
 }
+#endif
 
 score_heur_t Game2048::score_tilechoose_node(eval_state &state, board_t board, score_heur_t cprob) {
     if (cprob < CPROB_THRESH_BASE || state.curdepth >= state.depth_limit) {

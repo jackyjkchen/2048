@@ -265,13 +265,14 @@ static board_t execute_move(board_t board, int move) {
     board_t ret, tran, tmp;
     row_t *t = (row_t *)&ret;
     row_t row;
+    int i;
 
     ret = board;
     if (move == UP || move == DOWN) {
         tran = transpose(board);
         t = (row_t *)&tran;
     }
-    for (int i = 0; i < 4; ++i) {
+    for (i = 0; i < 4; ++i) {
         row = t[3 - i];
         if (move == UP) {
             tmp = unpack_col(row ^ execute_move_helper(row));
