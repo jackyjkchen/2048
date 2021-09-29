@@ -34,7 +34,7 @@ class Game2048
 
     int reverse_row(int row) {
         row &= 0xFFFF;
-        return ((row >> 12) | ((row >> 4) & 0x00F0) | ((row << 4) & 0x0F00) | (row << 12)) & 0xFFFF;
+        return ((row >>> 12) | ((row >>> 4) & 0x00F0) | ((row << 4) & 0x0F00) | (row << 12)) & 0xFFFF;
     }
 
     void print_board(long board) {
@@ -47,7 +47,7 @@ class Game2048
                 } else {
                     System.out.printf("|%6d", 1 << power_val);
                 }
-                board >>= 4;
+                board >>>= 4;
             }
             System.out.println("|");
         }
@@ -58,22 +58,22 @@ class Game2048
         long a1 = x & 0xF0F00F0FF0F00F0FL;
         long a2 = x & 0x0000F0F00000F0F0L;
         long a3 = x & 0x0F0F00000F0F0000L;
-        long a = a1 | (a2 << 12) | (a3 >> 12);
+        long a = a1 | (a2 << 12) | (a3 >>> 12);
         long b1 = a & 0xFF00FF0000FF00FFL;
         long b2 = a & 0x00FF00FF00000000L;
         long b3 = a & 0x00000000FF00FF00L;
 
-        return b1 | (b2 >> 24) | (b3 << 24);
+        return b1 | (b2 >>> 24) | (b3 << 24);
     }
 
     int count_empty(long x) {
-        x |= (x >> 2) & 0x3333333333333333L;
-        x |= (x >> 1);
+        x |= (x >>> 2) & 0x3333333333333333L;
+        x |= (x >>> 1);
         x = ~x & 0x1111111111111111L;
-        x += x >> 32;
-        x += x >> 16;
-        x += x >> 8;
-        x += x >> 4;
+        x += x >>> 32;
+        x += x >>> 16;
+        x += x >>> 8;
+        x += x >>> 4;
         return (int)(x & 0xf);
     }
 
@@ -85,9 +85,9 @@ class Game2048
             int i = 0, j = 0;
             int score = 0;
             line[0] = row & 0xf;
-            line[1] = (row >> 4) & 0xf;
-            line[2] = (row >> 8) & 0xf;
-            line[3] = (row >> 12) & 0xf;
+            line[1] = (row >>> 4) & 0xf;
+            line[2] = (row >>> 8) & 0xf;
+            line[3] = (row >>> 12) & 0xf;
 
             for (i = 0; i < 4; ++i) {
                 int rank = line[i];
@@ -129,32 +129,32 @@ class Game2048
         if (move == UP) {
             long t = transpose(board);
             ret ^= unpack_col(row_table[(int)(t & ROW_MASK)]);
-            ret ^= unpack_col(row_table[(int)((t >> 16) & ROW_MASK)]) << 4;
-            ret ^= unpack_col(row_table[(int)((t >> 32) & ROW_MASK)]) << 8;
-            ret ^= unpack_col(row_table[(int)((t >> 48) & ROW_MASK)]) << 12;
+            ret ^= unpack_col(row_table[(int)((t >>> 16) & ROW_MASK)]) << 4;
+            ret ^= unpack_col(row_table[(int)((t >>> 32) & ROW_MASK)]) << 8;
+            ret ^= unpack_col(row_table[(int)((t >>> 48) & ROW_MASK)]) << 12;
         } else if (move == DOWN) {
             long t = transpose(board);
             ret ^= unpack_col(reverse_row(row_table[reverse_row((int)(t & ROW_MASK))]));
-            ret ^= unpack_col(reverse_row(row_table[reverse_row((int)((t >> 16) & ROW_MASK))])) << 4;
-            ret ^= unpack_col(reverse_row(row_table[reverse_row((int)((t >> 32) & ROW_MASK))])) << 8;
-            ret ^= unpack_col(reverse_row(row_table[reverse_row((int)((t >> 48) & ROW_MASK))])) << 12;
+            ret ^= unpack_col(reverse_row(row_table[reverse_row((int)((t >>> 16) & ROW_MASK))])) << 4;
+            ret ^= unpack_col(reverse_row(row_table[reverse_row((int)((t >>> 32) & ROW_MASK))])) << 8;
+            ret ^= unpack_col(reverse_row(row_table[reverse_row((int)((t >>> 48) & ROW_MASK))])) << 12;
         } else if (move == LEFT) {
             ret ^= (long)(row_table[(int)(board & ROW_MASK)]);
-            ret ^= (long)(row_table[(int)((board >> 16) & ROW_MASK)]) << 16;
-            ret ^= (long)(row_table[(int)((board >> 32) & ROW_MASK)]) << 32;
-            ret ^= (long)(row_table[(int)((board >> 48) & ROW_MASK)]) << 48;
+            ret ^= (long)(row_table[(int)((board >>> 16) & ROW_MASK)]) << 16;
+            ret ^= (long)(row_table[(int)((board >>> 32) & ROW_MASK)]) << 32;
+            ret ^= (long)(row_table[(int)((board >>> 48) & ROW_MASK)]) << 48;
         } else if (move == RIGHT) {
             ret ^= (long)(reverse_row(row_table[reverse_row((int)(board & ROW_MASK))]));
-            ret ^= (long)(reverse_row(row_table[reverse_row((int)((board >> 16) & ROW_MASK))])) << 16;
-            ret ^= (long)(reverse_row(row_table[reverse_row((int)((board >> 32) & ROW_MASK))])) << 32;
-            ret ^= (long)(reverse_row(row_table[reverse_row((int)((board >> 48) & ROW_MASK))])) << 48;
+            ret ^= (long)(reverse_row(row_table[reverse_row((int)((board >>> 16) & ROW_MASK))])) << 16;
+            ret ^= (long)(reverse_row(row_table[reverse_row((int)((board >>> 32) & ROW_MASK))])) << 32;
+            ret ^= (long)(reverse_row(row_table[reverse_row((int)((board >>> 48) & ROW_MASK))])) << 48;
         }
         return ret;
     }
 
     int score_helper(long board) {
-        return score_table[(int)(board & ROW_MASK)] + score_table[(int)((board >> 16) & ROW_MASK)] +
-            score_table[(int)((board >> 32) & ROW_MASK)] + score_table[(int)((board >> 48) & ROW_MASK)];
+        return score_table[(int)(board & ROW_MASK)] + score_table[(int)((board >>> 16) & ROW_MASK)] +
+            score_table[(int)((board >>> 32) & ROW_MASK)] + score_table[(int)((board >>> 48) & ROW_MASK)];
     }
 
     int score_board(long board) {
@@ -171,13 +171,13 @@ class Game2048
 
         while (true) {
             while ((tmp & 0xf) != 0) {
-                tmp >>= 4;
+                tmp >>>= 4;
                 tile <<= 4;
             }
             if (index == 0)
                 break;
             --index;
-            tmp >>= 4;
+            tmp >>>= 4;
             tile <<= 4;
         }
         return board | tile;

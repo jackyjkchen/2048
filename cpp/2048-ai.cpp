@@ -162,7 +162,9 @@ const score_heur_t SCORE_SUM_WEIGHT = 11.0f;
 const score_heur_t SCORE_MERGES_WEIGHT = 700.0f;
 const score_heur_t SCORE_EMPTY_WEIGHT = 270.0f;
 const score_heur_t CPROB_THRESH_BASE = 0.0001f;
+#if FASTMODE != 0
 const row_t CACHE_DEPTH_LIMIT = 15;
+#endif
 
 class Game2048 {
 public:
