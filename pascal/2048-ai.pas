@@ -1,4 +1,4 @@
-program main_2048;
+program Game2048;
 
 uses
     {$ifdef MULTI_THREAD}

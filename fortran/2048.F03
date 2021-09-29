@@ -1,4 +1,4 @@
-program main_2048
+program Game2048
 use, intrinsic :: iso_c_binding, only : c_int, c_long, c_char, c_null_char
 implicit none
 
@@ -502,4 +502,4 @@ subroutine main()
     call play_game()
 end subroutine main
 
-end program main_2048
+end program Game2048

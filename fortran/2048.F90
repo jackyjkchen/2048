@@ -1,4 +1,4 @@
-program main_2048
+program Game2048
 implicit none
 
 #if !defined(FASTMODE) || (defined(FASTMODE) && FASTMODE != 0)
@@ -500,4 +500,4 @@ subroutine main()
     call play_game()
 end subroutine main
 
-end program main_2048
+end program Game2048
