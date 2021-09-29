@@ -50,13 +50,6 @@ enum {
     RIGHT,
 };
 
-#if defined(max)
-#undef max
-#endif
-#if defined(min)
-#undef min
-#endif
-
 #if defined(__MINGW64__) || defined(__MINGW32__)
 #undef __USE_MINGW_ANSI_STDIO
 #define __USE_MINGW_ANSI_STDIO 0
@@ -67,8 +60,8 @@ enum {
 #include <string.h>
 #include <time.h>
 
-#define max(a,b) ( ((a)>(b)) ? (a):(b) )
-#define min(a,b) ( ((a)>(b)) ? (b):(a) )
+#define _max(a,b) ( ((a)>(b)) ? (a):(b) )
+#define _min(a,b) ( ((a)>(b)) ? (b):(a) )
 
 static void clear_screen(void) {
 #if defined(_WIN32) && !defined(NOT_USE_WIN32_SDK)
@@ -265,7 +258,7 @@ void Game2048::init_tables(void) {
     row_t row = 0;
 
     do {
-        int i = 0, j = 0;
+        int i = 0;
         row_t line[4] = { 0 };
         score_t rank = 0;
 
@@ -283,8 +276,7 @@ void Game2048::init_tables(void) {
         line[3] = (row >> 12) & 0xf;
 
         for (i = 0; i < 4; ++i) {
-            score_t rank = line[i];
-
+            rank = line[i];
             sum += (score_heur_t)pow((score_heur_t)rank, SCORE_SUM_POWER);
             if (rank == 0) {
                 empty++;
@@ -319,7 +311,7 @@ void Game2048::init_tables(void) {
                            SCORE_EMPTY_WEIGHT * empty +
                            SCORE_MERGES_WEIGHT * merges -
                            SCORE_MONOTONICITY_WEIGHT *
-                           min(monotonicity_left, monotonicity_right) - SCORE_SUM_WEIGHT * sum);
+                           _min(monotonicity_left, monotonicity_right) - SCORE_SUM_WEIGHT * sum);
     } while (row++ != 0xFFFF);
 }
 
@@ -390,11 +382,10 @@ score_t Game2048::score_helper(board_t board) {
 }
 
 board_t Game2048::execute_move(board_t board, int move) {
-    board_t ret, tran, tmp;
+    board_t ret = board, tran, tmp;
     row_t *t = (row_t *)&ret;
     row_t row;
 
-    ret = board;
     if (move == UP || move == DOWN) {
         tran = transpose(board);
         t = (row_t *)&tran;
@@ -485,13 +476,11 @@ board_t Game2048::initial_board(void) {
     return insert_tile_rand(board, draw_tile());
 }
 
-static board_t board_bitor(board_t *i1, board_t *i2, int i2_lshift) {
-    board_t ret;
-    ret.r0 = i1->r0 | (i2->r0 << i2_lshift);
-    ret.r1 = i1->r1 | (i2->r1 << i2_lshift);
-    ret.r2 = i1->r2 | (i2->r2 << i2_lshift);
-    ret.r3 = i1->r3 | (i2->r3 << i2_lshift);
-    return ret;
+static board_t board_bitor(board_t i1, row_t i2, int i) {
+    row_t *t = (row_t *)&i1;
+
+    t[3 - i] |= i2;
+    return i1;
 }
 
 score_heur_t Game2048::score_tilechoose_node(eval_state &state, board_t board, score_heur_t cprob) {
@@ -503,7 +492,7 @@ score_heur_t Game2048::score_tilechoose_node(eval_state &state, board_t board, s
     row_t *t2 = (row_t *)&tile_2;
 
     if (cprob < CPROB_THRESH_BASE || state.curdepth >= state.depth_limit) {
-        state.maxdepth = max(state.curdepth, state.maxdepth);
+        state.maxdepth = _max(state.curdepth, state.maxdepth);
         state.tablehits++;
         return score_heur_board(board);
     }
@@ -516,8 +505,8 @@ score_heur_t Game2048::score_tilechoose_node(eval_state &state, board_t board, s
         t2[3 - i] = 1;
         while (t2[3 - i]) {
             if ((t1[3 - i] & 0xf) == 0) {
-                res += score_move_node(state, board_bitor(&board, &tile_2, 0), cprob * 0.9f) * 0.9f;
-                res += score_move_node(state, board_bitor(&board, &tile_2, 1), cprob * 0.1f) * 0.1f;
+                res += score_move_node(state, board_bitor(board, t2[3 - i], i), cprob * 0.9f) * 0.9f;
+                res += score_move_node(state, board_bitor(board, t2[3 - i] << 1, i), cprob * 0.1f) * 0.1f;
             }
             t1[3 - i] >>= 4;
             t2[3 - i] <<= 4;

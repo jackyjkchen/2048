@@ -114,8 +114,8 @@ typedef std::map<board_t, trans_table_entry_t> trans_table_t;
 #include <string.h>
 #include <time.h>
 
-#define max(a,b) ( ((a)>(b)) ? (a):(b) )
-#define min(a,b) ( ((a)>(b)) ? (b):(a) )
+#define _max(a,b) ( ((a)>(b)) ? (a):(b) )
+#define _min(a,b) ( ((a)>(b)) ? (b):(a) )
 
 static void clear_screen(void) {
 #if defined(_WIN32) && !defined(NOT_USE_WIN32_SDK)
@@ -375,10 +375,10 @@ void Game2048::init_tables() {
 
 #if FASTMODE != 0
         score_heur_table[row] = (score_heur_t)(SCORE_LOST_PENALTY + SCORE_EMPTY_WEIGHT * empty + SCORE_MERGES_WEIGHT * merges -
-            SCORE_MONOTONICITY_WEIGHT * min(monotonicity_left, monotonicity_right) - SCORE_SUM_WEIGHT * sum);
+            SCORE_MONOTONICITY_WEIGHT * _min(monotonicity_left, monotonicity_right) - SCORE_SUM_WEIGHT * sum);
 #else
         score_heur_table[row / TABLESIZE][row % TABLESIZE] = (score_heur_t)(SCORE_LOST_PENALTY + SCORE_EMPTY_WEIGHT * empty + SCORE_MERGES_WEIGHT * merges -
-            SCORE_MONOTONICITY_WEIGHT * min(monotonicity_left, monotonicity_right) - SCORE_SUM_WEIGHT * sum);
+            SCORE_MONOTONICITY_WEIGHT * _min(monotonicity_left, monotonicity_right) - SCORE_SUM_WEIGHT * sum);
 #endif
 
         for (i = 0; i < 3; ++i) {
@@ -611,9 +611,9 @@ int Game2048::get_depth_limit(board_t board) {
         count++;
     }
     count -= 2;
-    count = max(count, 3);
+    count = _max(count, 3);
     if (max_limit) {
-        count = min(count, max_limit);
+        count = _min(count, max_limit);
     }
     return count;
 }
@@ -621,7 +621,7 @@ int Game2048::get_depth_limit(board_t board) {
 
 score_heur_t Game2048::score_tilechoose_node(eval_state &state, board_t board, score_heur_t cprob) {
     if (cprob < CPROB_THRESH_BASE || state.curdepth >= state.depth_limit) {
-        state.maxdepth = max(state.curdepth, state.maxdepth);
+        state.maxdepth = _max(state.curdepth, state.maxdepth);
         state.tablehits++;
         return score_heur_board(board);
     }
