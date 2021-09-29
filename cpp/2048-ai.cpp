@@ -246,8 +246,8 @@ private:
     score_heur_t *score_heur_table;
 #else
 #define TABLESIZE 8192
-    row_t* row_table[8];
-    score_heur_t* score_heur_table[8];
+    row_t *row_table[8];
+    score_heur_t *score_heur_table[8];
 #endif
 };
 
@@ -414,10 +414,10 @@ void Game2048::init_tables() {
 
 #if FASTMODE != 0
 void Game2048::alloc_tables() {
-    row_left_table = (row_t*)malloc(sizeof(row_t) * TABLESIZE);
-    row_right_table = (row_t*)malloc(sizeof(row_t) * TABLESIZE);
-    score_table = (score_t*)malloc(sizeof(score_t) * TABLESIZE);
-    score_heur_table = (score_heur_t*)malloc(sizeof(score_heur_t) * TABLESIZE);
+    row_left_table = (row_t *)malloc(sizeof(row_t) * TABLESIZE);
+    row_right_table = (row_t *)malloc(sizeof(row_t) * TABLESIZE);
+    score_table = (score_t *)malloc(sizeof(score_t) * TABLESIZE);
+    score_heur_table = (score_heur_t *)malloc(sizeof(score_heur_t) * TABLESIZE);
     if (!row_left_table || !row_right_table || !score_table || !score_heur_table) {
         fprintf(stderr, "Not enough memory.");
         fflush(stderr);
@@ -475,8 +475,8 @@ void Game2048::alloc_tables() {
     memset(row_table, 0x00, sizeof(row_table));
     memset(score_heur_table, 0x00, sizeof(score_heur_table));
     for (int i = 0; i < 8; ++i) {
-        row_table[i] = (row_t*)malloc(sizeof(row_t) * TABLESIZE);
-        score_heur_table[i] = (score_heur_t*)malloc(sizeof(score_heur_t) * TABLESIZE);
+        row_table[i] = (row_t *)malloc(sizeof(row_t) * TABLESIZE);
+        score_heur_table[i] = (score_heur_t *)malloc(sizeof(score_heur_t) * TABLESIZE);
         if (!row_table[i] || !score_heur_table[i]) {
             fprintf(stderr, "Not enough memory.");
             fflush(stderr);
