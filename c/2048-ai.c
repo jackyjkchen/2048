@@ -389,9 +389,10 @@ static score_heur_t score_heur_helper(board_t board) {
 }
 #else
 static void alloc_tables(void) {
+    int i = 0;
     memset(row_table, 0x00, sizeof(row_table));
     memset(score_heur_table, 0x00, sizeof(score_heur_table));
-    for (int i = 0; i < 8; ++i) {
+    for (i = 0; i < 8; ++i) {
         row_table[i] = (row_t *)malloc(sizeof(row_t) * TABLESIZE);
         score_heur_table[i] = (score_heur_t *)malloc(sizeof(score_heur_t) * TABLESIZE);
         if (!row_table[i] || !score_heur_table[i]) {
@@ -403,7 +404,8 @@ static void alloc_tables(void) {
 }
 
 static void free_tables(void) {
-    for (int i = 0; i < 8; ++i) {
+    int i = 0;
+    for (i = 0; i < 8; ++i) {
         free(row_table[i]);
         free(score_heur_table[i]);
     }

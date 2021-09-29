@@ -6,6 +6,13 @@
 #ifndef MSDOS
 #define MSDOS 1
 #endif
+#ifdef _M_I86
+#define FASTMODE 0
+#endif
+#endif
+
+#if !defined(FASTMODE) || (defined(FASTMODE) && FASTMODE != 0)
+#define FASTMODE 1
 #endif
 
 typedef unsigned short row_t;
@@ -21,6 +28,7 @@ typedef struct {
     row_t r2;
     row_t r3;
 } board_t;
+typedef float score_heur_t;
 
 #if defined(__TINYC__)
 #define NOT_USE_WIN32_SDK 1
@@ -29,20 +37,10 @@ typedef struct {
 #if defined(_WIN32) && !defined(NOT_USE_WIN32_SDK)
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
-#include <conio.h>
-#elif defined(UNIX_LIKE)
-#include <unistd.h>
-#include <termios.h>
 #elif defined(__WATCOMC__)
 #include <graph.h>
-#elif defined(__BORLANDC__) || defined (__TURBOC__) || defined(__DJGPP__) || defined(MSDOS)
+#elif defined(__BORLANDC__) || defined (__TURBOC__) || defined(__DJGPP__)
 #include <conio.h>
-#endif
-
-#if defined(_MSC_VER) && _MSC_VER >= 700 && defined(__STDC__)
-#define _GETCH_USE 1
-#elif defined(__WATCOMC__) && __WATCOMC__ < 1100
-#define GETCH_USE 1
 #endif
 
 enum {
@@ -50,8 +48,14 @@ enum {
     DOWN,
     LEFT,
     RIGHT,
-    RETRACT
 };
+
+#if defined(max)
+#undef max
+#endif
+#if defined(min)
+#undef min
+#endif
 
 typedef int (*get_move_func_t)(board_t);
 
@@ -61,8 +65,12 @@ typedef int (*get_move_func_t)(board_t);
 #endif
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 #include <string.h>
 #include <time.h>
+
+#define max(a,b) ( ((a)>(b)) ? (a):(b) )
+#define min(a,b) ( ((a)>(b)) ? (b):(a) )
 
 static void clear_screen(void) {
 #if defined(_WIN32) && !defined(NOT_USE_WIN32_SDK)
@@ -101,43 +109,27 @@ static void clear_screen(void) {
 #endif
 }
 
-static int get_ch(void) {
-#if (defined(_WIN32) && !defined(GETCH_USE)) || defined(_GETCH_USE)
-    return _getch();
-#elif defined(MSDOS) || defined(GETCH_USE)
-    return getch();
-#elif defined(UNIX_LIKE)
-    struct termios old_termios, new_termios;
-    int error;
-    char c;
+const score_heur_t SCORE_LOST_PENALTY = 200000.0f;
+const score_heur_t SCORE_MONOTONICITY_POWER = 4.0f;
+const score_heur_t SCORE_MONOTONICITY_WEIGHT = 47.0f;
+const score_heur_t SCORE_SUM_POWER = 3.5f;
+const score_heur_t SCORE_SUM_WEIGHT = 11.0f;
+const score_heur_t SCORE_MERGES_WEIGHT = 700.0f;
+const score_heur_t SCORE_EMPTY_WEIGHT = 270.0f;
+const score_heur_t CPROB_THRESH_BASE = 0.0001f;
 
-    fflush(stdout);
-    tcgetattr(0, &old_termios);
-    new_termios = old_termios;
-    new_termios.c_lflag &= ~ICANON;
-#ifdef TERMIOSECHO
-    new_termios.c_lflag |= ECHO;
-#else
-    new_termios.c_lflag &= ~ECHO;
-#endif
-#ifdef TERMIOSFLUSH
-#define OPTIONAL_ACTIONS TCSAFLUSH
-#else
-#define OPTIONAL_ACTIONS TCSANOW
-#endif
-    new_termios.c_cc[VMIN] = 1;
-    new_termios.c_cc[VTIME] = 1;
-    error = tcsetattr(0, OPTIONAL_ACTIONS, &new_termios);
-    if (0 == error) {
-        error = read(0, &c, 1);
-    }
-    error += tcsetattr(0, OPTIONAL_ACTIONS, &old_termios);
+typedef struct {
+    int maxdepth;
+    int curdepth;
+    long nomoves;
+    long tablehits;
+    long cachehits;
+    long moves_evaled;
+    int depth_limit;
+} eval_state;
 
-    return (error == 1 ? (int)c : -1);
-#else
-    return getchar();
-#endif
-}
+#define TABLESIZE 8192
+score_heur_t *score_heur_table[8];
 
 static unsigned int unif_random(unsigned int n) {
     static unsigned int seeded = 0;
@@ -229,6 +221,88 @@ static int count_empty(board_t board) {
     return sum & 0xf;
 }
 
+static void init_tables(void) {
+    row_t row = 0;
+
+    do {
+        int i = 0, j = 0;
+        row_t line[4] = { 0 };
+        score_t rank = 0;
+
+        score_heur_t sum = 0.0f;
+        score_t empty = 0;
+        score_t merges = 0;
+        score_t prev = 0;
+        score_t counter = 0;
+        score_heur_t monotonicity_left = 0.0f;
+        score_heur_t monotonicity_right = 0.0f;
+
+        line[0] = row & 0xf;
+        line[1] = (row >> 4) & 0xf;
+        line[2] = (row >> 8) & 0xf;
+        line[3] = (row >> 12) & 0xf;
+
+        for (i = 0; i < 4; ++i) {
+            score_t rank = line[i];
+
+            sum += (score_heur_t)pow((score_heur_t)rank, SCORE_SUM_POWER);
+            if (rank == 0) {
+                empty++;
+            } else {
+                if (prev == rank) {
+                    counter++;
+                } else if (counter > 0) {
+                    merges += 1 + counter;
+                    counter = 0;
+                }
+                prev = rank;
+            }
+        }
+        if (counter > 0) {
+            merges += 1 + counter;
+        }
+
+        for (i = 1; i < 4; ++i) {
+            if (line[i - 1] > line[i]) {
+                monotonicity_left +=
+                    (score_heur_t)(pow((score_heur_t)line[i - 1], SCORE_MONOTONICITY_POWER) -
+                                   pow((score_heur_t)line[i], SCORE_MONOTONICITY_POWER));
+            } else {
+                monotonicity_right +=
+                    (score_heur_t)(pow((score_heur_t)line[i], SCORE_MONOTONICITY_POWER) -
+                                   pow((score_heur_t)line[i - 1], SCORE_MONOTONICITY_POWER));
+            }
+        }
+
+        score_heur_table[row / TABLESIZE][row % TABLESIZE] =
+            (score_heur_t)(SCORE_LOST_PENALTY +
+                           SCORE_EMPTY_WEIGHT * empty +
+                           SCORE_MERGES_WEIGHT * merges -
+                           SCORE_MONOTONICITY_WEIGHT *
+                           min(monotonicity_left, monotonicity_right) - SCORE_SUM_WEIGHT * sum);
+    } while (row++ != 0xFFFF);
+}
+
+static void alloc_tables(void) {
+    int i = 0;
+    memset(score_heur_table, 0x00, sizeof(score_heur_table));
+    for (i = 0; i < 8; ++i) {
+        score_heur_table[i] = (score_heur_t *)malloc(sizeof(score_heur_t) * TABLESIZE);
+        if (!score_heur_table[i]) {
+            fprintf(stderr, "Not enough memory.");
+            fflush(stderr);
+            abort();
+        }
+    }
+}
+
+static void free_tables(void) {
+    int i = 0;
+    for (i = 0; i < 8; ++i) {
+        free(score_heur_table[i]);
+    }
+}
+
 static row_t execute_move_helper(row_t row) {
     int i = 0, j = 0;
     row_t line[4];
@@ -259,6 +333,23 @@ static row_t execute_move_helper(row_t row) {
     }
 
     return line[0] | (line[1] << 4) | (line[2] << 8) | (line[3] << 12);
+}
+
+static score_t score_helper(board_t board) {
+    score_t score = 0, rank = 0;
+    row_t row = 0;
+    int i = 0, j = 0;
+
+    for (j = 0; j < 4; ++j) {
+        row = ((row_t *)&board)[3 - j];
+        for (i = 0; i < 4; ++i) {
+            rank = (row >> (i << 2)) & 0xf;
+            if (rank >= 2) {
+                score += (rank - 1) * (1 << rank);
+            }
+        }
+    }
+    return score;
 }
 
 static board_t execute_move(board_t board, int move) {
@@ -293,25 +384,24 @@ static board_t execute_move(board_t board, int move) {
     return ret;
 }
 
-static score_t score_helper(board_t board) {
-    score_t score = 0, rank = 0;
+static score_heur_t score_heur_helper(board_t board) {
+    score_heur_t score_heur = 0.0f;
     row_t row = 0;
-    int i = 0, j = 0;
+    int i = 0;
 
-    for (j = 0; j < 4; ++j) {
-        row = ((row_t *)&board)[3 - j];
-        for (i = 0; i < 4; ++i) {
-            rank = (row >> (i << 2)) & 0xf;
-            if (rank >= 2) {
-                score += (rank - 1) * (1 << rank);
-            }
-        }
+    for (i = 0; i < 4; ++i) {
+        row = ((row_t *)&board)[3 - i];
+        score_heur += score_heur_table[row / TABLESIZE][row % TABLESIZE];
     }
-    return score;
+    return score_heur;
 }
 
 static score_t score_board(board_t board) {
     return score_helper(board);
+}
+
+static score_heur_t score_heur_board(board_t board) {
+    return score_heur_helper(board) + score_heur_helper(transpose(board));
 }
 
 static row_t draw_tile(void) {
@@ -360,40 +450,132 @@ static board_t initial_board(void) {
     return insert_tile_rand(board, draw_tile());
 }
 
-int ask_for_move(board_t board) {
-    print_board(board);
-
-    while (1) {
-        char *allmoves = "wsadkjhl", *pos = 0;
-        char movechar = get_ch();
-
-        if (movechar == 'q') {
-            return -1;
-        } else if (movechar == 'r') {
-            return RETRACT;
-        }
-        pos = strchr(allmoves, movechar);
-        if (pos) {
-            return (pos - allmoves) % 4;
-        }
-    }
+static board_t board_bitor(board_t *i1, board_t *i2, int i2_lshift) {
+    board_t ret;
+    ret.r0 = i1->r0 | (i2->r0 << i2_lshift);
+    ret.r1 = i1->r1 | (i2->r1 << i2_lshift);
+    ret.r2 = i1->r2 | (i2->r2 << i2_lshift);
+    ret.r3 = i1->r3 | (i2->r3 << i2_lshift);
+    return ret;
 }
 
-#define MAX_RETRACT 64
+static score_heur_t score_move_node(eval_state *state, board_t board, score_heur_t cprob);
+static score_heur_t score_tilechoose_node(eval_state *state, board_t board, score_heur_t cprob) {
+    int num_open = 0;
+    score_heur_t res = 0.0f;
+    board_t tmp;
+    board_t tile_2;
+    row_t *t1 = (row_t *)&tmp;
+    row_t *t2 = (row_t *)&tile_2;
+    int i;
+
+    if (cprob < CPROB_THRESH_BASE || state->curdepth >= state->depth_limit) {
+        state->maxdepth = max(state->curdepth, state->maxdepth);
+        state->tablehits++;
+        return score_heur_board(board);
+    }
+
+    num_open = count_empty(board);
+    cprob /= num_open;
+
+    tmp = board;
+    for (i = 0; i < 4; ++i) {
+        t2[3 - i] = 1;
+        while (t2[3 - i]) {
+            if ((t1[3 - i] & 0xf) == 0) {
+                res += score_move_node(state, board_bitor(&board, &tile_2, 0), cprob * 0.9f) * 0.9f;
+                res += score_move_node(state, board_bitor(&board, &tile_2, 1), cprob * 0.1f) * 0.1f;
+            }
+            t1[3 - i] >>= 4;
+            t2[3 - i] <<= 4;
+        }
+    }
+    res = res / num_open;
+
+    return res;
+}
+
+static score_heur_t score_move_node(eval_state *state, board_t board, score_heur_t cprob) {
+    score_heur_t best = 0.0f;
+    int move = 0;
+
+    state->curdepth++;
+    for (move = 0; move < 4; ++move) {
+        board_t newboard = execute_move(board, move);
+
+        state->moves_evaled++;
+        if (memcmp(&newboard, &board, sizeof(board_t)) != 0) {
+            score_heur_t tmp = score_tilechoose_node(state, newboard, cprob);
+
+            if (best < tmp) {
+                best = tmp;
+            }
+        } else {
+            state->nomoves++;
+        }
+    }
+    state->curdepth--;
+
+    return best;
+}
+
+static score_heur_t _score_toplevel_move(eval_state *state, board_t board, int move) {
+    board_t newboard = execute_move(board, move);
+
+    if (memcmp(&newboard, &board, sizeof(board_t)) == 0)
+        return 0.0f;
+
+    return score_tilechoose_node(state, newboard, 1.0f) + 1e-6f;
+}
+
+static score_heur_t score_toplevel_move(board_t board, int move) {
+    eval_state state;
+    score_heur_t res = 0.0;
+
+    memset(&state, 0x00, sizeof(eval_state));
+    state.depth_limit = 3;
+    res = _score_toplevel_move(&state, board, move);
+
+    printf
+        ("Move %d: result %f: eval'd %ld moves (%ld no moves, %ld table hits, %ld cache hits, %ld cache size) (maxdepth=%d)\n",
+         move, res, state.moves_evaled, state.nomoves, state.tablehits, state.cachehits, 0L, state.maxdepth);
+
+    return res;
+}
+
+int find_best_move(board_t board) {
+    int move = 0;
+    score_heur_t best = 0.0f;
+    int bestmove = -1;
+    score_heur_t res[4] = { 0.0f };
+
+    print_board(board);
+    printf("Current scores: heur %ld, actual %ld\n", (long)score_heur_board(board), (long)score_board(board));
+
+    for (move = 0; move < 4; move++) {
+        res[move] = score_toplevel_move(board, move);
+    }
+
+    for (move = 0; move < 4; move++) {
+        if (res[move] > best) {
+            best = res[move];
+            bestmove = move;
+        }
+    }
+    printf("Selected bestmove: %d, result: %f\n", bestmove, best);
+
+    return bestmove;
+}
+
 void play_game(get_move_func_t get_move) {
-    board_t board;
+    board_t board = initial_board();
     int scorepenalty = 0;
     long last_score = 0, current_score = 0, moveno = 0;
-    board_t retract_vec[MAX_RETRACT];
-    row_t retract_penalty_vec[MAX_RETRACT];
-    int retract_pos = 0, retract_num = 0;
 
-    board = initial_board();
-    memset(retract_vec, 0x00, MAX_RETRACT * sizeof(board_t));
-    memset(retract_penalty_vec, 0x00, MAX_RETRACT * sizeof(row_t));
+    init_tables();
     while (1) {
-        int move = 0;
-        row_t tile = 0;
+        int move;
+        row_t tile;
         board_t newboard;
 
         clear_screen();
@@ -413,20 +595,6 @@ void play_game(get_move_func_t get_move) {
         if (move < 0)
             break;
 
-        if (move == RETRACT) {
-            if (moveno <= 1 || retract_num <= 0) {
-                moveno--;
-                continue;
-            }
-            moveno -= 2;
-            if (retract_pos == 0 && retract_num > 0)
-                retract_pos = MAX_RETRACT;
-            board = retract_vec[--retract_pos];
-            scorepenalty -= retract_penalty_vec[retract_pos];
-            retract_num--;
-            continue;
-        }
-
         newboard = execute_move(board, move);
         if (memcmp(&newboard, &board, sizeof(board_t)) == 0) {
             moveno--;
@@ -434,18 +602,8 @@ void play_game(get_move_func_t get_move) {
         }
 
         tile = draw_tile();
-        if (tile == 2) {
+        if (tile == 2)
             scorepenalty += 4;
-            retract_penalty_vec[retract_pos] = 4;
-        } else {
-            retract_penalty_vec[retract_pos] = 0;
-        }
-        retract_vec[retract_pos++] = board;
-        if (retract_pos == MAX_RETRACT)
-            retract_pos = 0;
-        if (retract_num < MAX_RETRACT)
-            retract_num++;
-
         board = insert_tile_rand(newboard, tile);
     }
 
@@ -454,6 +612,8 @@ void play_game(get_move_func_t get_move) {
 }
 
 int main() {
-    play_game(ask_for_move);
+    alloc_tables();
+    play_game(find_best_move);
+    free_tables();
     return 0;
 }

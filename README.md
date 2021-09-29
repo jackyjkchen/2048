@@ -14,9 +14,9 @@ AI实现需要关联容器、字典或哈希表做cache以提升性能，考验�
 
 为保障AI性能上的基本实用性——
 
-对于脚本语言，限定搜索深度上限为3，此时100%能算到2048，但通常只能算到4096-8192。
+对于脚本语言或16位DOS目标，限定搜索深度上限为3，此时100%能算到2048，但通常只能算到4096-8192，小概率算到16384。
 
-对于标准库中缺乏关联容器、字典或哈希表的语言（如C、Fortran），限定搜索深度上限为5，此时100%能算到4096，通常能算到8192-16384。
+对于标准库中缺乏关联容器、字典或哈希表的语言（如C、Fortran），限定搜索深度上限为5，此时100%能算到4096，通常能算到8192-16384，小概率算到32768。
 
 对于标准库拥有关联容器、字典或哈希表的语言的编译型语言（如C++、C#、Go、Java、VB.net、Pascal），不限定算法搜索深度（实际上限为12），此时100%能算到8192，16384概率超过90%，32768概率超过30%。
 
@@ -132,7 +132,7 @@ msc 3.0/4.0 (dos16)
 
 ## c/2048-ai.c
 
-ISO C90 AI实现，非严格C90内容仅为64位整数，由于C语言标准库缺乏关联容器做cache。可选支持OpenMP多线程（预处理OPENMP_THREAD控制）。
+ISO C90 AI实现，非严格C90内容仅为64位整数。可选支持OpenMP多线程（预处理OPENMP_THREAD控制）。
 
 ### 使用FASTMODE预处理（默认），可启用查表法，限定搜索深度为5。
 
@@ -158,7 +158,7 @@ cc (openserver, unixware)
 
 * 编译器相关comments同c/2048.c。
 
-### 使用FASTMODE=0预处理（dos16目标下默认FASTMODE=0），查表法采取分表形式（单表小于64KiB），可支持dos16目标（需要compact或large内存模型），限定搜索深度为3，额外支持：
+### 使用FASTMODE=0预处理（dos16目标下默认FASTMODE=0），查表法采取分表形式（单表小于64KiB，总内存需求384KiB），可支持dos16目标（需要compact或large内存模型），限定搜索深度为3，额外支持：
 ```
 openwatcom c++ 1.9 (dos16)
 watcom c++ 11.0 (dos16)
@@ -179,6 +179,41 @@ gcc编译示例：
 ```
 gcc -DOPENMP_THREAD -O2 -fopenmp c/2048-ai.c -o 2048 -lm
 ```
+
+
+## c/2048ai16.c
+
+不使用64位整数的严格ISO C90 AI实现，查表法采取分表形式（单表小于64KiB，总内存需求256KiB），支持dos16目标（需要compact或large内存模型），限定搜索深度为3。
+
+已测试编译器和平台：
+```
+gcc 2.0+ (linux, freebsd, macos, mingw, mingw-w64, cygwin, djgpp, openbsd, netbsd, dragonflybsd, solaris, openserver, unixware)
+clang 3.0+ (linux, macos, freebsd, win32, openbsd, netbsd, dragonflybsd)
+msvc 2.0+ (win32)
+icc 8.1+ (win32, linux)
+aocc 1.0+ (linux)
+nvhpc/pgi 20.11/21.7 (linux)
+open64 4.2.4/4.5.2.1/5.0 (linux)
+openwatcom c++ 1.9 (win32, dos32, dos16)
+watcom c++ 10.6/11.0 (win32, dos32, dos16)
+borland c++ 5.5 (win32)
+visualage c++ 3.5 (win32)
+tcc 0.9.27 (linux, win32)
+pcc 1.1.0 (linux, freebsd)
+lcc 4.0 (win32)
+dmc 8.57 (win32)
+cc (openserver, unixware)
+msvc 1.52 (dos16)
+msc 5.1/6.0/7.0 (dos16)
+quickc 2.01/2.51 (dos16)
+borland c++ 2.0/3.1 (dos16)
+turbo c++ 1.01/3.0 (dos16)
+turbo c 1.5/2.01 (dos16)
+symantec c++ 7.5 (dos16)
+power c 2.2.2 (dos16)
+```
+
+* 编译器相关comments同c/2048-16b.c。
 
 
 
@@ -272,7 +307,7 @@ dmc 8.57 (win32)
 g++-2.6.3 -I/usr/lib/gcc-lib/i686-legacy-linux-gnu/2.6.3/include/g++/stl -O2 cpp/2048-ai.cpp -lstdc++ -lm -o 2048
 ```
 
-### 若使用FASTMODE=0预处理（dos16目标下默认FASTMODE=0），不启用std::map cache，查表法采取分表形式（单表小于64KiB），可支持dos16目标（需要compact或large内存模型），由于速度很慢，因此限制搜索深度为3。
+### 若使用FASTMODE=0预处理（dos16目标下默认FASTMODE=0），不启用std::map cache，查表法采取分表形式（单表小于64KiB，总内存需求384KiB），可支持dos16目标（需要compact或large内存模型），由于速度很慢，因此限制搜索深度为3。
 
 额外支持：
 ```
@@ -323,6 +358,32 @@ open64 4.2.4/4.5.2.1/5.0 (linux)
 gcc编译示例：
 ```
 g++ -DOPENMP_THREAD -O2 -fopenmp cpp/2048-ai.cpp -o 2048
+```
+
+
+## cpp/2048ai16.cpp
+
+不使用64位整数的严格ISO C++98 AI实现，查表法采取分表形式（单表小于64KiB，总内存需求256KiB），支持dos16目标（需要compact或large内存模型），限定搜索深度为3。
+
+已测试编译器和平台：
+```
+gcc 2.2.2+ (linux, freebsd, macos, mingw, mingw-w64, cygwin, djgpp, openbsd, netbsd, dragonflybsd, solaris, openserver, unixware)
+clang 3.0+ (linux, macos, freebsd, win32, openbsd, netbsd, dragonflybsd)
+msvc 2.0+ (win32)
+icc 8.1+ (win32, linux)
+aocc 1.0+ (linux)
+nvhpc/pgi 20.11/21.7 (linux)
+open64 4.2.4/4.5.2.1/5.0 (linux)
+openwatcom c++ 1.9 (win32, dos32, dos16)
+watcom c++ 10.6/11.0 (win32, dos32, dos16)
+borland c++ 5.5 (win32)
+visualage c++ 3.5 (win32)
+dmc 8.57 (win32)
+msvc 1.52 (dos16)
+msc 7.0 (dos16)
+borland c++ 2.0/3.1 (dos16)
+turbo c++ 1.01/3.0 (dos16)
+symantec c++ 7.5 (dos16)
 ```
 
 
