@@ -6,9 +6,11 @@
 #ifndef MSDOS
 #define MSDOS 1
 #endif
-#ifdef _M_I86
-#define FASTMODE 0
 #endif
+
+#if defined(_M_I86)
+#define FASTMODE 0
+#define __16BIT__ 1
 #endif
 
 #if !defined(FASTMODE) || (defined(FASTMODE) && FASTMODE != 0)
@@ -16,7 +18,7 @@
 #endif
 
 typedef unsigned short row_t;
-#ifdef _M_I86
+#ifdef __16BIT__
 typedef unsigned long score_t;
 #else
 typedef unsigned int score_t;
@@ -62,18 +64,18 @@ enum {
 #include <omp.h>
 #endif
 
+#if FASTMODE != 0
+typedef struct {
+    int depth;
+    score_heur_t heuristic;
+} trans_table_entry_t;
+
 #if defined(max)
 #undef max
 #endif
 #if defined(min)
 #undef min
 #endif
-
-#if FASTMODE != 0
-typedef struct {
-    int depth;
-    score_heur_t heuristic;
-} trans_table_entry_t;
 
 #if __cplusplus >= 201103L
 #include <unordered_map>

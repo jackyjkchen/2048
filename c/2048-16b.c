@@ -8,9 +8,13 @@
 #endif
 #endif
 
+#if defined(_M_I86)
+#define __16BIT__ 1
+#endif
+
 typedef unsigned short row_t;
 
-#ifdef _M_I86
+#ifdef __16BIT__
 typedef unsigned long score_t;
 #else
 typedef unsigned int score_t;

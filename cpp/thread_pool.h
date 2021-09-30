@@ -31,13 +31,11 @@ typedef pthread_t THRD_HANDLE;
 #define THRD_INST void*
 #endif
 
-#if defined(__WATCOMC__)
 #if defined(max)
 #undef max
 #endif
 #if defined(min)
 #undef min
-#endif
 #endif
 
 typedef void (*thrd_callback)(void *param);

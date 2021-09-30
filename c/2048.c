@@ -6,9 +6,11 @@
 #ifndef MSDOS
 #define MSDOS 1
 #endif
-#ifdef _M_I86
-#define FASTMODE 0
 #endif
+
+#if defined(_M_I86)
+#define FASTMODE 0
+#define __16BIT__ 1
 #endif
 
 #if !defined(FASTMODE) || (defined(FASTMODE) && FASTMODE != 0)
@@ -17,7 +19,7 @@
 
 typedef unsigned short row_t;
 
-#ifdef _M_I86
+#ifdef __16BIT__
 typedef unsigned long score_t;
 #else
 typedef unsigned int score_t;
