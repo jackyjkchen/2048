@@ -531,7 +531,7 @@ static int get_depth_limit(board_t board) {
         count++;
     }
     count -= 2;
-    count = _max(count, 1);
+    count = _max(count, 3);
     count = _min(count, max_limit);
     return count;
 }
