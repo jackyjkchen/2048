@@ -619,7 +619,7 @@ static score_heur_t _score_toplevel_move(eval_state *state, board_t board, int m
 
 static score_heur_t score_toplevel_move(board_t board, int move) {
     eval_state state;
-    score_heur_t res = 0.0;
+    score_heur_t res = 0.0f;
 
     memset(&state, 0x00, sizeof(eval_state));
     state.depth_limit = get_depth_limit(board);
