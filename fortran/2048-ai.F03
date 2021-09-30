@@ -265,15 +265,17 @@ function execute_move(board, move)
         ret = ieor(ret, ishft(unpack_col(row_right_table(int(iand(ishft(t, -32), ROW_MASK), kind=2))), 8))
         ret = ieor(ret, ishft(unpack_col(row_right_table(int(iand(ishft(t, -48), ROW_MASK), kind=2))), 12))
     else if (move == LEFT) then
-        ret = ieor(ret, iand(int((row_left_table(int(iand(board, ROW_MASK), kind=2))), kind=8), ROW_MASK))
-        ret = ieor(ret, ishft(iand(int((row_left_table(int(iand(ishft(board, -16), ROW_MASK), kind=2))), kind=8), ROW_MASK), 16))
-        ret = ieor(ret, ishft(iand(int((row_left_table(int(iand(ishft(board, -32), ROW_MASK), kind=2))), kind=8), ROW_MASK), 32))
-        ret = ieor(ret, ishft(iand(int((row_left_table(int(iand(ishft(board, -48), ROW_MASK), kind=2))), kind=8), ROW_MASK), 48))
+        t = board
+        ret = ieor(ret, iand(int((row_left_table(int(iand(t, ROW_MASK), kind=2))), kind=8), ROW_MASK))
+        ret = ieor(ret, ishft(iand(int((row_left_table(int(iand(ishft(t, -16), ROW_MASK), kind=2))), kind=8), ROW_MASK), 16))
+        ret = ieor(ret, ishft(iand(int((row_left_table(int(iand(ishft(t, -32), ROW_MASK), kind=2))), kind=8), ROW_MASK), 32))
+        ret = ieor(ret, ishft(iand(int((row_left_table(int(iand(ishft(t, -48), ROW_MASK), kind=2))), kind=8), ROW_MASK), 48))
     else if (move == RIGHT) then
-        ret = ieor(ret, iand(int((row_right_table(int(iand(board, ROW_MASK), kind=2))), kind=8), ROW_MASK))
-        ret = ieor(ret, ishft(iand(int((row_right_table(int(iand(ishft(board, -16), ROW_MASK), kind=2))), kind=8), ROW_MASK), 16))
-        ret = ieor(ret, ishft(iand(int((row_right_table(int(iand(ishft(board, -32), ROW_MASK), kind=2))), kind=8), ROW_MASK), 32))
-        ret = ieor(ret, ishft(iand(int((row_right_table(int(iand(ishft(board, -48), ROW_MASK), kind=2))), kind=8), ROW_MASK), 48))
+        t = board
+        ret = ieor(ret, iand(int((row_right_table(int(iand(t, ROW_MASK), kind=2))), kind=8), ROW_MASK))
+        ret = ieor(ret, ishft(iand(int((row_right_table(int(iand(ishft(t, -16), ROW_MASK), kind=2))), kind=8), ROW_MASK), 16))
+        ret = ieor(ret, ishft(iand(int((row_right_table(int(iand(ishft(t, -32), ROW_MASK), kind=2))), kind=8), ROW_MASK), 32))
+        ret = ieor(ret, ishft(iand(int((row_right_table(int(iand(ishft(t, -48), ROW_MASK), kind=2))), kind=8), ROW_MASK), 48))
     end if
     execute_move = ret
 end function execute_move

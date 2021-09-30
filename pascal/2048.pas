@@ -152,21 +152,21 @@ end;
 
 function execute_move(board : qword; _move : integer) : qword;
 var
-    ret, t : qword;
+    ret : qword;
 begin
     ret := board;
     if _move = UP then begin
-        t := transpose(board);
-        ret := ret xor unpack_col(row_table[t and ROW_MASK]);
-        ret := ret xor (unpack_col(row_table[(t shr 16) and ROW_MASK]) shl 4);
-        ret := ret xor (unpack_col(row_table[(t shr 32) and ROW_MASK]) shl 8);
-        ret := ret xor (unpack_col(row_table[(t shr 48) and ROW_MASK]) shl 12);
+        board := transpose(board);
+        ret := ret xor unpack_col(row_table[board and ROW_MASK]);
+        ret := ret xor (unpack_col(row_table[(board shr 16) and ROW_MASK]) shl 4);
+        ret := ret xor (unpack_col(row_table[(board shr 32) and ROW_MASK]) shl 8);
+        ret := ret xor (unpack_col(row_table[(board shr 48) and ROW_MASK]) shl 12);
     end else if _move = DOWN then begin
-        t := transpose(board);
-        ret := ret xor unpack_col(reverse_row(row_table[reverse_row(t and ROW_MASK)]));
-        ret := ret xor (unpack_col(reverse_row(row_table[reverse_row((t shr 16) and ROW_MASK)])) shl 4);
-        ret := ret xor (unpack_col(reverse_row(row_table[reverse_row((t shr 32) and ROW_MASK)])) shl 8);
-        ret := ret xor (unpack_col(reverse_row(row_table[reverse_row((t shr 48) and ROW_MASK)])) shl 12);
+        board := transpose(board);
+        ret := ret xor unpack_col(reverse_row(row_table[reverse_row(board and ROW_MASK)]));
+        ret := ret xor (unpack_col(reverse_row(row_table[reverse_row((board shr 16) and ROW_MASK)])) shl 4);
+        ret := ret xor (unpack_col(reverse_row(row_table[reverse_row((board shr 32) and ROW_MASK)])) shl 8);
+        ret := ret xor (unpack_col(reverse_row(row_table[reverse_row((board shr 48) and ROW_MASK)])) shl 12);
     end else if _move = LEFT then begin
         ret := ret xor qword(row_table[board and ROW_MASK]);
         ret := ret xor (qword(row_table[(board shr 16) and ROW_MASK]) shl 16);
@@ -227,9 +227,10 @@ var
     row, rev_row : word;
 begin
     ret := board;
-    t := board;
     if (_move = UP) or (_move = DOWN) then
-        t := transpose(board);
+        t := transpose(board)
+    else
+        t := board;
     for i := 0 to 3 do begin
         row := (t shr (i shl 4)) and ROW_MASK;
         if _move = UP then begin

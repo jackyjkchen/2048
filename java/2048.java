@@ -127,17 +127,17 @@ class Game2048
         long ret = board;
 
         if (move == UP) {
-            long t = transpose(board);
-            ret ^= unpack_col(row_table[(int)(t & ROW_MASK)]);
-            ret ^= unpack_col(row_table[(int)((t >>> 16) & ROW_MASK)]) << 4;
-            ret ^= unpack_col(row_table[(int)((t >>> 32) & ROW_MASK)]) << 8;
-            ret ^= unpack_col(row_table[(int)((t >>> 48) & ROW_MASK)]) << 12;
+            board = transpose(board);
+            ret ^= unpack_col(row_table[(int)(board & ROW_MASK)]);
+            ret ^= unpack_col(row_table[(int)((board >>> 16) & ROW_MASK)]) << 4;
+            ret ^= unpack_col(row_table[(int)((board >>> 32) & ROW_MASK)]) << 8;
+            ret ^= unpack_col(row_table[(int)((board >>> 48) & ROW_MASK)]) << 12;
         } else if (move == DOWN) {
-            long t = transpose(board);
-            ret ^= unpack_col(reverse_row(row_table[reverse_row((int)(t & ROW_MASK))]));
-            ret ^= unpack_col(reverse_row(row_table[reverse_row((int)((t >>> 16) & ROW_MASK))])) << 4;
-            ret ^= unpack_col(reverse_row(row_table[reverse_row((int)((t >>> 32) & ROW_MASK))])) << 8;
-            ret ^= unpack_col(reverse_row(row_table[reverse_row((int)((t >>> 48) & ROW_MASK))])) << 12;
+            board = transpose(board);
+            ret ^= unpack_col(reverse_row(row_table[reverse_row((int)(board & ROW_MASK))]));
+            ret ^= unpack_col(reverse_row(row_table[reverse_row((int)((board >>> 16) & ROW_MASK))])) << 4;
+            ret ^= unpack_col(reverse_row(row_table[reverse_row((int)((board >>> 32) & ROW_MASK))])) << 8;
+            ret ^= unpack_col(reverse_row(row_table[reverse_row((int)((board >>> 48) & ROW_MASK))])) << 12;
         } else if (move == LEFT) {
             ret ^= (long)(row_table[(int)(board & ROW_MASK)]);
             ret ^= (long)(row_table[(int)((board >>> 16) & ROW_MASK)]) << 16;

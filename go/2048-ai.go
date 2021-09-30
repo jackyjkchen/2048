@@ -221,17 +221,17 @@ func execute_move(board uint64, move int) uint64 {
 	var ret uint64 = board
 
 	if move == UP {
-		var t uint64 = transpose(board)
-		ret ^= unpack_col(row_left_table[t&ROW_MASK])
-		ret ^= unpack_col(row_left_table[(t>>16)&ROW_MASK]) << 4
-		ret ^= unpack_col(row_left_table[(t>>32)&ROW_MASK]) << 8
-		ret ^= unpack_col(row_left_table[(t>>48)&ROW_MASK]) << 12
+		board = transpose(board)
+		ret ^= unpack_col(row_left_table[board&ROW_MASK])
+		ret ^= unpack_col(row_left_table[(board>>16)&ROW_MASK]) << 4
+		ret ^= unpack_col(row_left_table[(board>>32)&ROW_MASK]) << 8
+		ret ^= unpack_col(row_left_table[(board>>48)&ROW_MASK]) << 12
 	} else if move == DOWN {
-		var t uint64 = transpose(board)
-		ret ^= unpack_col(row_right_table[t&ROW_MASK])
-		ret ^= unpack_col(row_right_table[(t>>16)&ROW_MASK]) << 4
-		ret ^= unpack_col(row_right_table[(t>>32)&ROW_MASK]) << 8
-		ret ^= unpack_col(row_right_table[(t>>48)&ROW_MASK]) << 12
+		board = transpose(board)
+		ret ^= unpack_col(row_right_table[board&ROW_MASK])
+		ret ^= unpack_col(row_right_table[(board>>16)&ROW_MASK]) << 4
+		ret ^= unpack_col(row_right_table[(board>>32)&ROW_MASK]) << 8
+		ret ^= unpack_col(row_right_table[(board>>48)&ROW_MASK]) << 12
 	} else if move == LEFT {
 		ret ^= uint64(row_left_table[board&ROW_MASK])
 		ret ^= uint64(row_left_table[(board>>16)&ROW_MASK]) << 16

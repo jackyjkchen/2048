@@ -174,17 +174,17 @@ def init_tables():
 def execute_move(board, move):
     ret = board
     if move == UP:
-        t = transpose(board)
-        ret ^= unpack_col(row_left_table[t & ROW_MASK])
-        ret ^= unpack_col(row_left_table[(t >> 16) & ROW_MASK]) << 4
-        ret ^= unpack_col(row_left_table[(t >> 32) & ROW_MASK]) << 8
-        ret ^= unpack_col(row_left_table[(t >> 48) & ROW_MASK]) << 12
+        board = transpose(board)
+        ret ^= unpack_col(row_left_table[board & ROW_MASK])
+        ret ^= unpack_col(row_left_table[(board >> 16) & ROW_MASK]) << 4
+        ret ^= unpack_col(row_left_table[(board >> 32) & ROW_MASK]) << 8
+        ret ^= unpack_col(row_left_table[(board >> 48) & ROW_MASK]) << 12
     elif move == DOWN:
-        t = transpose(board)
-        ret ^= unpack_col(row_right_table[t & ROW_MASK])
-        ret ^= unpack_col(row_right_table[(t >> 16) & ROW_MASK]) << 4
-        ret ^= unpack_col(row_right_table[(t >> 32) & ROW_MASK]) << 8
-        ret ^= unpack_col(row_right_table[(t >> 48) & ROW_MASK]) << 12
+        board = transpose(board)
+        ret ^= unpack_col(row_right_table[board & ROW_MASK])
+        ret ^= unpack_col(row_right_table[(board >> 16) & ROW_MASK]) << 4
+        ret ^= unpack_col(row_right_table[(board >> 32) & ROW_MASK]) << 8
+        ret ^= unpack_col(row_right_table[(board >> 48) & ROW_MASK]) << 12
     elif move == LEFT:
         ret ^= row_left_table[board & ROW_MASK]
         ret ^= row_left_table[(board >> 16) & ROW_MASK] << 16

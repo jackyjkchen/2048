@@ -127,17 +127,17 @@ Public Module Game2048
     Private Function execute_move(board As ULong, move As Integer) As ULong
         Dim ret As ULong = board
         If move = UP Then
-            Dim t As ULong = transpose(board)
-            ret = ret Xor unpack_col(row_table(t And ROW_MASK))
-            ret = ret Xor (unpack_col(row_table((t >> 16) And ROW_MASK)) << 4)
-            ret = ret Xor (unpack_col(row_table((t >> 32) And ROW_MASK)) << 8)
-            ret = ret Xor (unpack_col(row_table((t >> 48) And ROW_MASK)) << 12)
+            board = transpose(board)
+            ret = ret Xor unpack_col(row_table(board And ROW_MASK))
+            ret = ret Xor (unpack_col(row_table((board >> 16) And ROW_MASK)) << 4)
+            ret = ret Xor (unpack_col(row_table((board >> 32) And ROW_MASK)) << 8)
+            ret = ret Xor (unpack_col(row_table((board >> 48) And ROW_MASK)) << 12)
         ElseIf move = DOWN Then
-            Dim t As ULong = transpose(board)
-            ret = ret Xor unpack_col(reverse_row(row_table(reverse_row(t And ROW_MASK))))
-            ret = ret Xor (unpack_col(reverse_row(row_table(reverse_row((t >> 16) And ROW_MASK)))) << 4)
-            ret = ret Xor (unpack_col(reverse_row(row_table(reverse_row((t >> 32) And ROW_MASK)))) << 8)
-            ret = ret Xor (unpack_col(reverse_row(row_table(reverse_row((t >> 48) And ROW_MASK)))) << 12)
+            board = transpose(board)
+            ret = ret Xor unpack_col(reverse_row(row_table(reverse_row(board And ROW_MASK))))
+            ret = ret Xor (unpack_col(reverse_row(row_table(reverse_row((board >> 16) And ROW_MASK)))) << 4)
+            ret = ret Xor (unpack_col(reverse_row(row_table(reverse_row((board >> 32) And ROW_MASK)))) << 8)
+            ret = ret Xor (unpack_col(reverse_row(row_table(reverse_row((board >> 48) And ROW_MASK)))) << 12)
         ElseIf move = LEFT Then
             ret = ret Xor CULng(row_table(board And ROW_MASK))
             ret = ret Xor (CULng(row_table((board >> 16) And ROW_MASK)) << 16)

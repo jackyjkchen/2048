@@ -343,20 +343,20 @@ static void free_tables(void) {
 }
 
 static board_t execute_move(board_t board, int move) {
-    board_t ret = board, t = 0;
+    board_t ret = board;
 
     if (move == UP) {
-        t = transpose(board);
-        ret ^= unpack_col(row_left_table[t & ROW_MASK]);
-        ret ^= unpack_col(row_left_table[(t >> 16) & ROW_MASK]) << 4;
-        ret ^= unpack_col(row_left_table[(t >> 32) & ROW_MASK]) << 8;
-        ret ^= unpack_col(row_left_table[(t >> 48) & ROW_MASK]) << 12;
+        board = transpose(board);
+        ret ^= unpack_col(row_left_table[board & ROW_MASK]);
+        ret ^= unpack_col(row_left_table[(board >> 16) & ROW_MASK]) << 4;
+        ret ^= unpack_col(row_left_table[(board >> 32) & ROW_MASK]) << 8;
+        ret ^= unpack_col(row_left_table[(board >> 48) & ROW_MASK]) << 12;
     } else if (move == DOWN) {
-        t = transpose(board);
-        ret ^= unpack_col(row_right_table[t & ROW_MASK]);
-        ret ^= unpack_col(row_right_table[(t >> 16) & ROW_MASK]) << 4;
-        ret ^= unpack_col(row_right_table[(t >> 32) & ROW_MASK]) << 8;
-        ret ^= unpack_col(row_right_table[(t >> 48) & ROW_MASK]) << 12;
+        board = transpose(board);
+        ret ^= unpack_col(row_right_table[board & ROW_MASK]);
+        ret ^= unpack_col(row_right_table[(board >> 16) & ROW_MASK]) << 4;
+        ret ^= unpack_col(row_right_table[(board >> 32) & ROW_MASK]) << 8;
+        ret ^= unpack_col(row_right_table[(board >> 48) & ROW_MASK]) << 12;
     } else if (move == LEFT) {
         ret ^= (board_t)(row_left_table[board & ROW_MASK]);
         ret ^= (board_t)(row_left_table[(board >> 16) & ROW_MASK]) << 16;
@@ -407,20 +407,20 @@ static void free_tables(void) {
 }
 
 static board_t execute_move(board_t board, int move) {
-    board_t ret = board, t = 0;
+    board_t ret = board;
     row_t row = 0;
     int i = 0;
 
     if (move == UP) {
-        t = transpose(board);
+        board = transpose(board);
         for (i = 0; i < 4; ++i) {
-            row = (t >> (i << 4)) & ROW_MASK;
+            row = (board >> (i << 4)) & ROW_MASK;
             ret ^= unpack_col(row_table[row / TABLESIZE][row % TABLESIZE]) << (i << 2);
         }
     } else if (move == DOWN) {
-        t = transpose(board);
+        board = transpose(board);
         for (i = 0; i < 4; ++i) {
-            row = reverse_row((t >> (i << 4)) & ROW_MASK);
+            row = reverse_row((board >> (i << 4)) & ROW_MASK);
             ret ^= unpack_col(reverse_row(row_table[row / TABLESIZE][row % TABLESIZE])) << (i << 2);
         }
     } else if (move == LEFT) {

@@ -178,17 +178,17 @@ end
 function execute_move(board, move)
     local ret = board
     if (move == UP) then
-        local t = transpose(board)
-        ret = ret ~ unpack_col(row_left_table[t & ROW_MASK])
-        ret = ret ~ (unpack_col(row_left_table[(t >> 16) & ROW_MASK]) << 4)
-        ret = ret ~ (unpack_col(row_left_table[(t >> 32) & ROW_MASK]) << 8)
-        ret = ret ~ (unpack_col(row_left_table[(t >> 48) & ROW_MASK]) << 12)
+        board = transpose(board)
+        ret = ret ~ unpack_col(row_left_table[board & ROW_MASK])
+        ret = ret ~ (unpack_col(row_left_table[(board >> 16) & ROW_MASK]) << 4)
+        ret = ret ~ (unpack_col(row_left_table[(board >> 32) & ROW_MASK]) << 8)
+        ret = ret ~ (unpack_col(row_left_table[(board >> 48) & ROW_MASK]) << 12)
     elseif (move == DOWN) then
-        local t = transpose(board)
-        ret = ret ~ unpack_col(row_right_table[t & ROW_MASK])
-        ret = ret ~ (unpack_col(row_right_table[(t >> 16) & ROW_MASK]) << 4)
-        ret = ret ~ (unpack_col(row_right_table[(t >> 32) & ROW_MASK]) << 8)
-        ret = ret ~ (unpack_col(row_right_table[(t >> 48) & ROW_MASK]) << 12)
+        board = transpose(board)
+        ret = ret ~ unpack_col(row_right_table[board & ROW_MASK])
+        ret = ret ~ (unpack_col(row_right_table[(board >> 16) & ROW_MASK]) << 4)
+        ret = ret ~ (unpack_col(row_right_table[(board >> 32) & ROW_MASK]) << 8)
+        ret = ret ~ (unpack_col(row_right_table[(board >> 48) & ROW_MASK]) << 12)
     elseif (move == LEFT) then
         ret = ret ~ row_left_table[board & ROW_MASK]
         ret = ret ~ (row_left_table[(board >> 16) & ROW_MASK] << 16)
