@@ -27,7 +27,7 @@ AI实现需要关联容器、字典或哈希表做cache以提升性能，考验�
 
 通常的ISO C90跨平台实现，非严格C90内容仅为64位整数。
 
-### 使用FASTMODE预处理（默认），可启用查表法，会增加384KiB的常驻内存开销。
+使用FASTMODE预处理（默认），可启用查表法，会增加384KiB的常驻内存开销。
 
 已测试编译器和平台：
 ```
@@ -49,6 +49,12 @@ dmc 8.57 (win32)
 cc (openserver, unixware)
 ```
 
+使用FASTMODE=0预处理（dos16目标下默认FASTMODE=0），代码段和数据段可控制在64KiB以内，额外支持：
+```
+openwatcom c++ 1.9 (dos16)
+watcom c++ 11.0 (dos16)
+```
+
 * gcc 3.1以下版本需要大量补丁用于支持现代化系统和修复一些bug，[参见legacy-gcc](https://github.com/jackyjkchen/legacy-gcc)。低版本gcc均在legacy-gcc场景测试，复用系统高版本的glibc，因此在一些老系统上可能行为会有所差异（比如使用gcc 2.x + libc5）。
 
 * msvc 2.x都不能使用优化，否则编译器直接crash，包括最新的2.2。其他版本msvc测试的都是补丁打满的版本。
@@ -64,12 +70,6 @@ cc (openserver, unixware)
 * dmc不能使用优化，其64位整数运算优化有bug，产生错误代码。
 
 * win64、windows for arm等均为win32的不同硬件架构，不单独说明，类似的linux、bsd等也不针对特定硬件架构，默认跨平台。
-
-### 使用FASTMODE=0预处理（dos16目标下默认FASTMODE=0），代码段和数据段可控制在64KiB以内，额外支持：
-```
-openwatcom c++ 1.9 (dos16)
-watcom c++ 11.0 (dos16)
-```
 
 
 ## c/2048-16b.c
@@ -134,7 +134,7 @@ msc 3.0/4.0 (dos16)
 
 ISO C90 AI实现，非严格C90内容仅为64位整数。可选支持OpenMP多线程（预处理OPENMP_THREAD控制）。
 
-### 使用FASTMODE预处理（默认），可启用查表法，限定搜索深度上限为5。
+### 默认启用查表法（预处理FASTMODE=1），限定搜索深度上限为5。
 
 已测试编译器和平台：
 ```
@@ -156,13 +156,13 @@ dmc 8.57 (win32)
 cc (openserver, unixware)
 ```
 
-* 编译器相关comments同c/2048.c。
-
-### 使用FASTMODE=0预处理（dos16目标下默认FASTMODE=0），查表法采取分表形式（单表小于64KiB，总内存需求384KiB），可支持dos16目标（需要compact或large内存模型），限定搜索深度上限为3，额外支持：
+使用FASTMODE=0预处理（dos16目标下默认FASTMODE=0），查表法采取分表形式（单表小于64KiB，总内存需求384KiB），可支持dos16目标（需要compact或large内存模型），限定搜索深度上限为3，额外支持：
 ```
 openwatcom c++ 1.9 (dos16)
 watcom c++ 11.0 (dos16)
 ```
+
+* 编译器相关comments同c/2048.c。
 
 ### 本实现支持OpenMP多线程，由预处理OPENMP_THREAD控制，已测试编译器和平台：
 ```
@@ -223,7 +223,7 @@ power c 2.2.2 (dos16)
 
 ISO C++98实现，使用64位整数，不依赖C++标准库。
 
-### 使用FASTMODE预处理（默认），可启用查表法，会增加384KiB的常驻内存开销。
+使用FASTMODE预处理（默认），可启用查表法，会增加384KiB的常驻内存开销。
 
 已测试编译器和平台：
 ```
@@ -241,15 +241,15 @@ visualage c++ 3.5 (win32)
 dmc 8.57 (win32)
 ```
 
-* gcc版本低于2.6时，不识别cpp扩展名，请编译软链接cpp/2048.cc。
-
-* 其余编译器已知问题参见c/2048.c。
-
-### 使用FASTMODE=0预处理（dos16目标下默认FASTMODE=0），代码段和数据段可控制在64KiB以内，额外支持：
+使用FASTMODE=0预处理（dos16目标下默认FASTMODE=0），代码段和数据段可控制在64KiB以内，额外支持：
 ```
 openwatcom c++ 1.9 (dos16)
 watcom c++ 11.0 (dos16)
 ```
+
+* gcc版本低于2.6时，不识别cpp扩展名，请编译软链接cc扩展名，后同。
+
+* 其余编译器已知问题参见c/2048.c。
 
 ## cpp/2048-16b.cpp
 
@@ -296,6 +296,15 @@ borland c++ 5.5 (win32)
 dmc 8.57 (win32)
 ```
 
+若使用FASTMODE=0预处理（dos16目标下默认FASTMODE=0），不启用std::map cache，查表法采取分表形式（单表小于64KiB，总内存需求384KiB），可支持dos16目标（需要compact或large内存模型），由于速度很慢，因此限制搜索深度上限为3，额外支持：
+```
+gcc 2.2.2/2.3.3/2.4.5/2.5.8 (linux)
+msvc 2.x (win32)
+visualage c++ 3.5 (win32)
+openwatcom c++ 1.9 (dos16)
+watcom c++ 11.0 (dos16)
+```
+
 * msvc 5.0必须应用SP3，否则优化选项会生成错误代码或者编译失败，其他版本msvc也都测试的是补丁打满的版本。
 
 * watcom c++ 11.0未包含STL，需要使用[经过修改的STLport-4.5.3](http://assa.4ip.ru/watcom/stlport.html)，下文多线程场景一样。其他只要有内置STL的编译器尽量使用内置STL而非STLport。
@@ -305,17 +314,6 @@ dmc 8.57 (win32)
 * libg++-2.6.x中的STL非常原始，问题很多，默认是不会安装stl头文件的，legacy-gcc的libg++-2.6.2[调整](https://github.com/jackyjkchen/legacy-gcc/commit/354b366f60bb37359adbcb7307ab70039b5a3829#diff-ef832efd837dd21850a4ae1c9b95e0e353ce653288d1de797d24a5178f130031)后会安装，但不在默认搜索路径。编译示例：
 ```
 g++-2.6.3 -I/usr/lib/gcc-lib/i686-legacy-linux-gnu/2.6.3/include/g++/stl -O2 cpp/2048-ai.cpp -lstdc++ -lm -o 2048
-```
-
-### 若使用FASTMODE=0预处理（dos16目标下默认FASTMODE=0），不启用std::map cache，查表法采取分表形式（单表小于64KiB，总内存需求384KiB），可支持dos16目标（需要compact或large内存模型），由于速度很慢，因此限制搜索深度上限为3。
-
-额外支持：
-```
-gcc 2.2.2/2.3.3/2.4.5/2.5.8 (linux)
-msvc 2.x (win32)
-visualage c++ 3.5 (win32)
-openwatcom c++ 1.9 (dos16)
-watcom c++ 11.0 (dos16)
 ```
 
 ### 本实现支持多线程，由预处理MULTI_THREAD控制，多线程版本依赖操作系统原生线程，因此dos等都不支持，已测试编译器和平台：
