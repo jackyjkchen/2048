@@ -134,7 +134,9 @@ msc 3.0/4.0 (dos16)
 
 ISO C90 AI实现，非严格C90内容仅为64位整数。可选支持OpenMP多线程（预处理OPENMP_THREAD控制）。
 
-### 默认启用查表法（预处理FASTMODE=1），限定搜索深度上限为5。
+### 单线程
+
+默认启用查表法（预处理FASTMODE=1），限定搜索深度上限为5。
 
 已测试编译器和平台：
 ```
@@ -164,7 +166,9 @@ watcom c++ 11.0 (dos16)
 
 * 编译器相关comments同c/2048.c。
 
-### 本实现支持OpenMP多线程，由预处理OPENMP_THREAD控制，已测试编译器和平台：
+### OpenMP多线程
+
+本实现支持OpenMP多线程，由预处理OPENMP_THREAD控制，已测试编译器和平台：
 ```
 gcc 4.2+ (linux, freebsd, macos, openbsd, netbsd, dragonflybsd, solaris)
 clang 3.5+ (linux, freebsd，macos, openbsd, netbsd, dragonflybsd)
@@ -281,7 +285,9 @@ symantec c++ 7.5 (dos16)
 
 AI版本，ISO C++98实现，可选支持多线程（预处理MULTI_THREAD或OPENMP_THREAD），默认启用查表法和std::map cache。
 
-### 不启用MULTI_THREAD时（默认），无须依赖thread_pool.cpp，已测试编译器和平台：
+### 单线程
+
+不启用MULTI_THREAD时（默认），无须依赖thread_pool.cpp，已测试编译器和平台：
 ```
 gcc 2.6.3+ (linux, freebsd, macos, mingw, mingw-w64, cygwin, djgpp, openbsd, netbsd, dragonflybsd, solaris, openserver, unixware)
 clang 3.0+ (linux, macos, freebsd, win32, openbsd, netbsd, dragonflybsd)
@@ -316,7 +322,9 @@ watcom c++ 11.0 (dos16)
 g++-2.6.3 -I/usr/lib/gcc-lib/i686-legacy-linux-gnu/2.6.3/include/g++/stl -O2 cpp/2048-ai.cpp -lstdc++ -lm -o 2048
 ```
 
-### 本实现支持多线程，由预处理MULTI_THREAD控制，多线程版本依赖操作系统原生线程，因此dos等都不支持，已测试编译器和平台：
+### 多线程
+
+本实现支持多线程，由预处理MULTI_THREAD控制，多线程版本依赖操作系统原生线程（cpp/thread_pool.cpp），仅支持Win32和Posix两种线程模型，已测试编译器和平台：
 ```
 gcc 2.7.2+ (linux, freebsd, macos, mingw, mingw-w64, cygwin, openbsd, netbsd, dragonflybsd, solaris)
 clang 3.0+ (linux, macos, freebsd, win32, openbsd, netbsd, dragonflybsd)
@@ -342,7 +350,9 @@ g++-2.7.2 -DMULTI_THREAD -O2 -I/usr/lib/gcc-lib/i686-legacy-linux-gnu/2.7.2.3/in
 
 * msvc 4.2的STL allocator线程不安全，有概率启动时crash。
 
-### 本实现亦支持OpenMP多线程，由预处理OPENMP_THREAD控制，OpenMP多线程不依赖thread_pool.cpp，但编译器和平台更为受限，已测试编译器和平台：
+### OpenMP多线程
+
+本实现亦支持OpenMP多线程，由预处理OPENMP_THREAD控制，OpenMP多线程不依赖thread_pool.cpp，但编译器和平台更为受限，已测试编译器和平台：
 ```
 gcc 4.2+ (linux, freebsd, macos, openbsd, netbsd, dragonflybsd, solaris)
 clang 3.5+ (linux, freebsd，macos, openbsd, netbsd, dragonflybsd)
@@ -566,14 +576,14 @@ quick pascal 1.0 (dos16)
 
 Pascal AI实现，查表法，由预处理FASTMODE决定是否使用TDictionary cache（默认不启用），由预处理MULTI_THREAD决定是否使用多线程（默认不启用）。
 
-## 默认不启用FASTMODE时，限定搜索深度上限为5。编译器支持范围更宽。
+默认不启用FASTMODE时，限定搜索深度上限为5。编译器支持范围更宽。
 
 已测试编译器和平台：
 ```
 free pascal 2.2+ (linux, win32, freebsd, macos, dos32)
 ```
 
-## 启用FASTMODE，依赖TDictionary，搜索深度不限，编译器支持范围较窄。
+启用FASTMODE，依赖TDictionary，搜索深度不限，编译器支持范围较窄。
 
 已测试编译器和平台：
 ```
