@@ -13,8 +13,7 @@
 #endif
 
 #if defined(WINVER) && WINVER < 0x0600
-ConditionVariableLegacy::ConditionVariableLegacy() : m_semphore(NULL), m_wait_num(0)
-{
+ConditionVariableLegacy::ConditionVariableLegacy() : m_semphore(NULL), m_wait_num(0) {
     m_semphore = CreateSemaphore(NULL, 0, INT_MAX, NULL);
     if (!m_semphore) {
         fprintf(stderr, "CreateSemaphore failed.");
@@ -23,13 +22,11 @@ ConditionVariableLegacy::ConditionVariableLegacy() : m_semphore(NULL), m_wait_nu
     }
 }
 
-ConditionVariableLegacy::~ConditionVariableLegacy()
-{
+ConditionVariableLegacy::~ConditionVariableLegacy() {
     CloseHandle(m_semphore);
 }
 
-bool ConditionVariableLegacy::wait(ThreadLock &lock, int timeout_ms/* = -1*/)
-{
+bool ConditionVariableLegacy::wait(ThreadLock &lock, int timeout_ms/* = -1*/) {
     DWORD timeout = INFINITE;
     if (timeout_ms >= 0) {
         timeout = (DWORD)timeout_ms;
@@ -42,26 +39,23 @@ bool ConditionVariableLegacy::wait(ThreadLock &lock, int timeout_ms/* = -1*/)
     return (ret == WAIT_OBJECT_0) ? true : false;
 }
 
-void ConditionVariableLegacy::signal()
-{
+void ConditionVariableLegacy::signal() {
     if (m_wait_num > 0) {
         ReleaseSemaphore(m_semphore, 1, NULL);
     }
 }
 
-void ConditionVariableLegacy::broadcast()
-{
+void ConditionVariableLegacy::broadcast() {
     if (m_wait_num > 0) {
         ReleaseSemaphore(m_semphore, m_wait_num, NULL);
     }
 }
 #endif
 
-ThreadLock::ThreadLock()
-{
+ThreadLock::ThreadLock() {
 #ifdef _WIN32
     InitializeCriticalSection(&m_mutex);
-#if WINVER >= 0x0600
+#if defined(WINVER) && WINVER >= 0x0600
     InitializeConditionVariable(&m_cond);
 #endif
 #else
@@ -70,8 +64,7 @@ ThreadLock::ThreadLock()
 #endif
 }
 
-ThreadLock::~ThreadLock()
-{
+ThreadLock::~ThreadLock() {
 #ifdef _WIN32
     DeleteCriticalSection(&m_mutex);
 #else
@@ -80,8 +73,7 @@ ThreadLock::~ThreadLock()
 #endif
 }
 
-void ThreadLock::lock()
-{
+void ThreadLock::lock() {
 #ifdef _WIN32
     EnterCriticalSection(&m_mutex);
 #else
@@ -89,8 +81,7 @@ void ThreadLock::lock()
 #endif
 }
 
-void ThreadLock::unlock()
-{
+void ThreadLock::unlock() {
 #ifdef _WIN32
     LeaveCriticalSection(&m_mutex);
 #else
@@ -98,10 +89,9 @@ void ThreadLock::unlock()
 #endif
 }
 
-bool ThreadLock::wait(int timeout_ms/* = -1*/)
-{
+bool ThreadLock::wait(int timeout_ms/* = -1*/) {
 #ifdef _WIN32
-#if WINVER >= 0x0600
+#if defined(WINVER) && WINVER >= 0x0600
     DWORD timeout = INFINITE;
     if (timeout_ms >= 0) {
         timeout = (DWORD)timeout_ms;
@@ -124,10 +114,9 @@ bool ThreadLock::wait(int timeout_ms/* = -1*/)
 #endif
 }
 
-void ThreadLock::signal()
-{
+void ThreadLock::signal() {
 #ifdef _WIN32
-#if WINVER >= 0x0600
+#if defined(WINVER) && WINVER >= 0x0600
     WakeConditionVariable(&m_cond);
 #else
     m_cond.signal();
@@ -137,10 +126,9 @@ void ThreadLock::signal()
 #endif
 }
 
-void ThreadLock::broadcast()
-{
+void ThreadLock::broadcast() {
 #ifdef _WIN32
-#if WINVER >= 0x0600
+#if defined(WINVER) && WINVER >= 0x0600
     WakeAllConditionVariable(&m_cond);
 #else
     m_cond.broadcast();
@@ -152,8 +140,7 @@ void ThreadLock::broadcast()
 
 #ifdef _WIN32
 #if defined(WINVER) && WINVER >= 0x0501
-static DWORD _count_set_bits(ULONG_PTR bitMask)
-{
+static DWORD _count_set_bits(ULONG_PTR bitMask) {
     DWORD LSHIFT = sizeof(ULONG_PTR) * 8 - 1;
     DWORD bitSetCount = 0;
     ULONG_PTR bitTest = (ULONG_PTR)1 << LSHIFT;
@@ -168,15 +155,13 @@ static DWORD _count_set_bits(ULONG_PTR bitMask)
 #endif
 #endif
 
-THRD_INST ThreadPool::_threadstart(void *param)
-{
+THRD_INST ThreadPool::_threadstart(void *param) {
     ThrdContext *context = (ThrdContext *)param;
     context->func(context->param);
     return 0;
 }
 
-int ThreadPool::get_cpu_num()
-{
+int ThreadPool::get_cpu_num() {
     int cpu_num = 0;
 #ifdef _WIN32
 #if defined(WINVER) && WINVER >= 0x0501
@@ -218,20 +203,17 @@ int ThreadPool::get_cpu_num()
     return cpu_num;
 }
 
-ThreadPool::ThreadPool(int max_thrd_num/* = 0*/) : m_pool_signaled(false), m_stop(true), m_thrd_num(max_thrd_num), m_active_thrd_num(0), m_thread_handle(NULL)
-{
+ThreadPool::ThreadPool(int max_thrd_num/* = 0*/) : m_pool_signaled(false), m_stop(true), m_thrd_num(max_thrd_num), m_active_thrd_num(0), m_thread_handle(NULL) {
     m_thrd_context.func = ThreadPool::thread_instance;
     m_thrd_context.param = this;
 }
 
-ThreadPool::~ThreadPool()
-{
+ThreadPool::~ThreadPool() {
     wait_all_thrd();
     free(m_thread_handle);
 }
 
-bool ThreadPool::init()
-{
+bool ThreadPool::init() {
     bool ret = false, clear_thrd = false;
     do {
         LockScope(this->m_ctrl_lock);
@@ -273,8 +255,7 @@ bool ThreadPool::init()
     return ret;
 }
 
-void ThreadPool::add_task(thrd_callback func, void *param)
-{
+void ThreadPool::add_task(thrd_callback func, void *param) {
     LockScope(this->m_ctrl_lock);
     ThrdContext context;
     context.func = func;
@@ -286,8 +267,7 @@ void ThreadPool::add_task(thrd_callback func, void *param)
     m_pool_lock.unlock();
 }
 
-void ThreadPool::wait_all_task()
-{
+void ThreadPool::wait_all_task() {
     LockScope(this->m_ctrl_lock);
     m_pool_lock.lock();
     if (m_stop) {
@@ -300,8 +280,7 @@ void ThreadPool::wait_all_task()
     m_pool_lock.unlock();
 }
 
-void ThreadPool::wait_all_thrd()
-{
+void ThreadPool::wait_all_thrd() {
     LockScope(this->m_ctrl_lock);
     m_pool_lock.lock();
     if (m_stop) {

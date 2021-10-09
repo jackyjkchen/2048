@@ -64,8 +64,7 @@ typedef std::deque<ThrdContext> ThreadQueue;
 typedef CONDITION_VARIABLE ConditionVariable;
 #elif defined(_WIN32)
 class ThreadLock;
-class ConditionVariableLegacy
-{
+class ConditionVariableLegacy {
 public:
     ConditionVariableLegacy();
     ~ConditionVariableLegacy();
@@ -81,8 +80,7 @@ private:
 typedef ConditionVariableLegacy ConditionVariable;
 #endif
 
-class ThreadLock
-{
+class ThreadLock {
 public:
     ThreadLock();
     ~ThreadLock();
@@ -99,8 +97,7 @@ private:
     ConditionVariable m_cond;
 };
 
-class LockScope
-{
+class LockScope {
 public:
     explicit LockScope(ThreadLock &lock) : m_lock(lock)
     {
@@ -118,8 +115,7 @@ private:
     ThreadLock &m_lock;
 };
 
-class ThreadPool
-{
+class ThreadPool {
 public:
     ThreadPool(int max_thrd_num = 0);
     ~ThreadPool();
