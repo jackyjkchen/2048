@@ -64,6 +64,12 @@ enum {
 
 typedef int (*get_move_func_t)(board_t);
 
+#if defined(_MSC_VER) && _MSC_VER >= 1500 && defined(POPCNT)
+#include <intrin.h>
+#define __builtin_popcount __popcnt
+#define __POPCNT__ 1
+#endif
+
 #if defined(__MINGW64__) || defined(__MINGW32__)
 #undef __USE_MINGW_ANSI_STDIO
 #define __USE_MINGW_ANSI_STDIO 0
@@ -528,11 +534,15 @@ static int get_depth_limit(board_t board) {
     }
 
     bitset >>= 1;
+#ifdef __POPCNT__
+    count = (int)(__builtin_popcount(bitset)) - 2;
+#else
     while (bitset) {
         bitset &= bitset - 1;
         count++;
     }
     count -= 2;
+#endif
     count = _max(count, 3);
     count = _min(count, max_limit);
     return count;

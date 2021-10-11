@@ -106,6 +106,12 @@ typedef std::map<board_t, trans_table_entry_t> trans_table_t;
 #endif
 #endif
 
+#if defined(_MSC_VER) && _MSC_VER >= 1500 && defined(POPCNT)
+#include <intrin.h>
+#define __builtin_popcount __popcnt
+#define __POPCNT__ 1
+#endif
+
 #if defined(__MINGW64__) || defined(__MINGW32__)
 #undef __USE_MINGW_ANSI_STDIO
 #define __USE_MINGW_ANSI_STDIO 0
@@ -182,7 +188,6 @@ public:
 private:
     inline board_t unpack_col(row_t row) {
         board_t tmp = row;
-
         return (tmp | (tmp << 12) | (tmp << 24) | (tmp << 36)) & COL_MASK;
     }
     inline row_t reverse_row(row_t row) {
@@ -609,11 +614,15 @@ int Game2048::get_depth_limit(board_t board) {
     }
 
     bitset >>= 1;
+#ifdef __POPCNT__
+    count = (int)(__builtin_popcount(bitset)) - 2;
+#else
     while (bitset) {
         bitset &= bitset - 1;
         count++;
     }
     count -= 2;
+#endif
     count = _max(count, 3);
     if (max_limit) {
         count = _min(count, max_limit);
