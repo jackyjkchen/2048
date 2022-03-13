@@ -13,7 +13,6 @@
 #endif
 
 typedef unsigned short row_t;
-
 #ifdef __16BIT__
 typedef unsigned long score_t;
 #else

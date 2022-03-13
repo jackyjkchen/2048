@@ -18,7 +18,6 @@
 #endif
 
 typedef unsigned short row_t;
-
 #ifdef __16BIT__
 typedef unsigned long score_t;
 #else
@@ -26,11 +25,9 @@ typedef unsigned int score_t;
 #endif
 #if defined(_MSC_VER) || defined(__BORLANDC__) || defined(__WATCOMC__)
 typedef unsigned __int64 board_t;
-
 #define W64LIT(x) x##ui64
 #else
 typedef unsigned long long board_t;
-
 #define W64LIT(x) x##ULL
 #endif
 
