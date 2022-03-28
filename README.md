@@ -345,7 +345,7 @@ g++ -DMULTI_THREAD -O2 cpp/2048-ai.cpp cpp/thread_pool.cpp -pthread -o 2048
 
 * gcc 2.7.2需要使用[经过修改的STLPort-3.12.3](https://github.com/jackyjkchen/legacy-gcc/blob/master/dev-libs/stlport/files/3.12.3/00_stlport-3.12.3.patch)，在legacy-gcc中已提供，否则libg++-2.7.x的STL在多线程场景下会coredump，编译示例：
 ```
-g++-2.7.2 -DMULTI_THREAD -O2 -I/usr/lib/gcc-lib/i686-legacy-linux-gnu/2.7.2.3/include/stlport/ cpp/2048-ai.cpp cpp/thread_pool.cpp -pthread -o 2048
+g++-2.7.2 -DMULTI_THREAD -O2 -I/usr/lib/gcc-lib/i686-legacy-linux-gnu/2.7.2/include/stlport/ cpp/2048-ai.cpp cpp/thread_pool.cpp -pthread -o 2048
 ```
 
 * msvc 4.2的STL allocator线程不安全，有概率启动时crash。
