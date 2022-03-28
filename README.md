@@ -231,7 +231,7 @@ ISO C++98实现，使用64位整数，不依赖C++标准库。
 
 已测试编译器和平台：
 ```
-gcc 2.2.2+ (linux, freebsd, macos, mingw, mingw-w64, cygwin, djgpp, openbsd, netbsd, dragonflybsd, solaris, openserver, unixware)
+gcc 2.1+ (linux, freebsd, macos, mingw, mingw-w64, cygwin, djgpp, openbsd, netbsd, dragonflybsd, solaris, openserver, unixware)
 clang 3.0+ (linux, macos, freebsd, win32, openbsd, netbsd, dragonflybsd)
 msvc 2.0+ (win32)
 icc 8.1+ (win32, linux)
@@ -261,7 +261,7 @@ ISO C++98实现，不使用64位整数，不使用查表法。由于不依赖C++
 
 已测试编译器和平台：
 ```
-gcc 2.2.2+ (linux, freebsd, macos, mingw, mingw-w64, cygwin, djgpp, openbsd, netbsd, dragonflybsd, solaris, openserver, unixware)
+gcc 2.1+ (linux, freebsd, macos, mingw, mingw-w64, cygwin, djgpp, openbsd, netbsd, dragonflybsd, solaris, openserver, unixware)
 clang 3.0+ (linux, macos, freebsd, win32, openbsd, netbsd, dragonflybsd)
 msvc 2.0+ (win32)
 icc 8.1+ (win32, linux)
@@ -304,7 +304,7 @@ dmc 8.57 (win32)
 
 若使用FASTMODE=0预处理（dos16目标下默认FASTMODE=0），不启用std::map cache，查表法采取分表形式（单表小于64KiB，总内存需求384KiB），可支持dos16目标（需要compact或large内存模型），由于速度很慢，因此限制搜索深度上限为3，额外支持：
 ```
-gcc 2.2.2/2.3.3/2.4.5/2.5.8 (linux)
+gcc 2.1/2.2.2/2.3.3/2.4.5/2.5.8 (linux)
 msvc 2.x (win32)
 visualage c++ 3.5 (win32)
 openwatcom c++ 1.9 (dos16)
@@ -375,7 +375,7 @@ g++ -DOPENMP_THREAD -O2 -fopenmp cpp/2048-ai.cpp -o 2048
 
 已测试编译器和平台：
 ```
-gcc 2.2.2+ (linux, freebsd, macos, mingw, mingw-w64, cygwin, djgpp, openbsd, netbsd, dragonflybsd, solaris, openserver, unixware)
+gcc 2.1+ (linux, freebsd, macos, mingw, mingw-w64, cygwin, djgpp, openbsd, netbsd, dragonflybsd, solaris, openserver, unixware)
 clang 3.0+ (linux, macos, freebsd, win32, openbsd, netbsd, dragonflybsd)
 msvc 2.0+ (win32)
 icc 8.1+ (win32, linux)
