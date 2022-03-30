@@ -326,7 +326,7 @@ g++-2.6.3 -I/usr/lib/gcc-lib/i686-legacy-linux-gnu/2.6.3/include/g++/stl -O2 cpp
 
 本实现支持多线程，由预处理MULTI_THREAD控制，多线程版本依赖操作系统原生线程（cpp/thread_pool.cpp），仅支持Win32和Posix两种线程模型，已测试编译器和平台：
 ```
-gcc 2.7.2+ (linux, freebsd, macos, mingw, mingw-w64, cygwin, openbsd, netbsd, dragonflybsd, solaris)
+gcc 2.6.3+ (linux, freebsd, macos, mingw, mingw-w64, cygwin, openbsd, netbsd, dragonflybsd, solaris)
 clang 3.0+ (linux, macos, freebsd, win32, openbsd, netbsd, dragonflybsd)
 msvc 4.2+ (win32)
 icc 8.1+ (win32, linux)
@@ -340,12 +340,17 @@ borland c++ 5.5 (win32)
 
 gcc编译示例：
 ```
-g++ -DMULTI_THREAD -O2 cpp/2048-ai.cpp cpp/thread_pool.cpp -pthread -o 2048
+g++ -DMULTI_THREAD -O2 cpp/2048-ai.cpp -pthread -o 2048
 ```
 
-* gcc 2.7.2需要使用[经过修改的STLPort-3.12.3](https://github.com/jackyjkchen/legacy-gcc/blob/master/dev-libs/stlport/files/3.12.3/00_stlport-3.12.3.patch)，在legacy-gcc中已提供，否则libg++-2.7.x的STL在多线程场景下会coredump，编译示例：
+* gcc 2.7.2需要使用STLPort-3.12.3，在legacy-gcc中已提供，否则libg++-2.7.x的STL在多线程场景下会coredump，编译示例：
 ```
-g++-2.7.2 -DMULTI_THREAD -O2 -I/usr/lib/gcc-lib/i686-legacy-linux-gnu/2.7.2/include/stlport/ cpp/2048-ai.cpp cpp/thread_pool.cpp -pthread -o 2048
+g++-2.7.2 -DMULTI_THREAD -O2 -I/usr/lib/gcc-lib/i686-legacy-linux-gnu/2.7.2/include/stlport/ cpp/2048-ai.cpp -pthread -o 2048
+```
+
+* gcc 2.6.3需要使用STLPort-2.033，在legacy-gcc中已提供，否则根本无法编译通过（使用libg++-2.6.x中的STL也无法编译通过），编译示例：
+```
+g++-2.6.3 -DMULTI_THREAD -O2 -I/usr/lib/gcc-lib/i686-legacy-linux-gnu/2.6.3/include/stlport/ cpp/2048-ai.cpp -lstdc++ -lm -pthread -o 2048
 ```
 
 * msvc 4.2的STL allocator线程不安全，有概率启动时crash。

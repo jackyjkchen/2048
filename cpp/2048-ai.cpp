@@ -59,7 +59,7 @@ enum {
 #error "MULTI_THREAD and OPENMP_THREAD cannot be defined at the same time."
 #endif
 #if defined(MULTI_THREAD)
-#include "thread_pool.h"
+#include "thread_pool.cpp"
 #elif defined(OPENMP_THREAD)
 #include <omp.h>
 #endif
