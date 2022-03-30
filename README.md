@@ -317,10 +317,16 @@ watcom c++ 11.0 (dos16)
 
 * dmc不能使用优化，其64位整数运算优化有bug，产生错误代码。
 
-* libg++-2.6.x中的STL非常原始，问题很多，默认是不会安装stl头文件的，legacy-gcc的libg++-2.6.2[调整](https://github.com/jackyjkchen/legacy-gcc/commit/354b366f60bb37359adbcb7307ab70039b5a3829#diff-ef832efd837dd21850a4ae1c9b95e0e353ce653288d1de797d24a5178f130031)后会安装，但不在默认搜索路径。编译示例：
+* gcc-2.6.3使用的libg++-2.6.x中的STL非常原始，问题很多，默认是不会安装stl头文件的，legacy-gcc的libg++-2.6.2[调整](https://github.com/jackyjkchen/legacy-gcc/commit/354b366f60bb37359adbcb7307ab70039b5a3829#diff-ef832efd837dd21850a4ae1c9b95e0e353ce653288d1de797d24a5178f130031)后会安装，但不在默认搜索路径。编译示例：
 ```
-g++-2.6.3 -I/usr/lib/gcc-lib/i686-legacy-linux-gnu/2.6.3/include/g++/stl -O2 cpp/2048-ai.cpp -lstdc++ -lm -o 2048
+g++-2.6.3 -O2 -I/usr/lib/gcc-lib/i686-legacy-linux-gnu/2.6.3/include/g++/stl  cpp/2048-ai.cpp -lstdc++ -lm -o 2048
 ```
+
+* gcc-2.6.3也可以使用STLPort-2.033，在legacy-gcc中已提供，编译示例：
+```
+g++-2.6.3 -O2 -I/usr/lib/gcc-lib/i686-legacy-linux-gnu/2.6.3/include/stlport/ cpp/2048-ai.cpp -lm -o 2048
+```
+
 
 ### 多线程
 
@@ -350,7 +356,7 @@ g++-2.7.2 -DMULTI_THREAD -O2 -I/usr/lib/gcc-lib/i686-legacy-linux-gnu/2.7.2/incl
 
 * gcc 2.6.3需要使用STLPort-2.033，在legacy-gcc中已提供，否则根本无法编译通过（使用libg++-2.6.x中的STL也无法编译通过），编译示例：
 ```
-g++-2.6.3 -DMULTI_THREAD -O2 -I/usr/lib/gcc-lib/i686-legacy-linux-gnu/2.6.3/include/stlport/ cpp/2048-ai.cpp -lstdc++ -lm -pthread -o 2048
+g++-2.6.3 -DMULTI_THREAD -O2 -I/usr/lib/gcc-lib/i686-legacy-linux-gnu/2.6.3/include/stlport/ cpp/2048-ai.cpp -lm -pthread -o 2048
 ```
 
 * msvc 4.2的STL allocator线程不安全，有概率启动时crash。
