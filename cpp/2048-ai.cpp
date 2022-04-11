@@ -662,9 +662,9 @@ score_heur_t Game2048::score_tilechoose_node(eval_state &state, board_t board, s
 #endif
         if (i != state.trans_table.end()) {
 #ifdef MAP_HAVE_SECOND
-            trans_table_entry_t entry = i->second;
+            trans_table_entry_t &entry = i->second;
 #else
-            trans_table_entry_t entry = state.trans_table[board];
+            trans_table_entry_t &entry = state.trans_table[board];
 #endif
 
             if (entry.depth <= state.curdepth) {
