@@ -13,7 +13,7 @@
 #endif
 
 #if defined(WINVER) && WINVER < 0x0600
-ConditionVariableLegacy::ConditionVariableLegacy() : m_semphore(NULL), m_wait_num(0) {
+ConditionVariableLegacy::ConditionVariableLegacy():m_semphore(NULL), m_wait_num(0) {
     m_semphore = CreateSemaphore(NULL, 0, INT_MAX, NULL);
     if (!m_semphore) {
         fprintf(stderr, "CreateSemaphore failed.");
@@ -26,14 +26,16 @@ ConditionVariableLegacy::~ConditionVariableLegacy() {
     CloseHandle(m_semphore);
 }
 
-bool ConditionVariableLegacy::wait(ThreadLock &lock, int timeout_ms/* = -1*/) {
+bool ConditionVariableLegacy::wait(ThreadLock &lock, int timeout_ms /* = -1 */ ) {
     DWORD timeout = INFINITE;
+
     if (timeout_ms >= 0) {
         timeout = (DWORD)timeout_ms;
     }
     m_wait_num++;
     lock.unlock();
     DWORD ret = WaitForSingleObject(m_semphore, timeout);
+
     lock.lock();
     m_wait_num--;
     return (ret == WAIT_OBJECT_0) ? true : false;
@@ -89,10 +91,11 @@ void ThreadLock::unlock() {
 #endif
 }
 
-bool ThreadLock::wait(int timeout_ms/* = -1*/) {
+bool ThreadLock::wait(int timeout_ms /* = -1 */ ) {
 #ifdef _WIN32
 #if defined(WINVER) && WINVER >= 0x0600
     DWORD timeout = INFINITE;
+
     if (timeout_ms >= 0) {
         timeout = (DWORD)timeout_ms;
     }
@@ -102,10 +105,12 @@ bool ThreadLock::wait(int timeout_ms/* = -1*/) {
 #endif
 #else
     int ret = 0;
+
     if (timeout_ms >= 0) {
         timeval now = { 0, 0 };
         gettimeofday(&now, NULL);
-        const timespec timeout = {now.tv_sec + timeout_ms / 1000, now.tv_usec * 1000 + (timeout_ms % 1000) * 1000 * 1000};
+        const timespec timeout =
+            { now.tv_sec + timeout_ms / 1000, now.tv_usec * 1000 + (timeout_ms % 1000) * 1000 * 1000 };
         ret = pthread_cond_timedwait(&m_cond, &m_mutex, &timeout);
     } else {
         ret = pthread_cond_wait(&m_cond, &m_mutex);
@@ -157,25 +162,27 @@ static DWORD _count_set_bits(ULONG_PTR bitMask) {
 
 THRD_INST ThreadPool::_threadstart(void *param) {
     ThrdContext *context = (ThrdContext *)param;
+
     context->func(context->param);
     return 0;
 }
 
 int ThreadPool::get_cpu_num() {
     int cpu_num = 0;
+
 #ifdef _WIN32
 #if defined(WINVER) && WINVER >= 0x0501
     DWORD length = 0;
     PSYSTEM_LOGICAL_PROCESSOR_INFORMATION buf = NULL, ptr = NULL;
     BOOL ret = FALSE;
+
     while ((ret = GetLogicalProcessorInformation(buf, &length)) == FALSE) {
         if (GetLastError() == ERROR_INSUFFICIENT_BUFFER) {
             buf = (PSYSTEM_LOGICAL_PROCESSOR_INFORMATION)malloc(length);
             if (!buf) {
                 return -1;
             }
-        }
-        else {
+        } else {
             free(buf);
             return -1;
         }
@@ -190,6 +197,7 @@ int ThreadPool::get_cpu_num() {
     free(buf);
 #else
     SYSTEM_INFO sysinfo;
+
     GetSystemInfo(&sysinfo);
     cpu_num = sysinfo.dwNumberOfProcessors;
 #endif
@@ -198,12 +206,13 @@ int ThreadPool::get_cpu_num() {
 #elif defined(_SC_NPROCESSORS_ONLN)
     cpu_num = (int)sysconf(_SC_NPROCESSORS_ONLN);
 #else
-#error "Unsupported system, cannot get cpu count."
+#warn "Cannot get cpu count, use cpu_num=1."
+    cpu_num = 1;
 #endif
     return cpu_num;
 }
 
-ThreadPool::ThreadPool(int max_thrd_num/* = 0*/) : m_pool_signaled(false), m_stop(true), m_thrd_num(max_thrd_num), m_active_thrd_num(0), m_thread_handle(NULL) {
+ThreadPool::ThreadPool(int max_thrd_num /* = 0 */ ):m_pool_signaled(false), m_stop(true), m_thrd_num(max_thrd_num), m_active_thrd_num(0), m_thread_handle(NULL) {
     m_thrd_context.func = ThreadPool::thread_instance;
     m_thrd_context.param = this;
 }
@@ -215,6 +224,7 @@ ThreadPool::~ThreadPool() {
 
 bool ThreadPool::init() {
     bool ret = false, clear_thrd = false;
+
     do {
         LockScope(this->m_ctrl_lock);
         if (m_thrd_num == 0) {
@@ -236,9 +246,10 @@ bool ThreadPool::init() {
         }
         m_stop = false;
         m_pool_lock.unlock();
-        for (int i= 0; i<m_thrd_num; ++i) {
+        for (int i = 0; i < m_thrd_num; ++i) {
 #ifdef _WIN32
             m_thread_handle[i] = (HANDLE)_beginthreadex(NULL, 0, ThreadPool::_threadstart, &m_thrd_context, 0, NULL);
+
             if (!m_thread_handle[i]) {
 #else
             if (pthread_create(&m_thread_handle[i], NULL, ThreadPool::_threadstart, &m_thrd_context) != 0) {
@@ -258,6 +269,7 @@ bool ThreadPool::init() {
 void ThreadPool::add_task(thrd_callback func, void *param) {
     LockScope(this->m_ctrl_lock);
     ThrdContext context;
+
     context.func = func;
     context.param = param;
     m_pool_lock.lock();
@@ -306,6 +318,7 @@ void ThreadPool::wait_all_thrd() {
 
 void ThreadPool::thread_instance(void *param) {
     ThreadPool *pthis = (ThreadPool *)param;
+
     while (true) {
         pthis->m_pool_lock.lock();
         if (pthis->m_queue.empty()) {
@@ -324,6 +337,7 @@ void ThreadPool::thread_instance(void *param) {
             continue;
         }
         ThrdContext context = pthis->m_queue.front();
+
         pthis->m_queue.pop_front();
         pthis->m_active_thrd_num++;
         pthis->m_pool_lock.unlock();
@@ -333,4 +347,3 @@ void ThreadPool::thread_instance(void *param) {
         pthis->m_pool_lock.unlock();
     }
 }
-
