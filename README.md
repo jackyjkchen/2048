@@ -18,7 +18,7 @@ AI实现需要关联容器、字典或哈希表做cache以提升性能，考验�
 
 对于标准库中缺乏关联容器、字典或哈希表的编译型语言（如C、Fortran），限定搜索深度上限为5，此时100%能算到4096，通常能算到8192-16384，小概率算到32768。
 
-对于标准库拥有关联容器、字典或哈希表的语言的编译型语言（如C++、C#、Go、Java、VB.net、Pascal），不限定算法搜索深度（实际上限为12），此时100%能算到8192，16384概率超过90%，32768概率超过30%。
+对于标准库拥有关联容器、字典或哈希表的编译型语言（如C++、C#、Go、Java、VB.net、Pascal），不限定算法搜索深度（实际上限为12），此时100%能算到8192，16384概率超过90%，32768概率超过30%。
 
 
 # C
@@ -55,7 +55,7 @@ openwatcom c++ 1.9 (dos16)
 watcom c++ 11.0 (dos16)
 ```
 
-* gcc 3.1以下版本需要大量补丁用于支持现代化系统和修复一些bug，[参见legacy-gcc](https://github.com/jackyjkchen/legacy-gcc)。低版本gcc均在legacy-gcc场景测试，复用系统高版本的glibc，因此在一些老系统上可能行为会有所差异（比如使用gcc 2.x + libc5）。
+* gcc 3.1以下版本需要大量补丁用于支持现代化系统和修复一些bug，[参见legacy-gcc](https://github.com/jackyjkchen/legacy-gcc)。低版本gcc均在legacy-gcc场景测试。
 
 * msvc 2.x都不能使用优化，否则编译器直接crash，包括最新的2.2。其他版本msvc测试的都是补丁打满的版本。
 
@@ -281,7 +281,7 @@ symantec c++ 7.5 (dos16)
 ```
 
 
-## cpp/2048-ai.cpp + cpp/thread_pool.cpp + cpp/thread_pool.h
+## cpp/2048-ai.cpp
 
 AI版本，ISO C++98实现，可选支持多线程（预处理MULTI_THREAD或OPENMP_THREAD），默认启用查表法和std::map cache。
 
