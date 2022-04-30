@@ -8,7 +8,7 @@
 #endif
 #endif
 
-#if defined(_M_I86)
+#if defined(_M_I86) || (defined(MSDOS) && (defined(__BORLANDC__) || defined (__TURBOC__)))
 #define __16BIT__ 1
 #endif
 
