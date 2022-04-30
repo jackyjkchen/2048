@@ -117,6 +117,8 @@ public:
 
     void play_game();
 
+    int find_best_move(board_t board);
+
 private:
     board_t unpack_col(row_t row);
     row_t reverse_row(row_t row);
@@ -156,8 +158,6 @@ private:
     score_heur_t score_tilechoose_node(eval_state &state, board_t board, score_heur_t cprob);
     score_heur_t _score_toplevel_move(eval_state &state, board_t board, int move);
     score_heur_t score_toplevel_move(board_t board, int move);
-
-    int find_best_move(board_t board);
 
 #define TABLESIZE 8192
     score_heur_t* score_heur_table[8];

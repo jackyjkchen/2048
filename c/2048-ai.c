@@ -117,14 +117,14 @@ static void clear_screen(void) {
 #endif
 }
 
-const score_heur_t SCORE_LOST_PENALTY = 200000.0f;
-const score_heur_t SCORE_MONOTONICITY_POWER = 4.0f;
-const score_heur_t SCORE_MONOTONICITY_WEIGHT = 47.0f;
-const score_heur_t SCORE_SUM_POWER = 3.5f;
-const score_heur_t SCORE_SUM_WEIGHT = 11.0f;
-const score_heur_t SCORE_MERGES_WEIGHT = 700.0f;
-const score_heur_t SCORE_EMPTY_WEIGHT = 270.0f;
-const score_heur_t CPROB_THRESH_BASE = 0.0001f;
+static const score_heur_t SCORE_LOST_PENALTY = 200000.0f;
+static const score_heur_t SCORE_MONOTONICITY_POWER = 4.0f;
+static const score_heur_t SCORE_MONOTONICITY_WEIGHT = 47.0f;
+static const score_heur_t SCORE_SUM_POWER = 3.5f;
+static const score_heur_t SCORE_SUM_WEIGHT = 11.0f;
+static const score_heur_t SCORE_MERGES_WEIGHT = 700.0f;
+static const score_heur_t SCORE_EMPTY_WEIGHT = 270.0f;
+static const score_heur_t CPROB_THRESH_BASE = 0.0001f;
 
 typedef struct {
     int maxdepth;
@@ -138,14 +138,14 @@ typedef struct {
 
 #if FASTMODE != 0
 #define TABLESIZE 65536
-row_t *row_left_table;
-row_t *row_right_table;
-score_t *score_table;
-score_heur_t *score_heur_table;
+static row_t *row_left_table;
+static row_t *row_right_table;
+static score_t *score_table;
+static score_heur_t *score_heur_table;
 #else
 #define TABLESIZE 8192
-row_t *row_table[8];
-score_heur_t *score_heur_table[8];
+static row_t *row_table[8];
+static score_heur_t *score_heur_table[8];
 #endif
 
 static unsigned int unif_random(unsigned int n) {

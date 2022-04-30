@@ -45,8 +45,8 @@ typedef float score_heur_t;
 #include <conio.h>
 #endif
 
-static const board_t ROW_MASK = W64LIT(0xFFFF);
-static const board_t COL_MASK = W64LIT(0x000F000F000F000F);
+const board_t ROW_MASK = W64LIT(0xFFFF);
+const board_t COL_MASK = W64LIT(0x000F000F000F000F);
 
 enum {
     UP = 0,
@@ -185,6 +185,8 @@ public:
 
     void play_game();
 
+    int find_best_move(board_t board);
+
 private:
     inline board_t unpack_col(row_t row) {
         board_t tmp = row;
@@ -243,7 +245,6 @@ private:
     static void thrd_worker(void *param);
     static ThreadPool &get_thrd_pool();
 #endif
-    int find_best_move(board_t board);
 
 #if FASTMODE != 0
 #define TABLESIZE 65536

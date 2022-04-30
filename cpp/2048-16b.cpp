@@ -144,6 +144,8 @@ class Game2048 {
 public:
     void play_game();
 
+    int ask_for_move(board_t board);
+
 private:
     board_t unpack_col(row_t row);
     row_t reverse_row(row_t row);
@@ -160,8 +162,6 @@ private:
     row_t draw_tile();
     board_t insert_tile_rand(board_t board, row_t tile);
     board_t initial_board();
-
-    int ask_for_move(board_t board);
 };
 
 unsigned int Game2048::unif_random(unsigned int n) {

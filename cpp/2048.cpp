@@ -54,8 +54,8 @@ typedef unsigned long long board_t;
 #define GETCH_USE 1
 #endif
 
-static const board_t ROW_MASK = W64LIT(0xFFFF);
-static const board_t COL_MASK = W64LIT(0x000F000F000F000F);
+const board_t ROW_MASK = W64LIT(0xFFFF);
+const board_t COL_MASK = W64LIT(0x000F000F000F000F);
 
 enum {
     UP = 0,
@@ -162,6 +162,8 @@ public:
 
     void play_game();
 
+    int ask_for_move(board_t board);
+
 private:
     inline board_t unpack_col(row_t row) {
         board_t tmp = row;
@@ -191,8 +193,6 @@ private:
     row_t draw_tile();
     board_t insert_tile_rand(board_t board, board_t tile);
     board_t initial_board();
-
-    int ask_for_move(board_t board);
 
 #if FASTMODE != 0
 #define TABLESIZE 65536
