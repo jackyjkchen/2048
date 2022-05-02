@@ -8,16 +8,8 @@
 #endif
 #endif
 
-#if defined(_M_I86) || (defined(MSDOS) && (defined(__BORLANDC__) || defined (__TURBOC__)))
-#define __16BIT__ 1
-#endif
-
 typedef unsigned short row_t;
-#ifdef __16BIT__
 typedef unsigned long score_t;
-#else
-typedef unsigned int score_t;
-#endif
 typedef struct {
     row_t r0;
     row_t r1;

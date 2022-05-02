@@ -8,7 +8,8 @@
 #endif
 #endif
 
-#if defined(_M_I86) || (defined(MSDOS) && (defined(__BORLANDC__) || defined (__TURBOC__)))
+#include <limits.h>
+#if UINT_MAX == 0xFFFFU
 #define __16BIT__ 1
 #endif
 
