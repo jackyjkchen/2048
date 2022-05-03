@@ -220,11 +220,9 @@ static int count_empty(board)
      board_t *board;
 {
     row_t sum = 0, x = 0, i = 0;
-    board_t tmp;
 
-    memcpy(&tmp, board, sizeof(board_t));
     for (i = 0; i < 4; i++) {
-        x = ((row_t *)&tmp)[i];
+        x = ((row_t *)board)[i];
         x |= (x >> 2) & 0x3333;
         x |= (x >> 1);
         x = ~x & 0x1111;

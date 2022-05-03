@@ -76,6 +76,10 @@ watcom c++ 11.0 (dos16)
 
 不使用64位整数的严格ISO C90实现，用于兼容一些老编译器，不使用查表法用以兼容16位DOS。
 
+除了64位整数外，为了兼容一些老编译器或者嵌入式系统，还有如下修改——
+* 不使用struct赋值、传参、返回等部分编译器或平台不一定支持的功能。
+* 悔棋步数从64限制为16，适配如6502等平台栈内存不足的问题。
+
 已测试编译器和平台：
 ```
 gcc 1.42+ (linux, freebsd, macos, mingw, mingw-w64, cygwin, djgpp, openbsd, netbsd, dragonflybsd, solaris, openserver, unixware)
@@ -102,6 +106,7 @@ turbo c++ 1.01/3.0 (dos16)
 turbo c 1.5/2.01 (dos16)
 symantec c++ 7.5 (dos16)
 power c 2.2.2 (dos16)
+cc65 2.19 (c64, apple2)
 ```
 
 * 因该版本不使用64位整数，msvc 2.x和dmc 8.57可以开启优化。
@@ -117,17 +122,12 @@ power c 2.2.2 (dos16)
 
 ## c/2048_kr.c
 
-在c/2048-16b.c基础上改用K&R格式，主要修改包括——
-
-* 函数参数转为K&R格式。
-* 不使用struct赋值、传参、返回等部分老旧编译器或平台不一定支持的功能。
-* 悔棋步数从64限制为16，适配如6502等古老平台栈内存不足的问题。
+在c/2048-16b.c基础上改用K&R格式。
 
 因为大部分现代编译器仍然支持K&R格式，能编译c/2048-16b.c的编译器应该也能编译c/2048_kr.c，因此只列出新增编译器支持：
 
 ```
 msc 3.0/4.0 (dos16)
-cc65 2.19 (c64, apple2)
 ```
 
 * msc 3.0产出的程序无法在Windows NT系统运行。只能用于DOS、Windows 3.x、Windows 9x、Windows Me。
