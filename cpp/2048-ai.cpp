@@ -86,7 +86,7 @@ typedef std::unordered_map<board_t, trans_table_entry_t> trans_table_t;
 #include <unordered_map>
 typedef std::tr1::unordered_map<board_t, trans_table_entry_t> trans_table_t;
 #define MAP_HAVE_SECOND 1
-#elif defined(__GNUC__) && (__GNUC__ >= 5 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 2))
+#elif defined(__GNUC__) && (__GNUC__ >= 5 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 3) || (__GNUC__ == 4 && __GNUC_MINOR__ == 2 && __GNUC_PATCHLEVEL__ >= 2))
 #include <tr1/unordered_map>
 typedef std::tr1::unordered_map<board_t, trans_table_entry_t> trans_table_t;
 #define MAP_HAVE_SECOND 1
