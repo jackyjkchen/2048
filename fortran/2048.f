@@ -1,445 +1,445 @@
-      program Game2048
+      PROGRAM GAME2048
 
-      call main()
-      stop
-      end
+      CALL MAIN()
+      STOP
+      END
 
-      subroutine init_num()
-        integer*8 :: ZF0F00F0F
-        integer*8 :: ZFF00FF00
-        integer*8 :: t8_1, t8_2
-        integer*8 :: ROW_MASK, COL_MASK
-        common /MASK_NUM/ ROW_MASK, COL_MASK
-        integer*2 :: Z000F, Z00F0, Z0F00
-        common /CONST_NUM/  Z000F, Z00F0, Z0F00
-        integer*8 :: ZF0F00F0FF0F00F0F, Z0000F0F00000F0F0,
+      SUBROUTINE INIT_NUM()
+        INTEGER*8 :: ZF0F00F0F
+        INTEGER*8 :: ZFF00FF00
+        INTEGER*8 :: T8_1, T8_2
+        INTEGER*8 :: ROW_MASK, COL_MASK
+        COMMON /MASK_NUM/ ROW_MASK, COL_MASK
+        INTEGER*2 :: Z000F, Z00F0, Z0F00
+        COMMON /CONST_NUM/  Z000F, Z00F0, Z0F00
+        INTEGER*8 :: ZF0F00F0FF0F00F0F, Z0000F0F00000F0F0,
      & Z0F0F00000F0F0000, ZFF00FF0000FF00FF
-        integer*8 :: Z00FF00FF00000000, Z00000000FF00FF00,
+        INTEGER*8 :: Z00FF00FF00000000, Z00000000FF00FF00,
      & Z3333333333333333, Z1111111111111111
-        common /LARGE_NUM1/ ZF0F00F0FF0F00F0F, Z0000F0F00000F0F0,
+        COMMON /LARGE_NUM1/ ZF0F00F0FF0F00F0F, Z0000F0F00000F0F0,
      & Z0F0F00000F0F0000, ZFF00FF0000FF00FF
-        common /LARGE_NUM2/ Z00FF00FF00000000, Z00000000FF00FF00,
+        COMMON /LARGE_NUM2/ Z00FF00FF00000000, Z00000000FF00FF00,
      & Z3333333333333333, Z1111111111111111
 
         ROW_MASK = 65535
-        t8_1 = 983055
-        COL_MASK = ior(ishft(t8_1, 32), t8_1)
+        T8_1 = 983055
+        COL_MASK = IOR(ISHFT(T8_1, 32), T8_1)
 
         Z000F = 15
         Z00F0 = 240
         Z0F00 = 3840
 
-        t8_1 = 61680
-        t8_2 = 3855
-        ZF0F00F0F = ior(ishft(t8_1, 16), t8_2)
-        t8_1 = 65280
-        ZFF00FF00 = ior(ishft(t8_1, 16), t8_1) 
+        T8_1 = 61680
+        T8_2 = 3855
+        ZF0F00F0F = IOR(ISHFT(T8_1, 16), T8_2)
+        T8_1 = 65280
+        ZFF00FF00 = IOR(ISHFT(T8_1, 16), T8_1) 
 
-        ZF0F00F0FF0F00F0F = ior(ishft(ZF0F00F0F, 32), ZF0F00F0F)
-        t8_1 = 61680
-        Z0000F0F00000F0F0 = ior(ishft(t8_1, 32), t8_1)
-        t8_1 = 252641280
-        Z0F0F00000F0F0000 = ior(ishft(t8_1, 32), t8_1)
-        t8_1 = 16711935
-        ZFF00FF0000FF00FF = ior(ishft(ZFF00FF00, 32), t8_1)
-        t8_1 = 16711935
-        Z00FF00FF00000000 = ishft(t8_1, 32)
+        ZF0F00F0FF0F00F0F = IOR(ISHFT(ZF0F00F0F, 32), ZF0F00F0F)
+        T8_1 = 61680
+        Z0000F0F00000F0F0 = IOR(ISHFT(T8_1, 32), T8_1)
+        T8_1 = 252641280
+        Z0F0F00000F0F0000 = IOR(ISHFT(T8_1, 32), T8_1)
+        T8_1 = 16711935
+        ZFF00FF0000FF00FF = IOR(ISHFT(ZFF00FF00, 32), T8_1)
+        T8_1 = 16711935
+        Z00FF00FF00000000 = ISHFT(T8_1, 32)
         Z00000000FF00FF00 = ZFF00FF00
-        t8_1 = 858993459
-        Z3333333333333333 = ior(ishft(t8_1, 32), t8_1)
-        t8_1 = 286331153
-        Z1111111111111111 = ior(ishft(t8_1, 32), t8_1)
-      end
+        T8_1 = 858993459
+        Z3333333333333333 = IOR(ISHFT(T8_1, 32), T8_1)
+        T8_1 = 286331153
+        Z1111111111111111 = IOR(ISHFT(T8_1, 32), T8_1)
+      END
 
-      integer*4 function unif_random(n)
-        integer*4 :: n
-        external c_rand
-        integer*4 :: c_rand
+      INTEGER*4 FUNCTION UNIF_RANDOM(N)
+        INTEGER*4 :: N
+        EXTERNAL c_rand
+        INTEGER*4 :: c_rand
 
-        unif_random = mod(c_rand(), n)
-      end
+        UNIF_RANDOM = MOD(c_rand(), N)
+      END
 
-      integer*8 function unpack_col(row)
-        integer*2 :: row
-        integer*8 :: t0, t1, t2, t3
-        integer*8 :: ROW_MASK, COL_MASK
-        common /MASK_NUM/ ROW_MASK, COL_MASK
+      INTEGER*8 FUNCTION UNPACK_COL(ROW)
+        INTEGER*2 :: ROW
+        INTEGER*8 :: T0, T1, T2, T3
+        INTEGER*8 :: ROW_MASK, COL_MASK
+        COMMON /MASK_NUM/ ROW_MASK, COL_MASK
 
-        t0 = row
-        t0 = iand(t0, ROW_MASK)
-        t1 = ishft(t0, 12)
-        t2 = ishft(t0, 24)
-        t3 = ishft(t0, 36)
+        T0 = ROW
+        T0 = IAND(T0, ROW_MASK)
+        T1 = ISHFT(T0, 12)
+        T2 = ISHFT(T0, 24)
+        T3 = ISHFT(T0, 36)
 
-        unpack_col = iand(ior(ior(ior(t0, t1), t2), t3), COL_MASK)
-      end
+        UNPACK_COL = IAND(IOR(IOR(IOR(T0, T1), T2), T3), COL_MASK)
+      END
 
-      integer*2 function reverse_row(row)
-        integer*2 :: row
-        integer*2 :: t0, t1, t2, t3
-        integer*2 :: Z000F, Z00F0, Z0F00
-        common /CONST_NUM/  Z000F, Z00F0, Z0F00
+      INTEGER*2 FUNCTION REVERSE_ROW(ROW)
+        INTEGER*2 :: ROW
+        INTEGER*2 :: T0, T1, T2, T3
+        INTEGER*2 :: Z000F, Z00F0, Z0F00
+        COMMON /CONST_NUM/  Z000F, Z00F0, Z0F00
 
-        t0 = ishft(row, -12)
-        t1 = iand(ishft(row, -4), Z00F0)
-        t2 = iand(ishft(row, 4), Z0F00)
-        t3 = ishft(row, 12)
+        T0 = ISHFT(ROW, -12)
+        T1 = IAND(ISHFT(ROW, -4), Z00F0)
+        T2 = IAND(ISHFT(ROW, 4), Z0F00)
+        T3 = ISHFT(ROW, 12)
 
-        reverse_row = ior(ior(ior(t0, t1), t2), t3)
-      end
+        REVERSE_ROW = IOR(IOR(IOR(T0, T1), T2), T3)
+      END
 
-      subroutine print_board(board)
-        integer*8 :: board
-        integer*8 :: board_, t_
-        integer*4 :: i, j, power_val
-        integer*2 :: Z000F, Z00F0, Z0F00
-        common /CONST_NUM/  Z000F, Z00F0, Z0F00
+      SUBROUTINE PRINT_BOARD(BOARD)
+        INTEGER*8 :: BOARD
+        INTEGER*8 :: BOARD_, T_
+        INTEGER*4 :: I, J, POWER_VAL
+        INTEGER*2 :: Z000F, Z00F0, Z0F00
+        COMMON /CONST_NUM/  Z000F, Z00F0, Z0F00
 
-        board_ = board
-        t_ = Z000F
-        write(*, *) '-----------------------------'
-        do i = 0, 3
-          do j = 0, 3
-            power_val = iand(board_, t_)
-            if (power_val == 0) then
-              write(*, '(a, "      ", $)') '|'
-            else
-              write(*, '(a, i6, $)')
-     & '|', ishft(1, power_val)
-            end if
-            board_ = ishft(board_, -4)
-          end do
-          write(*, '(a)') '|'
-        end do
-        write(*, *) '-----------------------------'
-      end
+        BOARD_ = BOARD
+        T_ = Z000F
+        WRITE(*, *) '-----------------------------'
+        DO I = 0, 3
+          DO J = 0, 3
+            POWER_VAL = IAND(BOARD_, T_)
+            IF (POWER_VAL == 0) THEN
+              WRITE(*, '(A, "      ", $)') '|'
+            ELSE
+              WRITE(*, '(A, I6, $)')
+     & '|', ISHFT(1, POWER_VAL)
+            END IF
+            BOARD_ = ISHFT(BOARD_, -4)
+          END DO
+          WRITE(*, '(A)') '|'
+        END DO
+        WRITE(*, *) '-----------------------------'
+      END
 
-      integer*8 function transpose_board(x)
-        integer*8 :: x
-        integer*8 :: a1, a2, a3, a, b1, b2, b3
-        integer*8 :: ZF0F00F0FF0F00F0F, Z0000F0F00000F0F0,
+      INTEGER*8 FUNCTION TRANSPOSE_BOARD(X)
+        INTEGER*8 :: X
+        INTEGER*8 :: A1, A2, A3, A, B1, B2, B3
+        INTEGER*8 :: ZF0F00F0FF0F00F0F, Z0000F0F00000F0F0,
      & Z0F0F00000F0F0000, ZFF00FF0000FF00FF
-        integer*8 :: Z00FF00FF00000000, Z00000000FF00FF00,
+        INTEGER*8 :: Z00FF00FF00000000, Z00000000FF00FF00,
      & Z3333333333333333, Z1111111111111111
-        common /LARGE_NUM1/ ZF0F00F0FF0F00F0F, Z0000F0F00000F0F0,
+        COMMON /LARGE_NUM1/ ZF0F00F0FF0F00F0F, Z0000F0F00000F0F0,
      & Z0F0F00000F0F0000, ZFF00FF0000FF00FF
-        common /LARGE_NUM2/ Z00FF00FF00000000, Z00000000FF00FF00,
+        COMMON /LARGE_NUM2/ Z00FF00FF00000000, Z00000000FF00FF00,
      & Z3333333333333333, Z1111111111111111
 
-        a1 = iand(x, ZF0F00F0FF0F00F0F)
-        a2 = iand(x, Z0000F0F00000F0F0)
-        a3 = iand(x, Z0F0F00000F0F0000)
-        a = ior(ior(a1, ishft(a2, 12)), ishft(a3, -12))
-        b1 = iand(a, ZFF00FF0000FF00FF)
-        b2 = iand(a, Z00FF00FF00000000)
-        b3 = iand(a, Z00000000FF00FF00)
+        A1 = IAND(X, ZF0F00F0FF0F00F0F)
+        A2 = IAND(X, Z0000F0F00000F0F0)
+        A3 = IAND(X, Z0F0F00000F0F0000)
+        A = IOR(IOR(A1, ISHFT(A2, 12)), ISHFT(A3, -12))
+        B1 = IAND(A, ZFF00FF0000FF00FF)
+        B2 = IAND(A, Z00FF00FF00000000)
+        B3 = IAND(A, Z00000000FF00FF00)
 
-        transpose_board = ior(ior(b1, ishft(b2, -24)), ishft(b3, 24))
-      end function transpose_board
+        TRANSPOSE_BOARD = IOR(IOR(B1, ISHFT(B2, -24)), ISHFT(B3, 24))
+      END FUNCTION TRANSPOSE_BOARD
 
-      integer*4 function count_empty(x)
-        integer*8 :: x
-        integer*8 :: x_, t_
-        integer*2 :: Z000F, Z00F0, Z0F00
-        common /CONST_NUM/  Z000F, Z00F0, Z0F00
-        integer*8 :: Z00FF00FF00000000, Z00000000FF00FF00,
+      INTEGER*4 FUNCTION COUNT_EMPTY(X)
+        INTEGER*8 :: X
+        INTEGER*8 :: X_, T_
+        INTEGER*2 :: Z000F, Z00F0, Z0F00
+        COMMON /CONST_NUM/  Z000F, Z00F0, Z0F00
+        INTEGER*8 :: Z00FF00FF00000000, Z00000000FF00FF00,
      & Z3333333333333333, Z1111111111111111
-        common /LARGE_NUM2/ Z00FF00FF00000000, Z00000000FF00FF00,
+        COMMON /LARGE_NUM2/ Z00FF00FF00000000, Z00000000FF00FF00,
      & Z3333333333333333, Z1111111111111111
 
-        x_ = x
-        x_ = ior(x_, iand(ishft(x_, -2), Z3333333333333333))
-        x_ = ior(x_, ishft(x_, -1))
-        x_ = iand(not(x_), Z1111111111111111)
-        x_ = x_ + ishft(x_, -32)
-        x_ = x_ + ishft(x_, -16)
-        x_ = x_ + ishft(x_, -8)
-        x_ = x_ + ishft(x_, -4)
-        t_ = Z000F
-        count_empty = iand(x_, t_)
-      end
+        X_ = X
+        X_ = IOR(X_, IAND(ISHFT(X_, -2), Z3333333333333333))
+        X_ = IOR(X_, ISHFT(X_, -1))
+        X_ = IAND(NOT(X_), Z1111111111111111)
+        X_ = X_ + ISHFT(X_, -32)
+        X_ = X_ + ISHFT(X_, -16)
+        X_ = X_ + ISHFT(X_, -8)
+        X_ = X_ + ISHFT(X_, -4)
+        T_ = Z000F
+        COUNT_EMPTY = IAND(X_, T_)
+      END
 
-      integer*2 function execute_move_helper(row)
-        integer*2 :: row
-        integer*2 :: i, j, t0, t1, t2, t3
-        integer*2 :: row_line(0:3)
-        integer*2 :: Z000F, Z00F0, Z0F00
-        common /CONST_NUM/  Z000F, Z00F0, Z0F00
+      INTEGER*2 FUNCTION EXECUTE_MOVE_HELPER(ROW)
+        INTEGER*2 :: ROW
+        INTEGER*2 :: I, J, T0, T1, T2, T3
+        INTEGER*2 :: ROW_LINE(0:3)
+        INTEGER*2 :: Z000F, Z00F0, Z0F00
+        COMMON /CONST_NUM/  Z000F, Z00F0, Z0F00
 
-        row_line(0) = iand(row, Z000F)
-        row_line(1) = iand(ishft(row, -4), Z000F)
-        row_line(2) = iand(ishft(row, -8), Z000F)
-        row_line(3) = iand(ishft(row, -12), Z000F)
-        i = 0
-        do while (i < 3)
-          j = i + 1
-          do while (j < 4)
-            if (row_line(j) /= 0) then
-              exit
-            end if
-            j = j + 1
-          end do
-          if (j == 4) then
-            exit
-          end if
-          if (row_line(i) == 0) then
-            row_line(i) = row_line(j)
-            row_line(j) = 0
-            i = i - 1
-          else if (row_line(i) == row_line(j)) then
-            if (row_line(i) /= 15) then
-              row_line(i) = row_line(i) + 1
-            end if
-            row_line(j) = 0
-          end if
-          i = i + 1
-        end do
-        t0 = row_line(0)
-        t1 = ishft(row_line(1), 4)
-        t2 = ishft(row_line(2), 8)
-        t3 = ishft(row_line(3), 12)
-        execute_move_helper = ior(ior(ior(t0, t1), t2), t3)
-      end
+        ROW_LINE(0) = IAND(ROW, Z000F)
+        ROW_LINE(1) = IAND(ISHFT(ROW, -4), Z000F)
+        ROW_LINE(2) = IAND(ISHFT(ROW, -8), Z000F)
+        ROW_LINE(3) = IAND(ISHFT(ROW, -12), Z000F)
+        I = 0
+        DO WHILE (I < 3)
+          J = I + 1
+          DO WHILE (J < 4)
+            IF (ROW_LINE(J) /= 0) THEN
+              EXIT
+            END IF
+            J = J + 1
+          END DO
+          IF (J == 4) THEN
+            EXIT
+          END IF
+          IF (ROW_LINE(I) == 0) THEN
+            ROW_LINE(I) = ROW_LINE(J)
+            ROW_LINE(J) = 0
+            I = I - 1
+          ELSE IF (ROW_LINE(I) == ROW_LINE(J)) THEN
+            IF (ROW_LINE(I) /= 15) THEN
+              ROW_LINE(I) = ROW_LINE(I) + 1
+            END IF
+            ROW_LINE(J) = 0
+          END IF
+          I = I + 1
+        END DO
+        T0 = ROW_LINE(0)
+        T1 = ISHFT(ROW_LINE(1), 4)
+        T2 = ISHFT(ROW_LINE(2), 8)
+        T3 = ISHFT(ROW_LINE(3), 12)
+        EXECUTE_MOVE_HELPER = IOR(IOR(IOR(T0, T1), T2), T3)
+      END
 
-      integer*8 function execute_move(board, move)
-        integer*8 :: board
-        integer*4 :: move
-        integer*8 :: ret, t
-        integer*2 :: row, rev_row, i
-        integer*8 :: transpose_board, unpack_col
-        integer*2 :: reverse_row, execute_move_helper
-        integer*8 :: ROW_MASK, COL_MASK
-        common /MASK_NUM/ ROW_MASK, COL_MASK
+      INTEGER*8 FUNCTION EXECUTE_MOVE(BOARD, MOVE)
+        INTEGER*8 :: BOARD
+        INTEGER*4 :: MOVE
+        INTEGER*8 :: RET, T
+        INTEGER*2 :: ROW, REV_ROW, I
+        INTEGER*8 :: TRANSPOSE_BOARD, UNPACK_COL
+        INTEGER*2 :: REVERSE_ROW, EXECUTE_MOVE_HELPER
+        INTEGER*8 :: ROW_MASK, COL_MASK
+        COMMON /MASK_NUM/ ROW_MASK, COL_MASK
 
-        ret = board
-        if ((move == 0) .or. (move == 1)) then
-            t = transpose_board(board)
-        else
-            t = board
-        end if
-        do i = 0, 3
-          row = iand(ishft(t, -ishft(i, 4)), ROW_MASK)
-          if (move == 0) then
-            ret = ieor(ret, ishft(unpack_col(ieor(row,
-     & execute_move_helper(row))), ishft(i, 2)))
-          else if (move == 1) then
-            rev_row = reverse_row(row)
-            ret = ieor(ret, ishft(unpack_col(ieor(row, reverse_row(
-     & execute_move_helper(rev_row)))), ishft(i, 2)))
-          else if (move == 2) then
-            ret = ieor(ret, ishft(iand(ieor(row,
-     & execute_move_helper(row)), ROW_MASK), ishft(i, 4)))
-          else if (move == 3) then
-            rev_row = reverse_row(row)
-            ret = ieor(ret, ishft(iand(ieor(row, reverse_row(
-     & execute_move_helper(rev_row))), ROW_MASK), ishft(i, 4)))
-          end if
-        end do
-        execute_move = ret
-      end
+        RET = BOARD
+        IF ((MOVE == 0) .OR. (MOVE == 1)) THEN
+            T = TRANSPOSE_BOARD(BOARD)
+        ELSE
+            T = BOARD
+        END IF
+        DO I = 0, 3
+          ROW = IAND(ISHFT(T, -ISHFT(I, 4)), ROW_MASK)
+          IF (MOVE == 0) THEN
+            RET = IEOR(RET, ISHFT(UNPACK_COL(IEOR(ROW,
+     & EXECUTE_MOVE_HELPER(ROW))), ISHFT(I, 2)))
+          ELSE IF (MOVE == 1) THEN
+            REV_ROW = REVERSE_ROW(ROW)
+            RET = IEOR(RET, ISHFT(UNPACK_COL(IEOR(ROW, REVERSE_ROW(
+     & EXECUTE_MOVE_HELPER(REV_ROW)))), ISHFT(I, 2)))
+          ELSE IF (MOVE == 2) THEN
+            RET = IEOR(RET, ISHFT(IAND(IEOR(ROW,
+     & EXECUTE_MOVE_HELPER(ROW)), ROW_MASK), ISHFT(I, 4)))
+          ELSE IF (MOVE == 3) THEN
+            REV_ROW = REVERSE_ROW(ROW)
+            RET = IEOR(RET, ISHFT(IAND(IEOR(ROW, REVERSE_ROW(
+     & EXECUTE_MOVE_HELPER(REV_ROW))), ROW_MASK), ISHFT(I, 4)))
+          END IF
+        END DO
+        EXECUTE_MOVE = RET
+      END
 
-      integer*4 function score_helper(board)
-        integer*8 :: board
-        integer*4 :: score, i, j, rank
-        integer*2 :: row
-        integer*2 :: Z000F, Z00F0, Z0F00
-        common /CONST_NUM/  Z000F, Z00F0, Z0F00
-        integer*8 :: ROW_MASK, COL_MASK
-        common /MASK_NUM/ ROW_MASK, COL_MASK
+      INTEGER*4 FUNCTION SCORE_HELPER(BOARD)
+        INTEGER*8 :: BOARD
+        INTEGER*4 :: SCORE, I, J, RANK
+        INTEGER*2 :: ROW
+        INTEGER*2 :: Z000F, Z00F0, Z0F00
+        COMMON /CONST_NUM/  Z000F, Z00F0, Z0F00
+        INTEGER*8 :: ROW_MASK, COL_MASK
+        COMMON /MASK_NUM/ ROW_MASK, COL_MASK
 
-        score = 0
-        do j = 0, 3
-          row = iand(ishft(board, -ishft(j, 4)), ROW_MASK)
-          do i = 0, 3
-            rank = iand(ishft(row, -ishft(i, 2)), Z000F)
-            if (rank >= 2) then
-              score = score + ((rank - 1) * ishft(1, rank))
-            end if
-          end do
-        end do
-        score_helper = score
-      end
+        SCORE = 0
+        DO J = 0, 3
+          ROW = IAND(ISHFT(BOARD, -ISHFT(J, 4)), ROW_MASK)
+          DO I = 0, 3
+            RANK = IAND(ISHFT(ROW, -ISHFT(I, 2)), Z000F)
+            IF (RANK >= 2) THEN
+              SCORE = SCORE + ((RANK - 1) * ISHFT(1, RANK))
+            END IF
+          END DO
+        END DO
+        SCORE_HELPER = SCORE
+      END
 
-      integer*4 function score_board(board)
-        integer*8 :: board
-        integer*4 :: score_helper
+      INTEGER*4 FUNCTION SCORE_BOARD(BOARD)
+        INTEGER*8 :: BOARD
+        INTEGER*4 :: SCORE_HELPER
 
-        score_board = score_helper(board)
-      end
+        SCORE_BOARD = SCORE_HELPER(BOARD)
+      END
 
-      integer*8 function draw_tile()
-        integer*4 :: ret
-        integer*4 :: unif_random
+      INTEGER*8 FUNCTION DRAW_TILE()
+        INTEGER*4 :: RET
+        INTEGER*4 :: UNIF_RANDOM
 
-        ret = unif_random(10)
-        if (ret < 9) then
-          ret = 1
-        else
-          ret = 2
-        end if
-        draw_tile = ret
-      end
+        RET = UNIF_RANDOM(10)
+        IF (RET < 9) THEN
+          RET = 1
+        ELSE
+          RET = 2
+        END IF
+        DRAW_TILE = RET
+      END
 
-      integer*8 function insert_tile_rand(board, tile)
-        integer*8 :: board
-        integer*8 :: tile
-        integer*8 :: tile_
-        integer*8 :: tmp, t_
-        integer*4 :: pos
-        integer*4 :: unif_random, count_empty
-        integer*2 :: Z000F, Z00F0, Z0F00
-        common /CONST_NUM/  Z000F, Z00F0, Z0F00
+      INTEGER*8 FUNCTION INSERT_TILE_RAND(BOARD, TILE)
+        INTEGER*8 :: BOARD
+        INTEGER*8 :: TILE
+        INTEGER*8 :: TILE_
+        INTEGER*8 :: TMP, T_
+        INTEGER*4 :: POS
+        INTEGER*4 :: UNIF_RANDOM, COUNT_EMPTY
+        INTEGER*2 :: Z000F, Z00F0, Z0F00
+        COMMON /CONST_NUM/  Z000F, Z00F0, Z0F00
 
-        tile_ = tile
-        pos = unif_random(count_empty(board))
-        tmp = board
-        t_ = Z000F
-        do while (1>0)
-          do while (iand(tmp, t_) /= 0)
-            tmp = ishft(tmp, -4)
-            tile_ = ishft(tile_, 4)
-          end do
-          if (pos == 0) then
-            exit
-          end if
-          pos = pos - 1
-          tmp = ishft(tmp, -4)
-          tile_ = ishft(tile_, 4)
-        end do
-        insert_tile_rand = ior(board, tile_)
-      end
+        TILE_ = TILE
+        POS = UNIF_RANDOM(COUNT_EMPTY(BOARD))
+        TMP = BOARD
+        T_ = Z000F
+        DO WHILE (1>0)
+          DO WHILE (IAND(TMP, T_) /= 0)
+            TMP = ISHFT(TMP, -4)
+            TILE_ = ISHFT(TILE_, 4)
+          END DO
+          IF (POS == 0) THEN
+            EXIT
+          END IF
+          POS = POS - 1
+          TMP = ISHFT(TMP, -4)
+          TILE_ = ISHFT(TILE_, 4)
+        END DO
+        INSERT_TILE_RAND = IOR(BOARD, TILE_)
+      END
 
-      integer*8 function initial_board()
-        integer*8 :: board
-        integer*4 :: rd
-        integer*8 :: tile
-        integer*4 :: unif_random
-        integer*8 :: draw_tile, insert_tile_rand
+      INTEGER*8 FUNCTION INITIAL_BOARD()
+        INTEGER*8 :: BOARD
+        INTEGER*4 :: RD
+        INTEGER*8 :: TILE
+        INTEGER*4 :: UNIF_RANDOM
+        INTEGER*8 :: DRAW_TILE, INSERT_TILE_RAND
 
-        rd = unif_random(16)
-        tile = draw_tile()
-        board = ishft(tile, ishft(rd, 2))
-        tile = draw_tile()
-        initial_board = insert_tile_rand(board, tile)
-      end
+        RD = UNIF_RANDOM(16)
+        TILE = DRAW_TILE()
+        BOARD = ISHFT(TILE, ISHFT(RD, 2))
+        TILE = DRAW_TILE()
+        INITIAL_BOARD = INSERT_TILE_RAND(BOARD, TILE)
+      END
 
-      integer*4 function ask_for_move(board)
-        integer*8 :: board
-        integer*4 :: ret
-        character :: movechar
-        integer :: pos
-        character(len=9) :: allmoves = 'wsadkjhl'
-        external c_getch
-        integer :: c_getch
+      INTEGER*4 FUNCTION ASK_FOR_MOVE(BOARD)
+        INTEGER*8 :: BOARD
+        INTEGER*4 :: RET
+        CHARACTER :: MOVECHAR
+        INTEGER :: POS
+        CHARACTER(LEN=9) :: ALLMOVES = 'wsadkjhl'
+        EXTERNAL c_getch
+        INTEGER :: c_getch
 
-        call print_board(board)
-        ret = -1
-        do while (1 > 0)
-          movechar = achar(c_getch())
-          if (movechar == 'q') then
-            ret = -1
-            exit
-          else if (movechar == 'r') then
-            ret = 5
-            exit
-          end if
-          pos = index(allmoves, movechar)
-          if (pos /= 0) then
-            ret = mod(pos - 1, 4)
-            exit
-          end if
-        end do
-        ask_for_move = ret
-      end
+        CALL PRINT_BOARD(BOARD)
+        RET = -1
+        DO WHILE (1 > 0)
+          MOVECHAR = ACHAR(c_getch())
+          IF (MOVECHAR == 'q') THEN
+            RET = -1
+            EXIT
+          ELSE IF (MOVECHAR == 'r') THEN
+            RET = 5
+            EXIT
+          END IF
+          POS = INDEX(ALLMOVES, MOVECHAR)
+          IF (POS /= 0) THEN
+            RET = MOD(POS - 1, 4)
+            EXIT
+          END IF
+        END DO
+        ASK_FOR_MOVE = RET
+      END
 
-      subroutine play_game()
-        integer*8 :: board, newboard, tile
-        integer*4 :: scorepenalty, current_score, last_score, moveno
-        integer*8 :: retract_vec(0:63)
-        integer*1 :: retract_penalty_vec(0:63)
-        integer*4 :: retract_pos, retract_num, move
-        external c_clear_screen, c_print_move_score, c_print_final_score
-        integer*8 :: initial_board, execute_move
-        integer*8 :: draw_tile, insert_tile_rand
-        integer*4 :: score_board, ask_for_move
+      SUBROUTINE PLAY_GAME()
+        INTEGER*8 :: BOARD, NEWBOARD, TILE
+        INTEGER*4 :: SCOREPENALTY, CURRENT_SCORE, LAST_SCORE, MOVENO
+        INTEGER*8 :: RETRACT_VEC(0:63)
+        INTEGER*1 :: RETRACT_PENALTY_VEC(0:63)
+        INTEGER*4 :: RETRACT_POS, RETRACT_NUM, MOVE
+        EXTERNAL c_clear_screen, c_print_move_score, c_print_final_score
+        INTEGER*8 :: INITIAL_BOARD, EXECUTE_MOVE
+        INTEGER*8 :: DRAW_TILE, INSERT_TILE_RAND
+        INTEGER*4 :: SCORE_BOARD, ASK_FOR_MOVE
 
-        board = initial_board()
-        scorepenalty = 0
-        current_score = 0
-        last_score = 0
-        moveno = 0
-        retract_pos = 0
-        retract_num = 0
+        BOARD = INITIAL_BOARD()
+        SCOREPENALTY = 0
+        CURRENT_SCORE = 0
+        LAST_SCORE = 0
+        MOVENO = 0
+        RETRACT_POS = 0
+        RETRACT_NUM = 0
 
-        do while (1 > 0)
-          call c_clear_screen()
-          move = 0
-          do while (move < 4)
-            if (execute_move(board, move) /= board) then
-              exit
-            end if
-            move = move + 1
-          end do
-          if (move == 4) then
-            exit
-          end if
+        DO WHILE (1 > 0)
+          CALL c_clear_screen()
+          MOVE = 0
+          DO WHILE (MOVE < 4)
+            IF (EXECUTE_MOVE(BOARD, MOVE) /= BOARD) THEN
+              EXIT
+            END IF
+            MOVE = MOVE + 1
+          END DO
+          IF (MOVE == 4) THEN
+            EXIT
+          END IF
 
-          current_score = score_board(board) - scorepenalty
-          moveno = moveno + 1
-          call c_print_move_score(moveno, current_score, last_score)
-          last_score = current_score
+          CURRENT_SCORE = SCORE_BOARD(BOARD) - SCOREPENALTY
+          MOVENO = MOVENO + 1
+          CALL c_print_move_score(MOVENO, CURRENT_SCORE, LAST_SCORE)
+          LAST_SCORE = CURRENT_SCORE
 
-          move = ask_for_move(board)
-          if (move < 0) then
-            exit
-          end if
+          MOVE = ASK_FOR_MOVE(BOARD)
+          IF (MOVE < 0) THEN
+            EXIT
+          END IF
 
-          if (move == 5) then
-            if ((moveno <= 1) .or. (retract_num <= 0)) then
-              moveno = moveno - 1
-              cycle
-            end if
-            moveno = moveno - 2
-            if ((retract_pos == 0) .and. (retract_num > 0)) then
-              retract_pos = 64
-            end if
-            retract_pos = retract_pos - 1
-            board = retract_vec(retract_pos)
-            scorepenalty = 
-     & scorepenalty - retract_penalty_vec(retract_pos)
-            retract_num = retract_num - 1
-            cycle
-          end if
+          IF (MOVE == 5) THEN
+            IF ((MOVENO <= 1) .OR. (RETRACT_NUM <= 0)) THEN
+              MOVENO = MOVENO - 1
+              CYCLE
+            END IF
+            MOVENO = MOVENO - 2
+            IF ((RETRACT_POS == 0) .AND. (RETRACT_NUM > 0)) THEN
+              RETRACT_POS = 64
+            END IF
+            RETRACT_POS = RETRACT_POS - 1
+            BOARD = RETRACT_VEC(RETRACT_POS)
+            SCOREPENALTY = 
+     & SCOREPENALTY - RETRACT_PENALTY_VEC(RETRACT_POS)
+            RETRACT_NUM = RETRACT_NUM - 1
+            CYCLE
+          END IF
 
-          newboard = execute_move(board, move)
-          if (newboard == board) then
-            moveno = moveno - 1
-            cycle
-          end if
+          NEWBOARD = EXECUTE_MOVE(BOARD, MOVE)
+          IF (NEWBOARD == BOARD) THEN
+            MOVENO = MOVENO - 1
+            CYCLE
+          END IF
 
-          tile = draw_tile()
-          if (tile == 2) then
-            scorepenalty = scorepenalty + 4
-            retract_penalty_vec(retract_pos) = 4
-          else
-            retract_penalty_vec(retract_pos) = 0
-          end if
-          retract_vec(retract_pos) = board
-          retract_pos = retract_pos + 1
-          if (retract_pos == 64) then
-            retract_pos = 0
-          end if
-          if (retract_num < 64) then
-            retract_num = retract_num + 1
-          end if
-          board = insert_tile_rand(newboard, tile)
-        end do
-        call print_board(board)
-        call c_print_final_score(current_score)
-      end
+          TILE = DRAW_TILE()
+          IF (TILE == 2) THEN
+            SCOREPENALTY = SCOREPENALTY + 4
+            RETRACT_PENALTY_VEC(RETRACT_POS) = 4
+          ELSE
+            RETRACT_PENALTY_VEC(RETRACT_POS) = 0
+          END IF
+          RETRACT_VEC(RETRACT_POS) = BOARD
+          RETRACT_POS = RETRACT_POS + 1
+          IF (RETRACT_POS == 64) THEN
+            RETRACT_POS = 0
+          END IF
+          IF (RETRACT_NUM < 64) THEN
+            RETRACT_NUM = RETRACT_NUM + 1
+          END IF
+          BOARD = INSERT_TILE_RAND(NEWBOARD, TILE)
+        END DO
+        CALL PRINT_BOARD(BOARD)
+        CALL c_print_final_score(CURRENT_SCORE)
+      END
 
-      subroutine main()
-        call init_num()
-        call play_game()
-      end
+      SUBROUTINE MAIN()
+        CALL INIT_NUM()
+        CALL PLAY_GAME()
+      END
 
