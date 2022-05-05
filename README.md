@@ -680,7 +680,7 @@ gcc-3.4.6 -O2 -c fortran/f77deps.c -o f77deps.o
 g77-3.4.6 -O2 fortran/2048.f f77deps.o -o 2048
 ```
 
-使用-std=gnu，也可使用gfortran编译器：
+使用-std=gnu，也可兼容gfortran编译器（gcc-11开始不再兼容）：
 ```
 gcc -std=c90 -O2 -c fortran/f90deps.c -o f90deps.o
 gfortran -std=gnu -O2 fortran/2048.f f90deps.o -o 2048
