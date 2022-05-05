@@ -453,7 +453,7 @@ mono 2048-old.exe
 
 # VB.net
 
-## vbdotnet/2048.vb
+## vb.net/2048.vb
 
 VB.net实现，查表法。需要.net framework 2.0+。
 
@@ -464,14 +464,14 @@ mono 1.2.3+ (linux, freebsd, macos)
 ```
 
 
-## vbdotnet/2048-ai.vb
+## vb.net/2048-ai.vb
 
 VB.net AI实现，查表法 + Dictionary + 多线程。需要.net framework 2.0+。
 
 编译器和平台支持同上。
 
 
-## vbdotnet/2048-old.vb
+## vb.net/2048-old.vb
 
 VB.net 1.0实现，查表法。兼容.net framework 1.0/1.1，仅支持Win32。
 
