@@ -43,7 +43,7 @@
 #include <stdlib.h>
 #include <time.h>
 
-DLLEXPORT unsigned int c_rand_() {
+DLLEXPORT unsigned int c_rand_(void) {
     static unsigned int seeded = 0;
 
     if (!seeded) {
@@ -82,7 +82,11 @@ DLLEXPORT void c_clear_screen_(void) {
         return;
     SetConsoleCursorPosition(hStdOut, homeCoords);
 #elif defined(UNIX_LIKE)
+#ifndef USE_SYSTEM_CLEAR
     printf("\033[2J\033[H");
+#else
+    system("clear");
+#endif
 #elif defined(__WATCOMC__)
     _clearscreen(_GCLEARSCREEN);
 #elif defined(__BORLANDC__) || defined (__TURBOC__) || defined(__DJGPP__)
