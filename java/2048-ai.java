@@ -293,11 +293,7 @@ class Game2048
             board >>>= 4;
         }
 
-        if (bitset <= 128) {
-            return 1;
-        } else if (bitset <= 512) {
-            return 2;
-        } else if (bitset <= 2048) {
+        if (bitset <= 2048) {
             return 3;
         } else if (bitset <= 2048 + 1024) {
             max_limit = 4;

@@ -441,27 +441,6 @@ static board_t initial_board(void) {
     return insert_tile_rand(board, draw_tile());
 }
 
-static int get_depth_limit(board_t board) {
-    row_t bitset = 0;
-    row_t row;
-    int i;
-
-    for (i = 0; i < 4; ++i) {
-        row = ((row_t *)&board)[3 - i];
-        while (row) {
-            bitset |= 1 << (row & 0xf);
-            row >>= 4;
-        }
-    }
-
-    if (bitset <= 128) {
-        return 1;
-    } else if (bitset <= 512) {
-        return 2;
-    }
-    return 3;
-}
-
 static board_t board_bitor(board_t i1, row_t i2, int i) {
     row_t *t = (row_t *)&i1;
 
@@ -542,7 +521,7 @@ static score_heur_t score_toplevel_move(board_t board, int move) {
     score_heur_t res = 0.0f;
 
     memset(&state, 0x00, sizeof(eval_state));
-    state.depth_limit = get_depth_limit(board);
+    state.depth_limit = 3;
     res = _score_toplevel_move(&state, board, move);
 
     printf

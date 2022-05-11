@@ -232,19 +232,6 @@ def initial_board():
     board = draw_tile() << (unif_random(16) << 2)
     return insert_tile_rand(board, draw_tile())
 
-def get_depth_limit(board):
-    bitset = 0
-
-    while board != 0:
-        bitset |= 1 << (board & 0xf)
-        board >>= 4
-
-    if bitset <= 128:
-        return 1
-    elif bitset <= 512:
-        return 2
-    return 3
-
 def score_tilechoose_node(state, board, cprob):
     if (cprob < CPROB_THRESH_BASE) or (state.curdepth >= state.depth_limit):
         state.maxdepth = max(state.curdepth, state.maxdepth)
@@ -300,7 +287,7 @@ def _score_toplevel_move(state, board, move):
 def score_toplevel_move(board, move):
     res = 0.0
     state = eval_state()
-    state.depth_limit = get_depth_limit(board)
+    state.depth_limit = 3
     res = _score_toplevel_move(state, board, move)
     sys.stdout.write("Move %d: result %f: eval'd %d moves (%d no moves, %d table hits, %d cache hits, %d cache size) (maxdepth=%d)%s" % (move, res,
            state.moves_evaled, state.nomoves, state.tablehits, state.cachehits, len(state.trans_table), state.maxdepth, os.linesep))

@@ -601,11 +601,7 @@ int Game2048::get_depth_limit(board_t board) {
         board >>= 4;
     }
 
-    if (bitset <= 128) {
-        return 1;
-    } else if (bitset <= 512) {
-        return 2;
-    } else if (bitset <= 2048) {
+    if (bitset <= 2048) {
         return 3;
     } else if (bitset <= 2048 + 1024) {
         max_limit = 4;
@@ -633,18 +629,6 @@ int Game2048::get_depth_limit(board_t board) {
 }
 #else
 int Game2048::get_depth_limit(board_t board) {
-    row_t bitset = 0;
-
-    while (board) {
-        bitset |= 1 << (board & 0xf);
-        board >>= 4;
-    }
-
-    if (bitset <= 128) {
-        return 1;
-    } else if (bitset <= 512) {
-        return 2;
-    }
     return 3;
 }
 #endif

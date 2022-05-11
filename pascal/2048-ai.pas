@@ -337,11 +337,7 @@ begin
         board := board shr 4;
     end;
 
-    if bitset <= 128 then
-        exit(1)
-    else if bitset <= 512 then
-        exit(2)
-    else if bitset <= 2048 then
+    if bitset <= 2048 then
         exit(3)
     else if bitset <= 2048 + 1024 then
         max_limit := 4

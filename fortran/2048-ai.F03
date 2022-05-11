@@ -385,13 +385,7 @@ function get_depth_limit(board)
         board = ishft(board, -4)
     end do
 
-    if (bitset <= 128) then
-        get_depth_limit = 1
-        return
-    else if (bitset <= 512) then
-        get_depth_limit = 2
-        return
-    else if (bitset <= 2048) then
+    if (bitset <= 2048) then
         get_depth_limit = 3
         return
     else if (bitset <= 2048 + 1024) then

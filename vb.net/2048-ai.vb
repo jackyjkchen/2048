@@ -285,11 +285,7 @@ Public Module Game2048
             board >>= 4
         End While
 
-        If bitset <= 128 Then
-            Return 1
-        Else If bitset <= 512 Then
-            Return 2
-        Else If bitset <= 2048 Then
+        If bitset <= 2048 Then
             Return 3
         Else If bitset <= 2048 + 1024 Then
             max_limit = 4
