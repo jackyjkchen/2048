@@ -1,5 +1,7 @@
 #if defined(__linux__) || defined(linux) || defined(__unix__) || defined(unix) || defined(__CYGWIN__) || defined(__MACH__)
+#ifndef __DJGPP__
 #define UNIX_LIKE 1
+#endif
 #endif
 
 #if defined(__MSDOS__) || defined(_MSDOS) || defined(__DOS__)
