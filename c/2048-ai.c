@@ -206,7 +206,7 @@ static board_t transpose(board_t x) {
 
 static int count_empty(board_t x) {
     x |= (x >> 2) & W64LIT(0x3333333333333333);
-    x |= (x >> 1);
+    x |= x >> 1;
     x = ~x & W64LIT(0x1111111111111111);
     x += x >> 32;
     x += x >> 16;
