@@ -643,11 +643,10 @@ score_heur_t Game2048::score_tilechoose_node(eval_state &state, board_t board, s
     }
 #if FASTMODE != 0
     if (state.curdepth < CACHE_DEPTH_LIMIT) {
-#if defined(__WATCOMC__)
-        trans_table_t::iterator &i = state.trans_table.find(board);
-#else
-        const trans_table_t::iterator &i = state.trans_table.find(board);
+#if !defined(__WATCOMC__)
+        const
 #endif
+        trans_table_t::iterator &i = state.trans_table.find(board);
         if (i != state.trans_table.end()) {
 #ifdef MAP_HAVE_SECOND
             trans_table_entry_t &entry = i->second;
