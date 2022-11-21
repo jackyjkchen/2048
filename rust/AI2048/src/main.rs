@@ -3,6 +3,7 @@ extern crate clearscreen;
 extern crate getch;
 extern crate rand;
 use rand::Rng;
+use std::collections::HashMap;
 
 type BoardT = u64;
 type RowT = u16;
@@ -19,16 +20,61 @@ const RETRACT: i32 = 4;
 
 const TABLESIZE: usize = 65536;
 
-struct Game2048 {
-    row_table: [RowT; TABLESIZE],
-    score_table: [ScoreT; TABLESIZE],
+type ScoreHeurT = f64;
+
+const SCORE_LOST_PENALTY: ScoreHeurT = 200000.0;
+const SCORE_MONOTONICITY_POWER: ScoreHeurT = 4.0;
+const SCORE_MONOTONICITY_WEIGHT: ScoreHeurT = 47.0;
+const SCORE_SUM_POWER: ScoreHeurT = 3.5;
+const SCORE_SUM_WEIGHT: ScoreHeurT = 11.0;
+const SCORE_MERGES_WEIGHT: ScoreHeurT = 700.0;
+const SCORE_EMPTY_WEIGHT: ScoreHeurT = 270.0;
+const CPROB_THRESH_BASE: ScoreHeurT = 0.0001;
+const CACHE_DEPTH_LIMIT: RowT = 15;
+
+struct TransTableEntryT {
+    depth: u32,
+    heuristic: ScoreHeurT,
 }
 
-impl Game2048 {
-    pub fn new() -> Game2048 {
-        Game2048 {
+struct EvalState {
+    trans_table: HashMap<BoardT, TransTableEntryT>,
+    maxdepth: u32,
+    curdepth: u32,
+    nomoves: u32,
+    tablehits: u32,
+    cachehits: u32,
+    moves_evaled: u32,
+    depth_limit: u32,
+}
+
+impl EvalState {
+    pub fn new() -> EvalState {
+        EvalState {
+            trans_table: HashMap::new(),
+            maxdepth: 0,
+            curdepth: 0,
+            nomoves: 0,
+            tablehits: 0,
+            cachehits: 0,
+            moves_evaled: 0,
+            depth_limit: 0,
+        }
+    }
+}
+
+struct AI2048 {
+    row_table: [RowT; TABLESIZE],
+    score_table: [ScoreT; TABLESIZE],
+    eval_state: EvalState,
+}
+
+impl AI2048 {
+    pub fn new() -> AI2048 {
+        AI2048 {
             row_table: [0; TABLESIZE],
             score_table: [0; TABLESIZE],
+            eval_state: EvalState::new(),
         }
     }
 
@@ -383,6 +429,6 @@ impl Game2048 {
 }
 
 fn main() {
-    let mut obj = Game2048::new();
+    let mut obj = AI2048::new();
     obj.play_game();
 }

@@ -14,3 +14,5 @@
 *.out
 *.rej
 *.so
+rust/*/target
+rust/*/Cargo.lock
