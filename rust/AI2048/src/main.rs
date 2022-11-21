@@ -64,16 +64,20 @@ impl EvalState {
 }
 
 struct AI2048 {
-    row_table: [RowT; TABLESIZE],
+    row_left_table: [RowT; TABLESIZE],
+    row_right_table: [RowT; TABLESIZE],
     score_table: [ScoreT; TABLESIZE],
+    score_heur_table: [ScoreHeurT; TABLESIZE],
     eval_state: EvalState,
 }
 
 impl AI2048 {
     pub fn new() -> AI2048 {
         AI2048 {
-            row_table: [0; TABLESIZE],
+            row_left_table: [0; TABLESIZE],
+            row_right_table: [0; TABLESIZE],
             score_table: [0; TABLESIZE],
+            score_heur_table: [0.0; TABLESIZE],
             eval_state: EvalState::new(),
         }
     }
@@ -166,6 +170,51 @@ impl AI2048 {
             }
             self.score_table[row as usize] = score;
 
+            let mut sum: ScoreHeurT = 0.0;
+            let mut empty: ScoreT = 0;
+            let mut merges: ScoreT = 0;
+            let mut prev: ScoreT = 0;
+            let mut counter: ScoreT = 0;
+
+            for i in 0..4 {
+                let rank: ScoreT = line[i] as ScoreT;
+
+                sum += (rank as ScoreHeurT).powf(SCORE_SUM_POWER);
+                if rank == 0 {
+                    empty += 1;
+                } else {
+                    if prev == rank {
+                        counter += 1;
+                    } else if counter > 0 {
+                        merges += 1 + counter;
+                        counter = 0;
+                    }
+                    prev = rank;
+                }
+            }
+            if counter > 0 {
+                merges += 1 + counter;
+            }
+
+            let mut monotonicity_left: ScoreHeurT = 0.0;
+            let mut monotonicity_right: ScoreHeurT = 0.0;
+
+            for i in 1..4 {
+                if line[i - 1] > line[i] {
+                    monotonicity_left += (line[i - 1] as ScoreHeurT).powf(SCORE_MONOTONICITY_POWER)
+                        - (line[i] as ScoreHeurT).powf(SCORE_MONOTONICITY_POWER);
+                } else {
+                    monotonicity_right += (line[i] as ScoreHeurT).powf(SCORE_MONOTONICITY_POWER)
+                        - (line[i - 1] as ScoreHeurT).powf(SCORE_MONOTONICITY_POWER);
+                }
+            }
+
+            self.score_heur_table[row as usize] = SCORE_LOST_PENALTY
+                + SCORE_EMPTY_WEIGHT * empty as ScoreHeurT
+                + SCORE_MERGES_WEIGHT * merges as ScoreHeurT
+                - SCORE_MONOTONICITY_WEIGHT * monotonicity_left.min(monotonicity_right)
+                - SCORE_SUM_WEIGHT * sum;
+
             let mut i = 0;
             while i < 3 {
                 let mut j = i + 1;
@@ -193,7 +242,11 @@ impl AI2048 {
             }
 
             let result = line[0] | (line[1] << 4) | (line[2] << 8) | (line[3] << 12);
-            self.row_table[row as usize] = row ^ result;
+
+            let rev_row = Self::reverse_row(row);
+            let rev_result = Self::reverse_row(result);
+            self.row_left_table[row as usize] = row ^ result;
+            self.row_right_table[rev_row as usize] = rev_row ^ rev_result;
 
             if row == 0xFFFF {
                 break;
@@ -207,45 +260,27 @@ impl AI2048 {
 
         if move_ == UP {
             board = Self::transpose(board);
-            ret ^= Self::unpack_col(self.row_table[(board & ROW_MASK) as usize]);
-            ret ^= Self::unpack_col(self.row_table[((board >> 16) & ROW_MASK) as usize]) << 4;
-            ret ^= Self::unpack_col(self.row_table[((board >> 32) & ROW_MASK) as usize]) << 8;
-            ret ^= Self::unpack_col(self.row_table[((board >> 48) & ROW_MASK) as usize]) << 12;
+            ret ^= Self::unpack_col(self.row_left_table[(board & ROW_MASK) as usize]);
+            ret ^= Self::unpack_col(self.row_left_table[((board >> 16) & ROW_MASK) as usize]) << 4;
+            ret ^= Self::unpack_col(self.row_left_table[((board >> 32) & ROW_MASK) as usize]) << 8;
+            ret ^= Self::unpack_col(self.row_left_table[((board >> 48) & ROW_MASK) as usize]) << 12;
         } else if move_ == DOWN {
             board = Self::transpose(board);
-            ret ^= Self::unpack_col(Self::reverse_row(
-                self.row_table[Self::reverse_row((board & ROW_MASK) as RowT) as usize],
-            ));
-            ret ^= Self::unpack_col(Self::reverse_row(
-                self.row_table[Self::reverse_row(((board >> 16) & ROW_MASK) as RowT) as usize],
-            )) << 4;
-            ret ^= Self::unpack_col(Self::reverse_row(
-                self.row_table[Self::reverse_row(((board >> 32) & ROW_MASK) as RowT) as usize],
-            )) << 8;
-            ret ^= Self::unpack_col(Self::reverse_row(
-                self.row_table[Self::reverse_row(((board >> 48) & ROW_MASK) as RowT) as usize],
-            )) << 12;
+            ret ^= Self::unpack_col(self.row_right_table[(board & ROW_MASK) as usize]);
+            ret ^= Self::unpack_col(self.row_right_table[((board >> 16) & ROW_MASK) as usize]) << 4;
+            ret ^= Self::unpack_col(self.row_right_table[((board >> 32) & ROW_MASK) as usize]) << 8;
+            ret ^=
+                Self::unpack_col(self.row_right_table[((board >> 48) & ROW_MASK) as usize]) << 12;
         } else if move_ == LEFT {
-            ret ^= (self.row_table[(board & ROW_MASK) as usize]) as BoardT;
-            ret ^= ((self.row_table[((board >> 16) & ROW_MASK) as usize]) as BoardT) << 16;
-            ret ^= ((self.row_table[((board >> 32) & ROW_MASK) as usize]) as BoardT) << 32;
-            ret ^= ((self.row_table[((board >> 48) & ROW_MASK) as usize]) as BoardT) << 48;
+            ret ^= (self.row_left_table[(board & ROW_MASK) as usize]) as BoardT;
+            ret ^= ((self.row_left_table[((board >> 16) & ROW_MASK) as usize]) as BoardT) << 16;
+            ret ^= ((self.row_left_table[((board >> 32) & ROW_MASK) as usize]) as BoardT) << 32;
+            ret ^= ((self.row_left_table[((board >> 48) & ROW_MASK) as usize]) as BoardT) << 48;
         } else if move_ == RIGHT {
-            ret ^= (Self::reverse_row(
-                self.row_table[Self::reverse_row((board & ROW_MASK) as RowT) as usize],
-            )) as BoardT;
-            ret ^= ((Self::reverse_row(
-                self.row_table[Self::reverse_row(((board >> 16) & ROW_MASK) as RowT) as usize],
-            )) as BoardT)
-                << 16;
-            ret ^= ((Self::reverse_row(
-                self.row_table[Self::reverse_row(((board >> 32) & ROW_MASK) as RowT) as usize],
-            )) as BoardT)
-                << 32;
-            ret ^= ((Self::reverse_row(
-                self.row_table[Self::reverse_row(((board >> 48) & ROW_MASK) as RowT) as usize],
-            )) as BoardT)
-                << 48;
+            ret ^= (self.row_right_table[(board & ROW_MASK) as usize]) as BoardT;
+            ret ^= ((self.row_right_table[((board >> 16) & ROW_MASK) as usize]) as BoardT) << 16;
+            ret ^= ((self.row_right_table[((board >> 32) & ROW_MASK) as usize]) as BoardT) << 32;
+            ret ^= ((self.row_right_table[((board >> 48) & ROW_MASK) as usize]) as BoardT) << 48;
         }
         ret
     }
@@ -257,8 +292,19 @@ impl AI2048 {
             + self.score_table[((board >> 48) & ROW_MASK) as usize]
     }
 
+    fn score_heur_helper(&self, board: BoardT) -> ScoreHeurT {
+        self.score_heur_table[(board & ROW_MASK) as usize]
+            + self.score_heur_table[((board >> 16) & ROW_MASK) as usize]
+            + self.score_heur_table[((board >> 32) & ROW_MASK) as usize]
+            + self.score_heur_table[((board >> 48) & ROW_MASK) as usize]
+    }
+
     fn score_board(&self, board: BoardT) -> ScoreT {
         Self::score_helper(self, board)
+    }
+
+    fn score_heur_board(&self, board: BoardT) -> ScoreHeurT {
+        Self::score_heur_helper(self, board) + Self::score_heur_helper(self, Self::transpose(board))
     }
 
     fn draw_tile() -> RowT {
@@ -294,6 +340,39 @@ impl AI2048 {
         let board = ((Self::draw_tile()) << (Self::unif_random(16) << 2)) as BoardT;
 
         Self::insert_tile_rand(board, Self::draw_tile() as BoardT)
+    }
+
+    fn get_depth_limit(mut board: BoardT) -> u32 {
+        let mut bitset: u32 = 0;
+        let mut max_limit: u32 = 0;
+        let mut count: u32 = 0;
+
+        while board != 0 {
+            bitset |= 1 << (board & 0xf);
+            board >>= 4;
+        }
+
+        if bitset <= 2048 {
+            return 3;
+        } else if bitset <= 2048 + 1024 {
+            max_limit = 4;
+        } else if bitset <= 4096 {
+            max_limit = 5;
+        } else if bitset <= 4096 + 2048 {
+            max_limit = 6;
+        }
+
+        bitset >>= 1;
+        while bitset != 0 {
+            bitset &= bitset - 1;
+            count += 1;
+        }
+        count -= 2;
+        count = count.max(3);
+        if max_limit != 0 {
+            count = count.min(max_limit);
+        }
+        count
     }
 
     fn _find_move(allmoves: &[u8; 9], movechar: u8) -> i32 {
