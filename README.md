@@ -412,6 +412,19 @@ symantec c++ 7.5 (dos16)
 
 
 
+# Rust
+
+## rust/Game2048
+
+Rust实现，查表法，依赖rand、getch、clearscreen三个crates
+
+已测试编译器和平台：
+```
+rust 1.0+ (linuxi, win32, freebsd, macos)
+```
+
+
+
 # C#
 
 ## csharp/2048.cs
