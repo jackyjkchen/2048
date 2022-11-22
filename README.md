@@ -418,9 +418,9 @@ symantec c++ 7.5 (dos16)
 
 Rust实现，查表法，依赖rand、getch、clearscreen三个crates
 
-已测试编译器和平台：
+已测试编译器和平台（Rust的编译器最低支持版本仅供参考，请尽可能使用最新版本，因为Rust严重依赖社区crates，虽然本身2048代码没有使用任何1.0版本以上的特性，但2022年底必须1.46以上版本才能构建成功，并随时间推移可能有更高需求）：
 ```
-rust 1.0+ (linuxi, win32, freebsd, macos)
+rust 1.46+ (linux, win32, freebsd, macos)
 ```
 
 
@@ -428,9 +428,9 @@ rust 1.0+ (linuxi, win32, freebsd, macos)
 
 Rust AI实现，查表法，默认多线程，依赖rand、clearscreen、crossbeam三个crates
 
-已测试编译器和平台：
+已测试编译器和平台（Rust的编译器最低支持版本仅供参考，请尽可能使用最新版本，因为Rust严重依赖社区crates，虽然本身2048代码没有使用任何1.0版本以上的特性，但2022年底必须1.46以上版本才能构建成功，并随时间推移可能有更高需求）：
 ```
-rust 1.0+ (linuxi, win32, freebsd, macos)
+rust 1.46+ (linux, win32, freebsd, macos)
 ```
 
 
