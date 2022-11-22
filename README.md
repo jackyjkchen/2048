@@ -424,6 +424,16 @@ rust 1.0+ (linuxi, win32, freebsd, macos)
 ```
 
 
+## rust/AI2048
+
+Rust AI实现，查表法，默认多线程，依赖rand、clearscreen、crossbeam三个crates
+
+已测试编译器和平台：
+```
+rust 1.0+ (linuxi, win32, freebsd, macos)
+```
+
+
 
 # C#
 

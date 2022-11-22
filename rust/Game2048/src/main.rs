@@ -25,7 +25,7 @@ struct Game2048 {
 }
 
 impl Game2048 {
-    pub fn new() -> Game2048 {
+    fn new() -> Game2048 {
         Game2048 {
             row_table: [0; TABLESIZE],
             score_table: [0; TABLESIZE],
@@ -291,7 +291,7 @@ impl Game2048 {
         ret
     }
 
-    pub fn play_game(&mut self) {
+    fn play_game(&mut self) {
         let mut board = Self::initial_board();
         let mut scorepenalty: i32 = 0;
         let mut last_score: i32 = 0;
@@ -321,7 +321,7 @@ impl Game2048 {
             current_score = Self::score_board(&self, board) as i32 - scorepenalty;
             moveno += 1;
             println!(
-                "Move #{moveno}, current score={current_score}(+{increased_score})\n",
+                "Move #{moveno}, current score={current_score}(+{increased_score})",
                 moveno = moveno,
                 current_score = current_score,
                 increased_score = current_score - last_score

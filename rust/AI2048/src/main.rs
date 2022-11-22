@@ -1,7 +1,8 @@
 #![allow(non_snake_case)]
 extern crate clearscreen;
-extern crate getch;
+extern crate crossbeam;
 extern crate rand;
+use crossbeam::thread;
 use rand::Rng;
 use std::collections::HashMap;
 
@@ -30,7 +31,7 @@ const SCORE_SUM_WEIGHT: ScoreHeurT = 11.0;
 const SCORE_MERGES_WEIGHT: ScoreHeurT = 700.0;
 const SCORE_EMPTY_WEIGHT: ScoreHeurT = 270.0;
 const CPROB_THRESH_BASE: ScoreHeurT = 0.0001;
-const CACHE_DEPTH_LIMIT: RowT = 15;
+const CACHE_DEPTH_LIMIT: u32 = 15;
 
 struct TransTableEntryT {
     depth: u32,
@@ -49,7 +50,7 @@ struct EvalState {
 }
 
 impl EvalState {
-    pub fn new() -> EvalState {
+    fn new() -> EvalState {
         EvalState {
             trans_table: HashMap::new(),
             maxdepth: 0,
@@ -68,22 +69,16 @@ struct AI2048 {
     row_right_table: [RowT; TABLESIZE],
     score_table: [ScoreT; TABLESIZE],
     score_heur_table: [ScoreHeurT; TABLESIZE],
-    eval_state: EvalState,
 }
 
 impl AI2048 {
-    pub fn new() -> AI2048 {
+    fn new() -> AI2048 {
         AI2048 {
             row_left_table: [0; TABLESIZE],
             row_right_table: [0; TABLESIZE],
             score_table: [0; TABLESIZE],
             score_heur_table: [0.0; TABLESIZE],
-            eval_state: EvalState::new(),
         }
-    }
-
-    fn get_ch() -> u8 {
-        getch::Getch::new().getch().unwrap()
     }
 
     fn clear_screen() {
@@ -375,48 +370,149 @@ impl AI2048 {
         count
     }
 
-    fn _find_move(allmoves: &[u8; 9], movechar: u8) -> i32 {
-        let mut pos: i32 = 0;
-        loop {
-            let pos_char = allmoves[pos as usize];
-            if pos_char == movechar {
-                break;
-            } else if pos_char == 0x00 {
-                pos = -1;
-                break;
-            }
-            pos += 1;
+    fn score_tilechoose_node(
+        &self,
+        state: &mut EvalState,
+        board: BoardT,
+        mut cprob: ScoreHeurT,
+    ) -> ScoreHeurT {
+        if cprob < CPROB_THRESH_BASE || state.curdepth >= state.depth_limit {
+            state.maxdepth = state.curdepth.max(state.maxdepth);
+            state.tablehits += 1;
+            return Self::score_heur_board(self, board);
         }
-        pos
+        if state.curdepth < CACHE_DEPTH_LIMIT {
+            if state.trans_table.contains_key(&board) {
+                let entry: &TransTableEntryT = state.trans_table.get(&board).unwrap();
+
+                if entry.depth <= state.curdepth {
+                    state.cachehits += 1;
+                    return entry.heuristic;
+                }
+            }
+        }
+
+        let num_open = Self::count_empty(board);
+
+        cprob /= num_open as ScoreHeurT;
+
+        let mut res: ScoreHeurT = 0.0;
+        let mut tmp: BoardT = board;
+        let mut tile_2: BoardT = 1;
+
+        while tile_2 != 0 {
+            if (tmp & 0xf) == 0 {
+                res += Self::score_move_node(self, state, board | tile_2, cprob * 0.9) * 0.9;
+                res += Self::score_move_node(self, state, board | (tile_2 << 1), cprob * 0.1) * 0.1;
+            }
+            tmp >>= 4;
+            tile_2 <<= 4;
+        }
+        res = res / num_open as ScoreHeurT;
+
+        if state.curdepth < CACHE_DEPTH_LIMIT {
+            let entry: TransTableEntryT = TransTableEntryT {
+                depth: state.curdepth,
+                heuristic: res,
+            };
+            state.trans_table.entry(board).or_insert(entry);
+        }
+
+        res
     }
 
-    fn ask_for_move(board: BoardT) -> i32 {
-        Self::print_board(board);
-        let ret: i32;
+    fn score_move_node(
+        &self,
+        state: &mut EvalState,
+        board: BoardT,
+        cprob: ScoreHeurT,
+    ) -> ScoreHeurT {
+        let mut best: ScoreHeurT = 0.0;
 
-        loop {
-            // wsadkjhl\0
-            let allmoves: [u8; 9] = [0x77, 0x73, 0x61, 0x64, 0x6b, 0x6a, 0x68, 0x6c, 0x00];
-            let movechar = Self::get_ch();
+        state.curdepth += 1;
+        for move_ in 0..4 {
+            let newboard = Self::execute_move(self, board, move_);
 
-            // 0x71='q', 0x72='r'
-            if movechar == 0x71 {
-                ret = -1;
-                break;
-            } else if movechar == 0x72 {
-                ret = RETRACT;
-                break;
-            }
-            let pos = Self::_find_move(&allmoves, movechar);
-            if pos >= 0 {
-                ret = pos % 4;
-                break;
+            state.moves_evaled += 1;
+            if board != newboard {
+                let tmp = Self::score_tilechoose_node(self, state, newboard, cprob);
+                if best < tmp {
+                    best = tmp;
+                }
+            } else {
+                state.nomoves += 1;
             }
         }
+        state.curdepth -= 1;
+
+        best
+    }
+
+    fn _score_toplevel_move(&self, state: &mut EvalState, board: BoardT, move_: i32) -> ScoreHeurT {
+        let newboard = Self::execute_move(self, board, move_);
+        let mut ret = 0.0;
+
+        if board != newboard {
+            ret = Self::score_tilechoose_node(self, state, newboard, 1.0) + 1e-6;
+        }
+
         ret
     }
 
-    pub fn play_game(&mut self) {
+    fn score_toplevel_move(&self, board: BoardT, move_: i32) -> ScoreHeurT {
+        let mut state: EvalState = EvalState::new();
+
+        state.depth_limit = Self::get_depth_limit(board);
+
+        let res = Self::_score_toplevel_move(self, &mut state, board, move_);
+
+        println!("Move {move_}: result {res}: eval'd {moves_evaled} moves ({nomoves} no moves, {tablehits} table hits, {cachehits} cache hits, {trans_table_size} cache size) (maxdepth={maxdepth})", move_=move_, res=res,
+           moves_evaled=state.moves_evaled, nomoves=state.nomoves, tablehits=state.tablehits, cachehits=state.cachehits, trans_table_size=state.trans_table.len(), maxdepth=state.maxdepth);
+
+        res
+    }
+
+    fn find_best_move(&self, board: BoardT) -> i32 {
+        let mut best: ScoreHeurT = 0.0;
+        let mut bestmove: i32 = -1;
+
+        Self::print_board(board);
+        println!(
+            "Current scores: heur {heur}, actual {actual}",
+            heur = Self::score_heur_board(self, board),
+            actual = Self::score_board(self, board)
+        );
+
+        let mut res: [ScoreHeurT; 4] = [0.0; 4];
+        thread::scope(|s| {
+            let handle0 = s.spawn(|_| Self::score_toplevel_move(self, board, 0));
+            let handle1 = s.spawn(|_| Self::score_toplevel_move(self, board, 1));
+            let handle2 = s.spawn(|_| Self::score_toplevel_move(self, board, 2));
+            let handle3 = s.spawn(|_| Self::score_toplevel_move(self, board, 3));
+            res[0] = handle0.join().unwrap();
+            res[1] = handle1.join().unwrap();
+            res[2] = handle2.join().unwrap();
+            res[3] = handle3.join().unwrap();
+        })
+        .unwrap();
+
+        for move_ in 0..4 {
+            if res[move_] > best {
+                best = res[move_];
+                bestmove = move_ as i32;
+            }
+        }
+
+        println!(
+            "Selected bestmove: {bestmove}, result: {best}",
+            bestmove = bestmove,
+            best = best
+        );
+
+        bestmove
+    }
+
+    fn play_game(&mut self) {
         let mut board = Self::initial_board();
         let mut scorepenalty: i32 = 0;
         let mut last_score: i32 = 0;
@@ -446,14 +542,14 @@ impl AI2048 {
             current_score = Self::score_board(&self, board) as i32 - scorepenalty;
             moveno += 1;
             println!(
-                "Move #{moveno}, current score={current_score}(+{increased_score})\n",
+                "Move #{moveno}, current score={current_score}(+{increased_score})",
                 moveno = moveno,
                 current_score = current_score,
                 increased_score = current_score - last_score
             );
             last_score = current_score;
 
-            move_ = Self::ask_for_move(board);
+            move_ = Self::find_best_move(self, board);
             if move_ < 0 {
                 break;
             }

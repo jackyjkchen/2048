@@ -8,4 +8,4 @@ edition = "2018"
 [dependencies]
 rand = "*"
 clearscreen = "*"
-getch = '*'
+crossbeam = '*'
