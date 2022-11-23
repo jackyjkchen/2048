@@ -426,7 +426,7 @@ rust 1.46+ (linux, win32, freebsd, macos)
 
 ## rust/AI2048
 
-Rust AI实现，查表法 + HashMap + 多线程，依赖rand、clearscreen、rayon三个crates
+Rust AI实现，查表法 + HashMap + 多线程，依赖rand、clearscreen、rayon、num_cpus四个crates
 
 编译器和平台支持同上。
 

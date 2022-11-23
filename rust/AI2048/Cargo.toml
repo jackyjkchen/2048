@@ -9,3 +9,4 @@ edition = "2018"
 rand = "*"
 clearscreen = "*"
 rayon = '*'
+num_cpus = '*'

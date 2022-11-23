@@ -1,5 +1,6 @@
 #![allow(non_snake_case)]
 extern crate clearscreen;
+extern crate num_cpus;
 extern crate rand;
 extern crate rayon;
 use rand::Rng;
@@ -303,13 +304,11 @@ impl AI2048 {
     }
 
     fn draw_tile() -> RowT {
-        let ret;
         if Self::unif_random(10) < 9 {
-            ret = 1;
+            1
         } else {
-            ret = 2;
+            2
         }
-        ret
     }
 
     fn insert_tile_rand(board: BoardT, mut tile: BoardT) -> BoardT {
@@ -517,6 +516,10 @@ impl AI2048 {
         let mut retract_num: i32 = 0;
 
         Self::init_tables(self);
+        rayon::ThreadPoolBuilder::new()
+            .num_threads(if num_cpus::get() >= 4 { 4 } else { 0 })
+            .build_global()
+            .unwrap();
         loop {
             let mut move_: i32 = 0;
 

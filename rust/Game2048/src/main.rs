@@ -216,13 +216,11 @@ impl Game2048 {
     }
 
     fn draw_tile() -> RowT {
-        let ret;
         if Self::unif_random(10) < 9 {
-            ret = 1;
+            1
         } else {
-            ret = 2;
+            2
         }
-        ret
     }
 
     fn insert_tile_rand(board: BoardT, mut tile: BoardT) -> BoardT {
