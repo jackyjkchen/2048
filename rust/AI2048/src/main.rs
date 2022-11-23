@@ -1,9 +1,9 @@
 #![allow(non_snake_case)]
 extern crate clearscreen;
-extern crate crossbeam;
 extern crate rand;
-use crossbeam::thread;
+extern crate rayon;
 use rand::Rng;
+use rayon::prelude::*;
 use std::collections::HashMap;
 
 type BoardT = u64;
@@ -483,18 +483,10 @@ impl AI2048 {
             actual = Self::score_board(self, board)
         );
 
-        let mut res: [ScoreHeurT; 4] = [0.0; 4];
-        thread::scope(|s| {
-            let handle0 = s.spawn(|_| Self::score_toplevel_move(self, board, 0));
-            let handle1 = s.spawn(|_| Self::score_toplevel_move(self, board, 1));
-            let handle2 = s.spawn(|_| Self::score_toplevel_move(self, board, 2));
-            let handle3 = s.spawn(|_| Self::score_toplevel_move(self, board, 3));
-            res[0] = handle0.join().unwrap();
-            res[1] = handle1.join().unwrap();
-            res[2] = handle2.join().unwrap();
-            res[3] = handle3.join().unwrap();
-        })
-        .unwrap();
+        let res: Vec<_> = (0..4)
+            .into_par_iter()
+            .map(|move_| Self::score_toplevel_move(self, board, move_))
+            .collect();
 
         for move_ in 0..4 {
             if res[move_] > best {
