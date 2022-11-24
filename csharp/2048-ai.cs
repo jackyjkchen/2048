@@ -416,24 +416,16 @@ class Game2048
         return best;
     }
 
-    double _score_toplevel_move(ref eval_state state, UInt64 board, int move)
-    {
-        UInt64 newboard = execute_move(board, move);
-
-        if (board == newboard)
-            return 0.0f;
-
-        return score_tilechoose_node(ref state, newboard, 1.0f) + 1e-6f;
-    }
-
     double score_toplevel_move(UInt64 board, int move)
     {
         double res = 0.0f;
         eval_state state = new eval_state();
+        UInt64 newboard = execute_move(board, move);
 
         state.depth_limit = get_depth_limit(board);
 
-        res = _score_toplevel_move(ref state, board, move);
+        if (board != newboard)
+            res = score_tilechoose_node(ref state, newboard, 1.0f) + 1e-6f;
 
         Console.WriteLine("Move {0}: result {1}: eval'd {2} moves ({3} no moves, {4} table hits, {5} cache hits, {6} cache size) (maxdepth={7})", move, res,
                state.moves_evaled, state.nomoves, state.tablehits, state.cachehits, state.trans_table.Count, state.maxdepth);

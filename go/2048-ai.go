@@ -397,24 +397,19 @@ func score_move_node(state *eval_state, board uint64, cprob float64) float64 {
 	return best
 }
 
-func _score_toplevel_move(state *eval_state, board uint64, move int) float64 {
-	var newboard uint64 = execute_move(board, move)
-
-	if board == newboard {
-		return 0.0
-	}
-
-	return score_tilechoose_node(state, newboard, 1.0) + 0.000001
-}
-
 func score_toplevel_move(board uint64, move int, res *float64, wg *sync.WaitGroup) {
 	defer wg.Done()
 	var state eval_state
+	var newboard uint64 = execute_move(board, move)
 
 	state.trans_table = make(map[uint64]trans_table_entry_t)
 	state.depth_limit = get_depth_limit(board)
 
-	*res = _score_toplevel_move(&state, board, move)
+	if board == newboard {
+		*res = 0.0
+    } else {
+	    *res = score_tilechoose_node(&state, newboard, 1.0) + 0.000001
+    }
 
 	fmt.Printf("Move %d: result %f: eval'd %d moves (%d no moves, %d table hits, %d cache hits, %d cache size) (maxdepth=%d)\n", move, *res,
 		state.moves_evaled, state.nomoves, state.tablehits, state.cachehits, len(state.trans_table), state.maxdepth)

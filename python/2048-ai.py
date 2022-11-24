@@ -278,17 +278,13 @@ def score_move_node(state, board, cprob):
     state.curdepth -= 1
     return best
 
-def _score_toplevel_move(state, board, move):
-    newboard = execute_move(board, move)
-    if (board == newboard):
-        return 0.0
-    return score_tilechoose_node(state, newboard, 1.0) + 0.000001
-
 def score_toplevel_move(board, move):
     res = 0.0
     state = eval_state()
+    newboard = execute_move(board, move)
     state.depth_limit = 3
-    res = _score_toplevel_move(state, board, move)
+    if (board != newboard):
+        res = score_tilechoose_node(state, newboard, 1.0) + 0.000001
     sys.stdout.write("Move %d: result %f: eval'd %d moves (%d no moves, %d table hits, %d cache hits, %d cache size) (maxdepth=%d)%s" % (move, res,
            state.moves_evaled, state.nomoves, state.tablehits, state.cachehits, len(state.trans_table), state.maxdepth, os.linesep))
     return res

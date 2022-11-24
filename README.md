@@ -647,8 +647,7 @@ gfortran 4.3+ (linux, mingw, mingw-w64, cygwin, freebsd, macos)
 
 编译命令行示例：
 ```
-gcc -std=c90 -O2 -c fortran/f03deps.c -o f03deps.o
-gfortran -std=f2003 -O2 fortran/2048.F03 f03deps.o -o 2048
+gfortran -std=f2003 -O2 fortran/2048.F03 fortran/f03deps.c -o 2048
 ```
 
 
@@ -664,8 +663,7 @@ gfortran 4.3+ (linux, mingw, mingw-w64, cygwin, freebsd, macos)
 gfortran 4.3以上版本均支持OpenMP，推荐使用，编译命令行示例如下：
 
 ```
-gcc -std=c90 -O2 -c fortran/f03deps.c -o f03deps.o
-gfortran -std=f2003 -O2 -fopenmp fortran/2048-ai.F03 f03deps.o -o 2048
+gfortran -std=f2003 -O2 -fopenmp fortran/2048-ai.F03 fortran/f03deps.c -o 2048
 ```
 
 
@@ -680,8 +678,7 @@ gfortran 4.0+ (linux, mingw, mingw-w64, cygwin, freebsd, macos)
 
 编译命令行示例：
 ```
-gcc -std=c90 -O2 -c fortran/f90deps.c -o f90deps.o
-gfortran -std=f95 -O2 fortran/2048.F90 f90deps.o -o 2048
+gfortran -std=f95 -O2 fortran/2048.F90 fortran/f90deps.c -o 2048
 ```
 
 
@@ -697,14 +694,12 @@ gfortran 4.0+ (linux, mingw, mingw-w64, cygwin, freebsd)
 
 编译命令行示例：
 ```
-gcc-3.4.6 -O2 -c fortran/f77deps.c -o f77deps.o
-g77-3.4.6 -O2 fortran/2048.f f77deps.o -o 2048
+g77-3.4.6 -O2 fortran/2048.f fortran/f77deps.c -o 2048
 ```
 
-使用-std=gnu，也可兼容gfortran编译器（gcc-11开始不再兼容）：
+使用-std=gnu，也可兼容gfortran编译器（必须gcc-8.5.0或以下）：
 ```
-gcc -std=c90 -O2 -c fortran/f90deps.c -o f90deps.o
-gfortran -std=gnu -O2 fortran/2048.f f90deps.o -o 2048
+gfortran -std=gnu -O2 fortran/2048.f fortran/f90deps.c -o 2048
 ```
 
 

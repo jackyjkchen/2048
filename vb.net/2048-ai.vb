@@ -371,17 +371,14 @@ Public Module Game2048
         Return best
     End Function
 
-    Private Function _score_toplevel_move(ByRef state As eval_state, board As ULong, move As Integer) As Double
-        Dim newboard As ULong = execute_move(board, move)
-        If board = newboard Then Return 0.0F
-        Return score_tilechoose_node(state, newboard, 1.0F) + 0.000001F
-    End Function
-
     Private Function score_toplevel_move(board As ULong, move As Integer) As Double
         Dim res As Double = 0.0F
         Dim state As eval_state = New eval_state()
+        Dim newboard As ULong = execute_move(board, move)
         state.depth_limit = get_depth_limit(board)
-        res = _score_toplevel_move(state, board, move)
+        If board <> newboard Then
+            res = score_tilechoose_node(state, newboard, 1.0F) + 0.000001F
+        End If
         Console.WriteLine("Move {0}: result {1}: eval'd {2} moves ({3} no moves, {4} table hits, {5} cache hits, {6} cache size) (maxdepth={7})", move, res, state.moves_evaled, state.nomoves, state.tablehits, state.cachehits, state.trans_table.Count, state.maxdepth)
         Return res
     End Function

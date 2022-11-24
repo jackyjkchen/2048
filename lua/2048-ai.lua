@@ -312,16 +312,6 @@ function score_move_node(state, board, cprob)
     return best
 end
 
-function _score_toplevel_move(state, board, move)
-    local newboard = execute_move(board, move)
-
-    if (board == newboard) then
-        return 0.0
-    end
-
-    return score_tilechoose_node(state, newboard, 1.0) + 0.000001
-end
-
 function score_toplevel_move(board, move)
     local res = 0.0
     local state = {
@@ -335,10 +325,13 @@ function score_toplevel_move(board, move)
         moves_evaled = 0,
         depth_limit = 0,
     }
+    local newboard = execute_move(board, move)
 
     state.depth_limit = 3
 
-    res = _score_toplevel_move(state, board, move)
+    if (board != newboard) then
+        res = score_tilechoose_node(state, newboard, 1.0) + 0.000001
+    end
 
     print(string.format("Move %d: result %f: eval'd %d moves (%d no moves, %d table hits, %d cache hits, %d cache size) (maxdepth=%d)", move, res,
            state.moves_evaled, state.nomoves, state.tablehits, state.cachehits, state.tablesize, state.maxdepth))

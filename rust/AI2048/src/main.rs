@@ -447,26 +447,22 @@ impl AI2048 {
         best
     }
 
-    fn _score_toplevel_move(&self, state: &mut EvalState, board: BoardT, move_: i32) -> ScoreHeurT {
-        let newboard = Self::execute_move(self, board, move_);
-        let mut ret = 0.0;
-
-        if board != newboard {
-            ret = Self::score_tilechoose_node(self, state, newboard, 1.0) + 1e-6;
-        }
-
-        ret
-    }
-
     fn score_toplevel_move(&self, board: BoardT, move_: i32) -> ScoreHeurT {
         let mut state: EvalState = EvalState::new();
+        let mut res = 0.0;
+        let newboard = Self::execute_move(self, board, move_);
 
         state.depth_limit = Self::get_depth_limit(board);
+        if board != newboard {
+            res = Self::score_tilechoose_node(self, &mut state, newboard, 1.0) + 1e-6;
+        }
 
-        let res = Self::_score_toplevel_move(self, &mut state, board, move_);
-
-        println!("Move {move_}: result {res}: eval'd {moves_evaled} moves ({nomoves} no moves, {tablehits} table hits, {cachehits} cache hits, {trans_table_size} cache size) (maxdepth={maxdepth})", move_=move_, res=res,
-           moves_evaled=state.moves_evaled, nomoves=state.nomoves, tablehits=state.tablehits, cachehits=state.cachehits, trans_table_size=state.trans_table.len(), maxdepth=state.maxdepth);
+        println!(
+           "Move {move_}: result {res}: eval'd {moves_evaled} moves ({nomoves} no moves, {tablehits} table hits, {cachehits} cache hits, {trans_table_size} cache size) (maxdepth={maxdepth})",
+           move_=move_, res=res, moves_evaled=state.moves_evaled, nomoves=state.nomoves,
+           tablehits=state.tablehits, cachehits=state.cachehits, trans_table_size=state.trans_table.len(),
+           maxdepth=state.maxdepth
+        );
 
         res
     }

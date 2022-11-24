@@ -614,22 +614,15 @@ static score_heur_t score_move_node(eval_state *state, board_t board, score_heur
     return best;
 }
 
-static score_heur_t _score_toplevel_move(eval_state *state, board_t board, int move) {
-    board_t newboard = execute_move(board, move);
-
-    if (board == newboard)
-        return 0.0f;
-
-    return score_tilechoose_node(state, newboard, 1.0f) + 1e-6f;
-}
-
 static score_heur_t score_toplevel_move(board_t board, int move) {
     eval_state state;
     score_heur_t res = 0.0f;
+    board_t newboard = execute_move(board, move);
 
     memset(&state, 0x00, sizeof(eval_state));
     state.depth_limit = get_depth_limit(board);
-    res = _score_toplevel_move(&state, board, move);
+    if (board != newboard)
+        res = score_tilechoose_node(&state, newboard, 1.0f) + 1e-6f;
 
     printf
         ("Move %d: result %f: eval'd %ld moves (%ld no moves, %ld table hits, %ld cache hits, %ld cache size) (maxdepth=%d)\n",

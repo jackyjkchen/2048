@@ -377,22 +377,15 @@ class Game2048
         return best;
     }
 
-    double _score_toplevel_move(eval_state state, long board, int move) {
-        long newboard = execute_move(board, move);
-
-        if (board == newboard)
-            return 0.0f;
-
-        return score_tilechoose_node(state, newboard, 1.0f) + 0.000001f;
-    }
-
     double score_toplevel_move(long board, int move) {
         double res = 0.0f;
         eval_state state = new eval_state();
+        long newboard = execute_move(board, move);
 
         state.depth_limit = get_depth_limit(board);
 
-        res = _score_toplevel_move(state, board, move);
+        if (board != newboard)
+            res = score_tilechoose_node(state, newboard, 1.0f) + 0.000001f;
 
         System.out.printf("Move %d: result %f: eval'd %d moves (%d no moves, %d table hits, %d cache hits, %d cache size) (maxdepth=%d)\n", move, res,
                state.moves_evaled, state.nomoves, state.tablehits, state.cachehits, state.trans_table.size(), state.maxdepth);

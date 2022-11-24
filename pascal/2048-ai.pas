@@ -441,21 +441,11 @@ begin
     score_move_node := best;
 end;
 
-function _score_toplevel_move(var state : eval_state; board : qword; _move : integer) : real;
-var
-    newboard : qword;
-begin
-    newboard := execute_move(board, _move);
-    if board = newboard then
-        _score_toplevel_move := 0.0
-    else
-        _score_toplevel_move := score_tilechoose_node(state, newboard, 1.0) + 0.000001;
-end;
-
 function score_toplevel_move(board : qword; _move : integer; var msg : string) : real;
 var
     state : eval_state;
     res : real;
+    newboard : qword;
 begin
 {$if FASTMODE <> 0}
     state.trans_table := trans_table_t.Create();
@@ -466,7 +456,11 @@ begin
     state.moves_evaled := 0;
     state.depth_limit := get_depth_limit(board);
 
-    res := _score_toplevel_move(state, board, _move);
+    newboard := execute_move(board, _move);
+    if board = newboard then
+        res := 0.0
+    else
+        res := score_tilechoose_node(state, newboard, 1.0) + 0.000001;
 {$if FASTMODE <> 0}
     msg := format('Move %d: result %f: eval''d %d moves (%d no moves, %d table hits, %d cache hits, %d cache size) (maxdepth=%d)', [_move, res,
            state.moves_evaled, state.nomoves, state.tablehits, state.cachehits, state.trans_table.Count, state.maxdepth]);

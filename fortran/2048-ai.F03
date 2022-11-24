@@ -468,25 +468,10 @@ function score_move_node(state, board, cprob)
     score_move_node = best
 end function score_move_node
 
-function score_toplevel_move_(state, board, move)
-    type(eval_state) :: state
-    integer(8), value, intent(in) :: board
-    integer(4), value, intent(in) :: move
-    real(4) :: score_toplevel_move_
-    integer(8) :: newboard
-
-    newboard = execute_move(board, move)
-
-    if (board == newboard) then
-        score_toplevel_move_ = 0.0
-    else
-        score_toplevel_move_ = score_tilechoose_node(state, newboard, 1.0) + 1e-6
-    endif
-end function score_toplevel_move_
-
 function score_toplevel_move(board, move)
     integer(8), value, intent(in) :: board
     integer(4), value, intent(in) :: move
+    integer(8) :: newboard
     real(4) :: score_toplevel_move
     type(eval_state) :: state
     real(4) :: res
@@ -499,7 +484,13 @@ function score_toplevel_move(board, move)
     state%moves_evaled = 0
     state%depth_limit = get_depth_limit(board)
 
-    res = score_toplevel_move_(state, board, move)
+    newboard = execute_move(board, move)
+
+    if (board == newboard) then
+        res = 0.0
+    else
+        res = score_tilechoose_node(state, newboard, 1.0) + 1e-6
+    endif
 
     print '("Move ", i0, ": result ", f0.0, ": eval''d ", i0, " moves (", i0, " no moves, ", i0, &
         & " table hits, ", i0, " cache hits, ", i0, " cache size) (maxdepth=", i0, ")")', &
