@@ -18,7 +18,6 @@ const UP: i32 = 0;
 const DOWN: i32 = 1;
 const LEFT: i32 = 2;
 const RIGHT: i32 = 3;
-const RETRACT: i32 = 4;
 
 const TABLESIZE: usize = 65536;
 
@@ -505,11 +504,6 @@ impl AI2048 {
         let mut last_score: i32 = 0;
         let mut current_score: i32 = 0;
         let mut moveno: i32 = 0;
-        const MAX_RETRACT: usize = 64;
-        let mut retract_vec: [BoardT; MAX_RETRACT] = [0; MAX_RETRACT];
-        let mut retract_penalty_vec: [RowT; MAX_RETRACT] = [0; MAX_RETRACT];
-        let mut retract_pos: i32 = 0;
-        let mut retract_num: i32 = 0;
 
         Self::init_tables(self);
         rayon::ThreadPoolBuilder::new()
@@ -545,22 +539,6 @@ impl AI2048 {
                 break;
             }
 
-            if move_ == RETRACT {
-                if moveno <= 1 || retract_num <= 0 {
-                    moveno -= 1;
-                    continue;
-                }
-                moveno -= 2;
-                if retract_pos == 0 && retract_num > 0 {
-                    retract_pos = MAX_RETRACT as i32;
-                }
-                retract_pos -= 1;
-                board = retract_vec[retract_pos as usize];
-                scorepenalty -= retract_penalty_vec[retract_pos as usize] as i32;
-                retract_num -= 1;
-                continue;
-            }
-
             let newboard = Self::execute_move(&self, board, move_);
             if newboard == board {
                 moveno -= 1;
@@ -570,17 +548,6 @@ impl AI2048 {
             let tile = Self::draw_tile();
             if tile == 2 {
                 scorepenalty += 4;
-                retract_penalty_vec[retract_pos as usize] = 4;
-            } else {
-                retract_penalty_vec[retract_pos as usize] = 0;
-            }
-            retract_vec[retract_pos as usize] = board;
-            retract_pos += 1;
-            if retract_pos == MAX_RETRACT as i32 {
-                retract_pos = 0;
-            }
-            if retract_num < MAX_RETRACT as i32 {
-                retract_num += 1;
             }
 
             board = Self::insert_tile_rand(newboard, tile as BoardT);
