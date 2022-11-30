@@ -562,6 +562,5 @@ impl AI2048 {
 }
 
 fn main() {
-    let mut obj = AI2048::new();
-    obj.play_game();
+    AI2048::new().play_game();
 }

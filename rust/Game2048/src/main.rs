@@ -381,6 +381,5 @@ impl Game2048 {
 }
 
 fn main() {
-    let mut obj = Game2048::new();
-    obj.play_game();
+    Game2048::new().play_game();
 }
