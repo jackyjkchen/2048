@@ -89,7 +89,7 @@ static void clear_screen() {
     _clearscreen(_GCLEARSCREEN);
 #elif defined(__BORLANDC__) || defined (__TURBOC__) || defined(__DJGPP__) || defined(__CC65__)
     clrscr();
-#elif (defined(_WIN32) && defined(NOT_USE_WIN32_SDK)) || defined(MSDOS)
+#elif (defined(_WIN32) && defined(NOT_USE_WIN32_SDK)) || (defined(MSDOS) && !defined(__BCC__))
     system("cls");
 #endif
 }

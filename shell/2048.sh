@@ -19,7 +19,7 @@ function unpack_col() {
 
 function reverse_row() {
     local row=$1
-    echo $((((row >> 12) | ((row >> 4) & 0x00F0)  | ((row << 4) & 0x0F00) | (row << 12)) & $ROW_MASK ))
+    echo $((((row >> 12) | ((row >> 4) & 0x00F0)  | ((row << 4) & 0x0F00) | (row << 12)) & $ROW_MASK))
 }
 
 function print_board() {
@@ -295,10 +295,10 @@ function play_game() {
         fi
         retract_vec[$((retract_pos))]=$((board))
         retract_pos=$((retract_pos + 1))
-        if [ $((retract_pos)) -eq 64 ]; then
+        if [ $((retract_pos)) -eq $((MAX_RETRACT)) ]; then
             retract_pos=0
         fi
-        if [ $((retract_num)) -lt 64 ]; then
+        if [ $((retract_num)) -lt $((MAX_RETRACT)) ]; then
             retract_num=$((retract_num + 1))
         fi
 
