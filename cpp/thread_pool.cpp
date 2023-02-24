@@ -225,7 +225,7 @@ bool ThreadPool::init() {
     bool ret = false, clear_thrd = false;
 
     do {
-        LockScope(this->m_ctrl_lock);
+        LockScope lock(this->m_ctrl_lock);
         if (m_thrd_num == 0) {
             m_thrd_num = get_cpu_num();
         }
@@ -266,7 +266,7 @@ bool ThreadPool::init() {
 }
 
 void ThreadPool::add_task(thrd_callback func, void *param) {
-    LockScope(this->m_ctrl_lock);
+    LockScope lock(this->m_ctrl_lock);
     ThrdContext context;
 
     context.func = func;
@@ -279,7 +279,7 @@ void ThreadPool::add_task(thrd_callback func, void *param) {
 }
 
 void ThreadPool::wait_all_task() {
-    LockScope(this->m_ctrl_lock);
+    LockScope lock(this->m_ctrl_lock);
     m_pool_lock.lock();
     if (m_stop) {
         m_pool_lock.unlock();
@@ -292,7 +292,7 @@ void ThreadPool::wait_all_task() {
 }
 
 void ThreadPool::wait_all_thrd() {
-    LockScope(this->m_ctrl_lock);
+    LockScope lock(this->m_ctrl_lock);
     m_pool_lock.lock();
     if (m_stop) {
         m_pool_lock.unlock();
