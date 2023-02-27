@@ -109,10 +109,20 @@ typedef std::map<board_t, trans_table_entry_t> trans_table_t;
 #endif
 #endif
 
-#if defined(_MSC_VER) && _MSC_VER >= 1500 && defined(POPCNT)
+#if defined(_MSC_VER) && _MSC_VER >= 1500
 #include <intrin.h>
-#define __builtin_popcount __popcnt
-#define __POPCNT__ 1
+#define popcount __popcnt
+#elif defined(__GNUC__) && (__GNUC__ >= 4 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 4))
+#define popcount __builtin_popcount
+#else
+static inline int popcount(unsigned int bitset) {
+    int count = 0;
+    while (bitset) {
+        bitset &= bitset - 1;
+        count++;
+    }
+    return count;
+}
 #endif
 
 #if defined(__MINGW64__) || defined(__MINGW32__)
@@ -613,15 +623,7 @@ int Game2048::get_depth_limit(board_t board) {
     }
 
     bitset >>= 1;
-#ifdef __POPCNT__
-    count = (int)(__builtin_popcount(bitset)) - 2;
-#else
-    while (bitset) {
-        bitset &= bitset - 1;
-        count++;
-    }
-    count -= 2;
-#endif
+    count = (int)(popcount(bitset)) - 2;
     count = _max(count, 3);
     if (max_limit) {
         count = _min(count, max_limit);
