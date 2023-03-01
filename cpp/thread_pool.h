@@ -62,26 +62,6 @@ typedef deque<ThrdContext, allocator<ThrdContext> > ThreadQueue;
 typedef std::deque<ThrdContext> ThreadQueue;
 #endif
 
-#if defined(WINVER) && WINVER >= 0x0600
-typedef CONDITION_VARIABLE ConditionVariable;
-#elif defined(_WIN32)
-class ThreadLock;
-class ConditionVariableLegacy {
-public:
-    ConditionVariableLegacy();
-    ~ConditionVariableLegacy();
-
-    bool wait(ThreadLock &lock, int timeout_ms = -1);
-    void signal();
-    void broadcast();
-
-private:
-    HANDLE m_semphore;
-    int m_wait_num;
-};
-typedef ConditionVariableLegacy ConditionVariable;
-#endif
-
 class ThreadLock {
 public:
     ThreadLock();
@@ -95,6 +75,25 @@ public:
     void broadcast();
 
 private:
+#if defined(WINVER) && WINVER >= 0x0600
+    typedef CONDITION_VARIABLE ConditionVariable;
+#elif defined(_WIN32)
+    class ConditionVariableLegacy {
+    public:
+        ConditionVariableLegacy();
+        ~ConditionVariableLegacy();
+
+        bool wait(ThreadLock &lock, int timeout_ms = -1);
+        void signal();
+        void broadcast();
+
+    private:
+        HANDLE m_semphore;
+        int m_wait_num;
+    };
+    typedef ConditionVariableLegacy ConditionVariable;
+#endif
+
     CriticalSection m_mutex;
     ConditionVariable m_cond;
 };
@@ -131,6 +130,7 @@ public:
 
 private:
     static void thread_instance(void *param);
+    static THRD_INST _threadstart(void *param);
     ThreadQueue m_queue;
     ThrdContext m_thrd_context;
     ThreadLock m_pool_lock;
@@ -140,7 +140,6 @@ private:
     int m_thrd_num;
     int m_active_thrd_num;
     THRD_HANDLE *m_thread_handle;
-    static THRD_INST _threadstart(void *param);
 };
 
 #endif

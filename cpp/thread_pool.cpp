@@ -13,7 +13,7 @@
 #endif
 
 #if defined(WINVER) && WINVER < 0x0600
-ConditionVariableLegacy::ConditionVariableLegacy():m_semphore(NULL), m_wait_num(0) {
+ThreadLock::ConditionVariableLegacy::ConditionVariableLegacy():m_semphore(NULL), m_wait_num(0) {
     m_semphore = CreateSemaphore(NULL, 0, INT_MAX, NULL);
     if (!m_semphore) {
         fprintf(stderr, "CreateSemaphore failed.");
@@ -22,11 +22,11 @@ ConditionVariableLegacy::ConditionVariableLegacy():m_semphore(NULL), m_wait_num(
     }
 }
 
-ConditionVariableLegacy::~ConditionVariableLegacy() {
+ThreadLock::ConditionVariableLegacy::~ConditionVariableLegacy() {
     CloseHandle(m_semphore);
 }
 
-bool ConditionVariableLegacy::wait(ThreadLock &lock, int timeout_ms /* = -1 */ ) {
+bool ThreadLock::ConditionVariableLegacy::wait(ThreadLock &lock, int timeout_ms /* = -1 */ ) {
     DWORD timeout = INFINITE;
 
     if (timeout_ms >= 0) {
@@ -41,13 +41,13 @@ bool ConditionVariableLegacy::wait(ThreadLock &lock, int timeout_ms /* = -1 */ )
     return (ret == WAIT_OBJECT_0) ? true : false;
 }
 
-void ConditionVariableLegacy::signal() {
+void ThreadLock::ConditionVariableLegacy::signal() {
     if (m_wait_num > 0) {
         ReleaseSemaphore(m_semphore, 1, NULL);
     }
 }
 
-void ConditionVariableLegacy::broadcast() {
+void ThreadLock::ConditionVariableLegacy::broadcast() {
     if (m_wait_num > 0) {
         ReleaseSemaphore(m_semphore, m_wait_num, NULL);
     }
