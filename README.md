@@ -106,6 +106,7 @@ turbo c++ 1.01/3.0 (dos16)
 turbo c 1.5/2.01 (dos16)
 symantec c++ 7.5 (dos16)
 power c 2.2.2 (dos16)
+dev86 0.16.21 (dos16)
 cc65 2.19 (c64, apple2)
 ```
 
