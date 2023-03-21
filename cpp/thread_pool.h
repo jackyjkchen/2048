@@ -125,8 +125,9 @@ public:
     void add_task(thrd_callback func, void *param);
     void wait_all_task();
     void wait_all_thrd();
+    int get_thrd_count();
 
-    static int get_cpu_num();
+    static int get_cpu_count();
 
 private:
     static void thread_instance(void *param);
@@ -137,8 +138,8 @@ private:
     ThreadLock m_ctrl_lock;
     bool m_pool_signaled;
     bool m_stop;
-    int m_thrd_num;
-    int m_active_thrd_num;
+    int m_thrd_count;
+    int m_active_thrd_count;
     THRD_HANDLE *m_thread_handle;
 };
 
