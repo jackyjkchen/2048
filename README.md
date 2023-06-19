@@ -47,6 +47,7 @@ pcc 1.1.0 (linux, freebsd)
 lcc 4.0 (win32)
 dmc 8.57 (win32)
 cc (openserver, unixware)
+compcert 3.12 (linux)
 ```
 
 使用FASTMODE=0预处理（dos16目标下默认FASTMODE=0），代码段和数据段可控制在64KiB以内，额外支持：
@@ -98,6 +99,7 @@ pcc 1.1.0 (linux, freebsd)
 lcc 4.0 (win32)
 dmc 8.57 (win32)
 cc (openserver, unixware)
+compcert 3.12 (linux)
 msvc 1.52 (dos16)
 msc 5.1/6.0/7.0 (dos16)
 quickc 2.01/2.51 (dos16)
@@ -162,6 +164,7 @@ pcc 1.1.0 (linux, freebsd)
 lcc 4.0 (win32)
 dmc 8.57 (win32)
 cc (openserver, unixware)
+compcert 3.12 (linux)
 ```
 
 使用FASTMODE=0预处理（dos16目标下默认FASTMODE=0），查表法采取分表形式（单表小于64KiB，总内存需求384KiB），可支持dos16目标（需要compact或large内存模型），限定搜索深度上限为3，额外支持：
@@ -213,6 +216,7 @@ pcc 1.1.0 (linux, freebsd)
 lcc 4.0 (win32)
 dmc 8.57 (win32)
 cc (openserver, unixware)
+compcert 3.12 (linux)
 msvc 1.52 (dos16)
 msc 5.1/6.0/7.0 (dos16)
 quickc 2.01/2.51 (dos16)
