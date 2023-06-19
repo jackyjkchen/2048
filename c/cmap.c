@@ -5,8 +5,8 @@
  * under the terms of the MIT license. See LICENSE for details.
  */
 
-#include <stdlib.h> /* malloc, realloc */
-#include <string.h> /* strcmp, memset, memcmp, memcpy */
+#include <stdlib.h>             /* malloc, realloc */
+#include <string.h>             /* strcmp, memset, memcmp, memcpy */
 #include "cmap.h"
 
 typedef struct map_node_t map_node_t;
@@ -24,18 +24,9 @@ size_t map_generic_hash(const void *mem, size_t memsize) {
     const unsigned char *barr = mem;
     size_t hash = 5381;
     size_t i;
+
     for (i = 0; i < memsize; i++) {
         hash = ((hash << 5) + hash) ^ (barr[i]);
-    }
-    return hash;
-}
-
-size_t map_string_hash(const void *mem, size_t memsize) {
-    const unsigned char *barr = *(void **)mem;
-    size_t hash = 5381;
-    (void) memsize;
-    while (*barr){
-        hash = ((hash << 5) + hash) ^ (*barr++);
     }
     return hash;
 }
@@ -44,13 +35,10 @@ int map_generic_cmp(const void *a, const void *b, size_t memsize) {
     return memcmp(a, b, memsize);
 }
 
-int map_string_cmp(const void *a, const void *b, size_t memsize) {
-    (void) memsize;
-    return strcmp(*(const char **) a, *(const char **) b);
-}
-
-static map_node_t *map_newnode(const void *key, size_t ksize, size_t koffset, const void *value, size_t vsize, size_t voffset, MapHashFunction hash_func) {
+static map_node_t *map_newnode(const void *key, size_t ksize, size_t koffset, const void *value, size_t vsize,
+                               size_t voffset, MapHashFunction hash_func) {
     map_node_t *node;
+
     node = (map_node_t *) malloc(sizeof(*node) + koffset + ksize + voffset + vsize);
     if (node == NULL) {
         return NULL;
@@ -74,6 +62,7 @@ size_t map_bucketidx(map_base_t *m, size_t hash) {
 
 static void map_addnode(map_base_t *m, map_node_t *node) {
     size_t n = map_bucketidx(m, node->hash);
+
     node->next = m->buckets[n];
     m->buckets[n] = node;
 }
@@ -83,6 +72,7 @@ static int map_resize(map_base_t *m, size_t nbuckets) {
     map_node_t *nodes, *node, *next;
     map_node_t **buckets;
     size_t i;
+
     /* Chain all nodes together */
     nodes = NULL;
     i = m->nbuckets;
@@ -118,6 +108,7 @@ static int map_resize(map_base_t *m, size_t nbuckets) {
 static map_node_t **map_getref(map_base_t *m, const void *key, size_t ksize) {
     size_t hash = m->hash_func(key, ksize);
     map_node_t **next;
+
     if (m->nbuckets > 0) {
         next = &m->buckets[map_bucketidx(m, hash)];
         while (*next != NULL) {
@@ -134,6 +125,7 @@ static map_node_t **map_getref(map_base_t *m, const void *key, size_t ksize) {
 void map_delete_(map_base_t *m) {
     map_node_t *next, *node;
     size_t i;
+
     i = m->nbuckets;
     while (i--) {
         node = m->buckets[i];
@@ -149,13 +141,16 @@ void map_delete_(map_base_t *m) {
 
 void *map_get_(map_base_t *m, const void *key, size_t ksize) {
     map_node_t **next = map_getref(m, key, ksize);
+
     return next != NULL ? (*next)->value : NULL;
 }
 
 
-int map_set_(map_base_t *m, const void *key, size_t ksize, size_t koffset, const void *value, size_t vsize, size_t voffset) {
+int map_set_(map_base_t *m, const void *key, size_t ksize, size_t koffset, const void *value, size_t vsize,
+             size_t voffset) {
     size_t n;
     map_node_t **next, *node;
+
     /* Find & replace existing node */
     next = map_getref(m, key, ksize);
     if (next != NULL) {
@@ -183,6 +178,7 @@ int map_set_(map_base_t *m, const void *key, size_t ksize, size_t koffset, const
 void map_remove_(map_base_t *m, const void *key, size_t ksize) {
     map_node_t *node;
     map_node_t **next = map_getref(m, key, ksize);
+
     if (next != NULL) {
         node = *next;
         *next = (*next)->next;
@@ -194,6 +190,7 @@ void map_remove_(map_base_t *m, const void *key, size_t ksize) {
 
 map_iter_t map_iter_(void) {
     map_iter_t iter;
+
     iter.bucketidx = (size_t)-1;
     iter.node = NULL;
     return iter;
@@ -207,7 +204,7 @@ void *map_next_(map_base_t *m, map_iter_t *iter) {
             goto nextBucket;
         }
     } else {
-        nextBucket:
+      nextBucket:
         do {
             if (++iter->bucketidx >= m->nbuckets) {
                 return NULL;
@@ -222,13 +219,16 @@ void *map_next_(map_base_t *m, map_iter_t *iter) {
 int map_equal_(map_base_t *m1, map_base_t *m2, size_t ksize, size_t vsize, MapCmpFunction val_cmp_func) {
     void *m1_key;
     map_iter_t m1_it = map_iter(m1);
-    if (m1->nnodes != m2->nnodes){
+
+    if (m1->nnodes != m2->nnodes) {
         return 0;
     }
-    if (!val_cmp_func) val_cmp_func = map_generic_cmp;
-    while ((m1_key = map_next_(m1, &m1_it)) != 0){
+    if (!val_cmp_func)
+        val_cmp_func = map_generic_cmp;
+    while ((m1_key = map_next_(m1, &m1_it)) != 0) {
         void *m2_val_ptr = map_get_(m2, m1_key, ksize);
-        if (m2_val_ptr == NULL || val_cmp_func(map_get_(m1, m1_key, ksize), m2_val_ptr, vsize) != 0){
+
+        if (m2_val_ptr == NULL || val_cmp_func(map_get_(m1, m1_key, ksize), m2_val_ptr, vsize) != 0) {
             return 0;
         }
     }
@@ -236,11 +236,11 @@ int map_equal_(map_base_t *m1, map_base_t *m2, size_t ksize, size_t vsize, MapCm
 }
 
 int map_from_pairs_(map_base_t *m, size_t pcount, size_t psize,
-                    const void *key, size_t ksize, size_t koffset,
-                    const void *val, size_t vsize, size_t voffset) {
+                    const void *key, size_t ksize, size_t koffset, const void *val, size_t vsize, size_t voffset) {
     size_t i;
+
     for (i = 0; i < pcount; i++) {
-        if (!map_set_(m, key, ksize, koffset, val, vsize, voffset)){
+        if (!map_set_(m, key, ksize, koffset, val, vsize, voffset)) {
             return 0;
         }
         key = (char *)key + psize;
@@ -251,14 +251,16 @@ int map_from_pairs_(map_base_t *m, size_t pcount, size_t psize,
 int map_copy_(map_base_t *m1, map_base_t *m2, size_t ksize, size_t koffset, size_t vsize, size_t voffset) {
     map_node_t *next, *node;
     size_t i;
-    if (m2->nbuckets > (m1->nbuckets - m1->nnodes) && !map_resize(m1, m2->nbuckets)) return 0;
+
+    if (m2->nbuckets > (m1->nbuckets - m1->nnodes) && !map_resize(m1, m2->nbuckets))
+        return 0;
 
     i = m2->nbuckets;
     while (i--) {
         node = m2->buckets[i];
         while (node != NULL) {
             next = node->next;
-            if (!map_set_(m1, node->key, ksize, koffset, node->value, vsize, voffset)){
+            if (!map_set_(m1, node->key, ksize, koffset, node->value, vsize, voffset)) {
                 return 0;
             }
             node = next;

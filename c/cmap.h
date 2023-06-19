@@ -8,7 +8,7 @@
 #ifndef CMAP_H
 #define CMAP_H
 
-#include <stddef.h> /* size_t, NULL */
+#include <stddef.h>             /* size_t, NULL */
 
 #define MAP_VER_MAJOR 2
 #define MAP_VER_MINOR 5
@@ -130,12 +130,7 @@ typedef struct {
 
 size_t map_generic_hash(const void *mem, size_t memsize);
 
-size_t map_string_hash(const void *mem, size_t memsize);
-
 int map_generic_cmp(const void *a, const void *b, size_t memsize);
-
-int map_string_cmp(const void *a, const void *b, size_t memsize);
-
 
 /* "private" functions */
 void map_delete_(map_base_t *);

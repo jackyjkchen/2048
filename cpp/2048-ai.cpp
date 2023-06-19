@@ -723,11 +723,12 @@ score_heur_t Game2048::score_toplevel_move(board_t board, int move) {
         res = score_tilechoose_node(state, newboard, 1.0f) + 1e-6f;
 
 #if FASTMODE != 0
-    printf("Move %d: result %f: eval'd %ld moves (%ld no moves, %ld table hits, %ld cache hits, %ld cache size) (maxdepth=%d)\n", move, res,
-           state.moves_evaled, state.nomoves, state.tablehits, state.cachehits, (long)state.trans_table.size(), state.maxdepth);
+    printf("Move %d: result %f: eval'd %ld moves (%ld no moves, %ld table hits, %ld cache hits, %ld cache size) (maxdepth=%d)\n",
+           move, res, state.moves_evaled, state.nomoves, state.tablehits, state.cachehits,
+          (long)state.trans_table.size(), state.maxdepth);
 #else
-    printf("Move %d: result %f: eval'd %ld moves (%ld no moves, %ld table hits, %ld cache hits, %ld cache size) (maxdepth=%d)\n", move, res,
-           state.moves_evaled, state.nomoves, state.tablehits, state.cachehits, 0L, state.maxdepth);
+    printf("Move %d: result %f: eval'd %ld moves (%ld no moves, %ld table hits, %ld cache hits, %ld cache size) (maxdepth=%d)\n",
+           move, res, state.moves_evaled, state.nomoves, state.tablehits, state.cachehits, 0L, state.maxdepth);
 #endif
 
     return res;
@@ -773,7 +774,7 @@ int Game2048::find_best_move(board_t board) {
 #else
     score_heur_t res[4] = { 0.0f };
 #if defined(OPENMP_THREAD)
-#pragma omp parallel for
+#pragma omp parallel for num_threads(omp_get_num_procs() >= 4 ? 4 : omp_get_num_procs())
 #endif
     for (move = 0; move < 4; move++) {
         res[move] = score_toplevel_move(board, move);

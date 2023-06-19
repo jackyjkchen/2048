@@ -16,9 +16,9 @@ AI实现需要关联容器、字典或哈希表做cache以提升性能，考验�
 
 对于脚本语言或16位DOS目标，限定搜索深度上限为3，此时100%能算到2048，但通常只能算到4096-8192，小概率算到16384。
 
-对于标准库中缺乏关联容器、字典或哈希表的编译型语言（如C、Fortran），限定搜索深度上限为5，此时100%能算到4096，通常能算到8192-16384，小概率算到32768。
+对于标准库中缺乏关联容器、字典或哈希表的编译型语言（如Fortran），限定搜索深度上限为5，此时100%能算到4096，通常能算到8192-16384，小概率算到32768。
 
-对于标准库拥有关联容器、字典或哈希表的编译型语言（如C++、C#、Rust、Go、Java、VB.net、Pascal），不限定算法搜索深度（实际上限为12），此时100%能算到8192，16384概率超过90%，32768概率超过30%。
+对于标准库拥有关联容器、字典或哈希表的编译型语言（如C++、C#、Rust、Go、Java、VB.net、Pascal，C语言使用[https://github.com/Wirtos/cmap](https://github.com/Wirtos/cmap)作为关联容器），不限定算法搜索深度（实际上限为12），此时100%能算到8192，16384概率超过90%，32768概率超过30%。
 
 
 # C
@@ -140,11 +140,11 @@ msc 3.0/4.0 (dos16)
 
 ## c/2048-ai.c
 
-ISO C90 AI实现，非严格C90内容仅为64位整数。可选支持OpenMP多线程（预处理OPENMP_THREAD控制）。
+ISO C90 AI实现，非严格C90内容仅为64位整数。可选支持OpenMP多线程（预处理OPENMP_THREAD控制）。使用[https://github.com/Wirtos/cmap](https://github.com/Wirtos/cmap)作为cache。
 
 ### 单线程
 
-默认启用查表法（预处理FASTMODE=1），限定搜索深度上限为5。
+默认启用查表法和cache（预处理FASTMODE=1）。
 
 已测试编译器和平台：
 ```
@@ -167,7 +167,7 @@ cc (openserver, unixware)
 compcert 3.12 (linux)
 ```
 
-使用FASTMODE=0预处理（dos16目标下默认FASTMODE=0），查表法采取分表形式（单表小于64KiB，总内存需求384KiB），可支持dos16目标（需要compact或large内存模型），限定搜索深度上限为3，额外支持：
+使用FASTMODE=0预处理（dos16目标下默认FASTMODE=0），不启用cache，查表法采取分表形式（单表小于64KiB，总内存需求384KiB），可支持dos16目标（需要compact或large内存模型），限定搜索深度上限为3，额外支持：
 ```
 openwatcom c++ 1.9 (dos16)
 watcom c++ 11.0 (dos16)
@@ -196,7 +196,7 @@ gcc -DOPENMP_THREAD -O2 -fopenmp c/2048-ai.c -o 2048 -lm
 
 ## c/2048ai16.c
 
-不使用64位整数的严格ISO C90 AI实现，查表法采取分表形式（单表小于64KiB，总内存需求256KiB），支持dos16目标（需要compact或large内存模型），限定搜索深度上限为3。
+不使用64位整数的严格ISO C90 AI实现，不启用cache，查表法采取分表形式（单表小于64KiB，总内存需求256KiB），支持dos16目标（需要compact或large内存模型），限定搜索深度上限为3。
 
 已测试编译器和平台：
 ```
@@ -392,7 +392,7 @@ g++ -DOPENMP_THREAD -O2 -fopenmp cpp/2048-ai.cpp -o 2048
 
 ## cpp/2048ai16.cpp
 
-不使用64位整数的ISO C++98 AI实现，查表法采取分表形式（单表小于64KiB，总内存需求256KiB），支持dos16目标（需要compact或large内存模型），限定搜索深度上限为3。
+不使用64位整数的ISO C++98 AI实现，不启用cache，查表法采取分表形式（单表小于64KiB，总内存需求256KiB），支持dos16目标（需要compact或large内存模型），限定搜索深度上限为3。
 
 已测试编译器和平台：
 ```
