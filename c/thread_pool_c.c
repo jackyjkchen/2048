@@ -69,14 +69,14 @@ static void legacycv_uinit(LEGACYCV_CTX* ctx) {
 }
 
 static int legacycv_wait(LEGACYCV_CTX* ctx, THREADLOCK_CTX *lock, int timeout_ms) {
-    DWORD timeout = INFINITE;
+    DWORD timeout = INFINITE, ret = 0;
 
     if (timeout_ms >= 0) {
         timeout = (DWORD)timeout_ms;
     }
     ctx->wait_num++;
     threadlock_unlock(lock);
-    DWORD ret = WaitForSingleObject(ctx->semphore, timeout);
+    ret = WaitForSingleObject(ctx->semphore, timeout);
 
     threadlock_lock(lock);
     ctx->wait_num--;
@@ -121,8 +121,8 @@ int threadlock_init(THREADLOCK_CTX *ctx) {
     InitializeConditionVariable(&ctx_->cond);
 #else
     if (!legacycv_init(&ctx_->cond)) {
-        free(ctx_->ctx);
-        ctx_->ctx = NULL;
+        free(ctx->ctx);
+        ctx->ctx = NULL;
         return 0;
     }
 #endif
@@ -177,7 +177,7 @@ int threadlock_wait(THREADLOCK_CTX *ctx, int timeout_ms) {
     }
     return (TRUE == SleepConditionVariableCS(&ctx_->cond, &ctx_->mutex, timeout));
 #else
-    return legacycv_wait(ctx_->cond, ctx, timeout_ms);
+    return legacycv_wait(&ctx_->cond, ctx, timeout_ms);
 #endif
 #else
     int ret = 0;
@@ -225,10 +225,10 @@ void threadlock_broadcast(THREADLOCK_CTX *ctx) {
 #if defined(WINVER) && WINVER >= 0x0501
 static DWORD _count_set_bits(ULONG_PTR bitMask) {
     DWORD LSHIFT = sizeof(ULONG_PTR) * 8 - 1;
-    DWORD bitSetCount = 0;
+    DWORD bitSetCount = 0, i = 0;
     ULONG_PTR bitTest = (ULONG_PTR)1 << LSHIFT;
 
-    for (DWORD i = 0; i <= LSHIFT; ++i) {
+    for (i = 0; i <= LSHIFT; ++i) {
         bitSetCount += ((bitMask & bitTest) ? 1 : 0);
         bitTest /= 2;
     }

@@ -87,7 +87,7 @@ typedef int (*get_move_func_t)(board_t);
 #elif defined(__GNUC__) && (__GNUC__ >= 4 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 4))
 #define popcount __builtin_popcount
 #else
-static inline int popcount(unsigned int bitset) {
+static int popcount(unsigned int bitset) {
     int count = 0;
     while (bitset) {
         bitset &= bitset - 1;
