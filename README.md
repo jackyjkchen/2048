@@ -175,6 +175,29 @@ watcom c++ 11.0 (dos16)
 
 * 编译器相关comments同c/2048.c。
 
+### 多线程
+
+本实现支持多线程，由预处理MULTI_THREAD控制，多线程版本依赖操作系统原生线程（c/thread_pool_c.c），仅支持Win32和Posix两种线程模型，已测试编译器和平台：
+
+已测试编译器和平台：
+```
+gcc 1.42+ (linux, freebsd, macos, mingw, mingw-w64, cygwin, openbsd, netbsd, dragonflybsd, solaris, openserver, unixware)
+clang 3.0+ (linux, macos, freebsd, win32, openbsd, netbsd, dragonflybsd)
+msvc 2.0+ (win32)
+icc 8.1+ (win32, linux)
+aocc 1.0+ (linux)
+nvhpc/pgi 20.11/21.7 (linux)
+open64 4.2.4/4.5.2.1/5.0 (linux)
+openwatcom c++ 1.9 (win32)
+watcom c++ 11.0 (win32)
+borland c++ 5.5 (win32)
+visualage c++ 3.5 (win32)
+pcc 1.1.0 (linux, freebsd)
+lcc 4.0 (win32)
+dmc 8.57 (win32)
+```
+
+
 ### OpenMP多线程
 
 本实现支持OpenMP多线程，由预处理OPENMP_THREAD控制，已测试编译器和平台：

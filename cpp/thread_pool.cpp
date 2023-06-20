@@ -115,7 +115,7 @@ bool ThreadLock::wait(int timeout_ms /* = -1 */ ) {
     } else {
         ret = pthread_cond_wait(&m_cond, &m_mutex);
     }
-    return ret;
+    return (ret == 0);
 #endif
 }
 
@@ -143,7 +143,6 @@ void ThreadLock::broadcast() {
 #endif
 }
 
-#ifdef _WIN32
 #if defined(WINVER) && WINVER >= 0x0501
 static DWORD _count_set_bits(ULONG_PTR bitMask) {
     DWORD LSHIFT = sizeof(ULONG_PTR) * 8 - 1;
@@ -157,7 +156,6 @@ static DWORD _count_set_bits(ULONG_PTR bitMask) {
 
     return bitSetCount;
 }
-#endif
 #endif
 
 THRD_INST ThreadPool::_threadstart(void *param) {

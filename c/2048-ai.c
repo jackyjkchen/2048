@@ -58,7 +58,13 @@ enum {
     RIGHT,
 };
 
-#if defined(OPENMP_THREAD)
+#if defined(MULTI_THREAD) && defined(OPENMP_THREAD)
+#error "MULTI_THREAD and OPENMP_THREAD cannot be defined at the same time."
+#endif
+#if defined(MULTI_THREAD)
+#include "deque.c"
+#include "thread_pool_c.c"
+#elif defined(OPENMP_THREAD)
 #include <omp.h>
 #endif
 
@@ -165,6 +171,16 @@ typedef struct {
     long moves_evaled;
     int depth_limit;
 } eval_state;
+
+#if defined(MULTI_THREAD)
+typedef struct {
+	board_t board;
+	int move;
+	score_heur_t res;
+} thrd_context;
+
+static void thrd_worker(void *param);
+#endif
 
 #if FASTMODE != 0
 #define TABLESIZE 65536
@@ -684,15 +700,47 @@ static score_heur_t score_toplevel_move(board_t board, int move) {
     return res;
 }
 
+#if defined(MULTI_THREAD)
+static void thrd_worker(void *param) {
+    thrd_context *pcontext = (thrd_context *)param;
+    pcontext->res = score_toplevel_move(pcontext->board, pcontext->move);
+}
+
+static THREADPOOL_CTX* get_thrd_pool() {
+    static THREADPOOL_CTX ctx;
+    return &ctx;
+}
+#endif
+
 int find_best_move(board_t board) {
     int move = 0;
     score_heur_t best = 0.0f;
     int bestmove = -1;
+#if defined(MULTI_THREAD)
+    thrd_context context[4];
+    THREADPOOL_CTX *ctx = get_thrd_pool();
+#else
     score_heur_t res[4] = { 0.0f };
+#endif
 
     print_board(board);
     printf("Current scores: heur %ld, actual %ld\n", (long)score_heur_board(board), (long)score_board(board));
 
+#if defined(MULTI_THREAD)
+    for (move = 0; move < 4; move++) {
+        context[move].board = board;
+        context[move].move = move;
+        context[move].res = 0.0f;
+        threadpool_addtask(ctx, thrd_worker, &context[move]);
+    }
+    threadpool_waitalltask(ctx);
+    for (move = 0; move < 4; move++) {
+        if (context[move].res > best) {
+            best = context[move].res;
+            bestmove = move;
+        }
+    }
+#else
 #if defined(OPENMP_THREAD)
 #pragma omp parallel for num_threads(omp_get_num_procs() >= 4 ? 4 : omp_get_num_procs())
 #endif
@@ -706,6 +754,7 @@ int find_best_move(board_t board) {
             bestmove = move;
         }
     }
+#endif
     printf("Selected bestmove: %d, result: %f\n", bestmove, best);
 
     return bestmove;
@@ -716,6 +765,14 @@ void play_game(get_move_func_t get_move) {
     int scorepenalty = 0;
     long last_score = 0, current_score = 0, moveno = 0;
 
+#if defined(MULTI_THREAD)
+    THREADPOOL_CTX *ctx = get_thrd_pool();
+    if (!threadpool_startup(ctx, threadpool_cpucount() >= 4 ? 4 : 0)) {
+        fprintf(stderr, "Init thread pool failed.");
+        fflush(stderr);
+        abort();
+    }
+#endif
     init_tables();
     while (1) {
         int move;
