@@ -181,7 +181,7 @@ watcom c++ 11.0 (dos16)
 
 已测试编译器和平台：
 ```
-gcc 1.42+ (linux, freebsd, macos, mingw, mingw-w64, cygwin, openbsd, netbsd, dragonflybsd, solaris, openserver, unixware)
+gcc 1.42+ (linux, freebsd, macos, mingw, mingw-w64, cygwin, openbsd, netbsd, dragonflybsd, solaris)
 clang 3.0+ (linux, macos, freebsd, win32, openbsd, netbsd, dragonflybsd)
 msvc 2.0+ (win32)
 icc 8.1+ (win32, linux)
