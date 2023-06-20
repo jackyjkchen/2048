@@ -309,7 +309,7 @@ static void thread_instance(void *param) {
     THREADPOOL_CTX_ *ctx_ = (THREADPOOL_CTX_ *)param;
 
     while (1) {
-        ThrdContext *context = NULL;
+        ThrdContext context;
         threadlock_lock(&ctx_->pool_lock);
         if (deque_empty(&ctx_->queue)) {
             if (ctx_->stop) {
@@ -326,10 +326,10 @@ static void thread_instance(void *param) {
             threadlock_unlock(&ctx_->pool_lock);
             continue;
         }
-        context = (ThrdContext *)deque_pop_front(&ctx_->queue);
+        memcpy(&context, deque_pop_front(&ctx_->queue), sizeof(ThrdContext));
         ctx_->active_thrd_count++;
         threadlock_unlock(&ctx_->pool_lock);
-        context->func(context->param);
+        context.func(context.param);
         threadlock_lock(&ctx_->pool_lock);
         ctx_->active_thrd_count--;
         threadlock_unlock(&ctx_->pool_lock);
@@ -352,7 +352,7 @@ int threadpool_startup(THREADPOOL_CTX *ctx, int max_thrd_num) {
 
     ctx_ = (THREADPOOL_CTX_*)ctx->ctx;
     do {
-        if (!deque_init(&ctx_->queue, 16)) {
+        if (!deque_init(&ctx_->queue)) {
             break;
         }
         ctx_->thrd_context.func = thread_instance;

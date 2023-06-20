@@ -17,7 +17,7 @@ typedef struct {
         ET tmp;            \
     }
 
-#define deque_init(ctx, queue_size) deque_init_(&(ctx)->base, sizeof((ctx)->tmp), queue_size)
+#define deque_init(ctx) deque_init_(&(ctx)->base, sizeof((ctx)->tmp))
 
 #define deque_delete(ctx) deque_delete_(&(ctx)->base)
 
@@ -32,7 +32,7 @@ typedef struct {
 #define deque_empty(ctx) ((ctx)->base.nnode == 0)
 
 /* private function */
-extern int deque_init_(deque_base_t *base, size_t node_size, size_t queue_size);
+extern int deque_init_(deque_base_t *base, size_t node_size);
 
 extern void deque_delete_(deque_base_t *base);
 

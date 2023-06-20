@@ -3,7 +3,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-int deque_init_(deque_base_t *base, size_t node_size, size_t queue_size) {
+int deque_init_(deque_base_t *base, size_t node_size) {
+    const size_t queue_size = 16;
     if(!base->buf) {
         base->buf = malloc(node_size * queue_size);
         if(!base->buf) {
@@ -58,9 +59,23 @@ void* deque_pop_back_(deque_base_t *base, size_t node_size) {
     return ret;
 }
 
+static int deque_resize_(deque_base_t *base, size_t node_size) {
+    void *newbuf = realloc(base->buf, 2 * base->nsize * node_size);
+    if (!newbuf) {
+        return 0;
+    }
+    base->buf = newbuf;
+    memmove((unsigned char *)base->buf + base->nsize * node_size, base->buf, base->tailidx * node_size);
+    base->tailidx += base->nsize;
+    base->nsize *= 2;
+    return 1;
+}
+
 int deque_push_front_(deque_base_t *base, void *node, size_t node_size) {
     if (base->nnode >= base->nsize) {
-        return 0;
+        if (!deque_resize_(base, node_size)) {
+            return 0;
+        }
     }
     if (base->headidx == 0) {
         base->headidx = base->nsize - 1;
@@ -74,7 +89,9 @@ int deque_push_front_(deque_base_t *base, void *node, size_t node_size) {
 
 int deque_push_back_(deque_base_t *base, void *node, size_t node_size) {
     if (base->nnode >= base->nsize) {
-        return 0;
+        if (!deque_resize_(base, node_size)) {
+            return 0;
+        }
     }
     memcpy((unsigned char *)base->buf + base->tailidx * node_size, node, node_size);
     base->tailidx += 1;
