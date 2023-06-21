@@ -5,9 +5,10 @@
 
 int deque_init_(deque_base_t *base, size_t node_size) {
     const size_t queue_size = 16;
-    if(!base->buf) {
+
+    if (!base->buf) {
         base->buf = malloc(node_size * queue_size);
-        if(!base->buf) {
+        if (!base->buf) {
             return 0;
         }
         memset(base->buf, 0x00, node_size * queue_size);
@@ -30,8 +31,9 @@ void deque_delete_(deque_base_t *base) {
     base->tailidx = 0;
 }
 
-void* deque_pop_front_(deque_base_t *base, size_t node_size) {
+void *deque_pop_front_(deque_base_t *base, size_t node_size) {
     void *ret = NULL;
+
     if (base->nnode == 0) {
         return ret;
     }
@@ -44,8 +46,9 @@ void* deque_pop_front_(deque_base_t *base, size_t node_size) {
     return ret;
 }
 
-void* deque_pop_back_(deque_base_t *base, size_t node_size) {
+void *deque_pop_back_(deque_base_t *base, size_t node_size) {
     void *ret = NULL;
+
     if (base->nnode == 0) {
         return ret;
     }
@@ -61,6 +64,7 @@ void* deque_pop_back_(deque_base_t *base, size_t node_size) {
 
 static int deque_resize_(deque_base_t *base, size_t node_size) {
     void *newbuf = realloc(base->buf, 2 * base->nsize * node_size);
+
     if (!newbuf) {
         return 0;
     }
@@ -101,4 +105,3 @@ int deque_push_back_(deque_base_t *base, void *node, size_t node_size) {
     base->nnode++;
     return 1;
 }
-
