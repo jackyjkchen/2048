@@ -1,5 +1,5 @@
-#ifndef _THREAD_POOL_H_
-#define _THREAD_POOL_H_
+#ifndef _THREAD_POOL_C_H_
+#define _THREAD_POOL_C_H_
 
 #ifdef __cplusplus
 extern "C" {
