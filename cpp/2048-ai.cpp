@@ -16,7 +16,7 @@
 #define __16BIT__ 1
 #endif
 
-#if !defined(FASTMODE) || (defined(FASTMODE) && FASTMODE != 0)
+#if !defined(FASTMODE)
 #define FASTMODE 1
 #endif
 
@@ -67,7 +67,7 @@ enum {
 #include <omp.h>
 #endif
 
-#if FASTMODE != 0
+#if FASTMODE
 typedef struct {
     int depth;
     score_heur_t heuristic;
@@ -107,7 +107,6 @@ typedef std::map<board_t, trans_table_entry_t, less<board_t> > trans_table_t;
 typedef std::map<board_t, trans_table_entry_t> trans_table_t;
 #define MAP_HAVE_SECOND 1
 #endif
-#endif
 
 #if defined(_MSC_VER) && _MSC_VER >= 1500
 #include <intrin.h>
@@ -123,6 +122,7 @@ static inline int popcount(unsigned int bitset) {
     }
     return count;
 }
+#endif
 #endif
 
 #if defined(__MINGW64__) || defined(__MINGW32__)
@@ -183,7 +183,7 @@ const score_heur_t SCORE_SUM_WEIGHT = 11.0f;
 const score_heur_t SCORE_MERGES_WEIGHT = 700.0f;
 const score_heur_t SCORE_EMPTY_WEIGHT = 270.0f;
 const score_heur_t CPROB_THRESH_BASE = 0.0001f;
-#if FASTMODE != 0
+#if FASTMODE
 const row_t CACHE_DEPTH_LIMIT = 15;
 #endif
 
@@ -228,7 +228,7 @@ private:
     board_t initial_board();
 
     struct eval_state {
-#if FASTMODE != 0
+#if FASTMODE
         trans_table_t trans_table;
 #endif
         int maxdepth;
@@ -258,7 +258,7 @@ private:
     static ThreadPool &get_thrd_pool();
 #endif
 
-#if FASTMODE != 0
+#if FASTMODE
 #define TABLESIZE 65536
     row_t *row_left_table;
     row_t *row_right_table;
@@ -327,7 +327,7 @@ int Game2048::count_empty(board_t x) {
 
 void Game2048::init_tables() {
     row_t row = 0, result = 0;
-#if FASTMODE != 0
+#if FASTMODE
     row_t rev_row = 0, rev_result = 0;
 #endif
 
@@ -340,7 +340,7 @@ void Game2048::init_tables() {
         line[2] = (row >> 8) & 0xf;
         line[3] = (row >> 12) & 0xf;
 
-#if FASTMODE != 0
+#if FASTMODE
         score_t score = 0;
         for (i = 0; i < 4; ++i) {
             score_t rank = line[i];
@@ -391,7 +391,7 @@ void Game2048::init_tables() {
             }
         }
 
-#if FASTMODE != 0
+#if FASTMODE
         score_heur_table[row] = (score_heur_t)(SCORE_LOST_PENALTY + SCORE_EMPTY_WEIGHT * empty + SCORE_MERGES_WEIGHT * merges -
             SCORE_MONOTONICITY_WEIGHT * _min(monotonicity_left, monotonicity_right) - SCORE_SUM_WEIGHT * sum);
 #else
@@ -421,7 +421,7 @@ void Game2048::init_tables() {
 
         result = line[0] | (line[1] << 4) | (line[2] << 8) | (line[3] << 12);
 
-#if FASTMODE != 0
+#if FASTMODE
         rev_row = reverse_row(row);
         rev_result = reverse_row(result);
         row_left_table[row] = row ^ result;
@@ -432,7 +432,7 @@ void Game2048::init_tables() {
     } while (row++ != 0xFFFF);
 }
 
-#if FASTMODE != 0
+#if FASTMODE
 void Game2048::alloc_tables() {
     row_left_table = (row_t *)malloc(sizeof(row_t) * TABLESIZE);
     row_right_table = (row_t *)malloc(sizeof(row_t) * TABLESIZE);
@@ -602,7 +602,7 @@ board_t Game2048::initial_board() {
     return insert_tile_rand(board, draw_tile());
 }
 
-#if FASTMODE != 0
+#if FASTMODE
 int Game2048::get_depth_limit(board_t board) {
     row_t bitset = 0, max_limit = 0;
     int count = 0;
@@ -642,7 +642,7 @@ score_heur_t Game2048::score_tilechoose_node(eval_state &state, board_t board, s
         state.tablehits++;
         return score_heur_board(board);
     }
-#if FASTMODE != 0
+#if FASTMODE
     if (state.curdepth < CACHE_DEPTH_LIMIT) {
 #if !defined(__WATCOMC__)
         const
@@ -681,7 +681,7 @@ score_heur_t Game2048::score_tilechoose_node(eval_state &state, board_t board, s
     }
     res = res / num_open;
 
-#if FASTMODE != 0
+#if FASTMODE
     if (state.curdepth < CACHE_DEPTH_LIMIT) {
         trans_table_entry_t entry = { state.curdepth, res };
         state.trans_table[board] = entry;
@@ -722,7 +722,7 @@ score_heur_t Game2048::score_toplevel_move(board_t board, int move) {
     if (board != newboard)
         res = score_tilechoose_node(state, newboard, 1.0f) + 1e-6f;
 
-#if FASTMODE != 0
+#if FASTMODE
     printf("Move %d: result %f: eval'd %ld moves (%ld no moves, %ld table hits, %ld cache hits, %ld cache size) (maxdepth=%d)\n",
            move, res, state.moves_evaled, state.nomoves, state.tablehits, state.cachehits,
           (long)state.trans_table.size(), state.maxdepth);

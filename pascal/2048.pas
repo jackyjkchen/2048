@@ -85,11 +85,11 @@ begin
 end;
 
 {$macro on}
-{$if (not defined(FASTMODE)) or (defined(FASTMODE) and FASTMODE <> 0)}
+{$if (not defined(FASTMODE))}
 {$define FASTMODE := 1}
 {$endif}
 
-{$if FASTMODE <> 0}
+{$if FASTMODE}
 const
     TABLESIZE = 65536;
 type
@@ -364,7 +364,7 @@ begin
     retract_num := 0;
 
     randomize;
-{$if FASTMODE <> 0}
+{$if FASTMODE}
     init_tables;
 {$endif}
     while true do begin

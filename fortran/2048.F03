@@ -17,13 +17,13 @@ function c_getch() bind(c, name='c_getch_')
     integer(c_int) :: c_getch
 end function c_getch
 
-#if !defined(FASTMODE) || (defined(FASTMODE) && FASTMODE != 0)
+#if !defined(FASTMODE)
 #define FASTMODE 1
 #endif
 
 end interface
 
-#if FASTMODE != 0
+#if FASTMODE
 integer(2) :: row_table(-32768:32767)
 integer(4) :: score_table(-32768:32767)
 #endif
@@ -128,7 +128,7 @@ function count_empty(x)
     count_empty = iand(x, int(Z000F, kind=8))
 end function count_empty
 
-#if FASTMODE != 0
+#if FASTMODE
 subroutine init_tables()
     integer(2) :: row, row_result, t0, t1, t2, t3
     integer(2) :: row_line(0:3)
@@ -431,7 +431,7 @@ subroutine play_game()
     retract_pos = 0
     retract_num = 0
 
-#if FASTMODE != 0
+#if FASTMODE
     call init_tables()
 #endif
     do while (1 > 0)

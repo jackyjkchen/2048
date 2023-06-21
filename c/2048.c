@@ -16,7 +16,7 @@
 #define __16BIT__ 1
 #endif
 
-#if !defined(FASTMODE) || (defined(FASTMODE) && FASTMODE != 0)
+#if !defined(FASTMODE)
 #define FASTMODE 1
 #endif
 
@@ -218,7 +218,7 @@ static int count_empty(board_t x) {
     return (int)(x & 0xf);
 }
 
-#if FASTMODE != 0
+#if FASTMODE
 #define TABLESIZE 65536
 static row_t row_table[TABLESIZE];
 static score_t score_table[TABLESIZE];
@@ -436,7 +436,7 @@ void play_game(get_move_func_t get_move) {
     row_t retract_penalty_vec[MAX_RETRACT] = { 0 };
     int retract_pos = 0, retract_num = 0;
 
-#if FASTMODE != 0
+#if FASTMODE
     init_tables();
 #endif
     while (1) {

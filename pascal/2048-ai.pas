@@ -102,7 +102,7 @@ const
     CACHE_DEPTH_LIMIT                = 15;
 
 type
-{$if FASTMODE <> 0}
+{$if FASTMODE}
     trans_table_entry_t = record
          depth : integer;
          heuristic : real;
@@ -110,7 +110,7 @@ type
     trans_table_t = specialize TDictionary<qword, trans_table_entry_t>;
 {$endif}
     eval_state = record
-{$if FASTMODE <> 0}
+{$if FASTMODE}
         trans_table  : trans_table_t;
 {$endif}
         maxdepth     : integer;
@@ -341,7 +341,7 @@ begin
         exit(3)
     else if bitset <= 2048 + 1024 then
         max_limit := 4
-{$if FASTMODE <> 0}
+{$if FASTMODE}
     else if bitset <= 4096 then
         max_limit := 5
     else if bitset <= 4096 + 1024 then
@@ -369,7 +369,7 @@ function score_move_node(var state : eval_state; board : qword; cprob : real) : 
 function score_tilechoose_node(var state : eval_state; board : qword; cprob : real) : real;
 var
     res   : real;
-{$if FASTMODE <> 0}
+{$if FASTMODE}
     entry : trans_table_entry_t;
 {$endif}
     tile_2, tmp : qword;
@@ -380,7 +380,7 @@ begin
         state.tablehits := state.tablehits + 1;
         exit(score_heur_board(board));
     end;
-{$if FASTMODE <> 0}
+{$if FASTMODE}
     if state.curdepth < CACHE_DEPTH_LIMIT then begin
         if state.trans_table.ContainsKey(board) then begin
             entry := state.trans_table[board];
@@ -407,7 +407,7 @@ begin
     end;
     res := res / num_open;
 
-{$if FASTMODE <> 0}
+{$if FASTMODE}
     if state.curdepth < CACHE_DEPTH_LIMIT then begin
         entry.depth := state.curdepth;
         entry.heuristic := res;
@@ -447,7 +447,7 @@ var
     res : real;
     newboard : qword;
 begin
-{$if FASTMODE <> 0}
+{$if FASTMODE}
     state.trans_table := trans_table_t.Create();
 {$endif}
     state.maxdepth := 0;
@@ -461,7 +461,7 @@ begin
         res := 0.0
     else
         res := score_tilechoose_node(state, newboard, 1.0) + 0.000001;
-{$if FASTMODE <> 0}
+{$if FASTMODE}
     msg := format('Move %d: result %f: eval''d %d moves (%d no moves, %d table hits, %d cache hits, %d cache size) (maxdepth=%d)', [_move, res,
            state.moves_evaled, state.nomoves, state.tablehits, state.cachehits, state.trans_table.Count, state.maxdepth]);
     state.trans_table.Free();

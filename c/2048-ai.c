@@ -16,7 +16,7 @@
 #define __16BIT__ 1
 #endif
 
-#if !defined(FASTMODE) || (defined(FASTMODE) && FASTMODE != 0)
+#if !defined(FASTMODE)
 #define FASTMODE 1
 #endif
 
@@ -68,8 +68,8 @@ enum {
 #include <omp.h>
 #endif
 
-
-#if FASTMODE != 0
+typedef int (*get_move_func_t)(board_t);
+#if FASTMODE
 #include "cmap.c"
 typedef struct {
     int depth;
@@ -77,9 +77,6 @@ typedef struct {
 } trans_table_entry_t;
 
 typedef map_t(board_t, trans_table_entry_t) trans_table_t;
-#endif
-
-typedef int (*get_move_func_t)(board_t);
 
 #if defined(_MSC_VER) && _MSC_VER >= 1500
 #include <intrin.h>
@@ -95,6 +92,7 @@ static int popcount(unsigned int bitset) {
     }
     return count;
 }
+#endif
 #endif
 
 #if defined(__MINGW64__) || defined(__MINGW32__)
@@ -155,12 +153,12 @@ static const score_heur_t SCORE_SUM_WEIGHT = 11.0f;
 static const score_heur_t SCORE_MERGES_WEIGHT = 700.0f;
 static const score_heur_t SCORE_EMPTY_WEIGHT = 270.0f;
 static const score_heur_t CPROB_THRESH_BASE = 0.0001f;
-#if FASTMODE != 0
+#if FASTMODE
 static const row_t CACHE_DEPTH_LIMIT = 15;
 #endif
 
 typedef struct {
-#if FASTMODE != 0
+#if FASTMODE
     trans_table_t trans_table;
 #endif
     int maxdepth;
@@ -174,15 +172,15 @@ typedef struct {
 
 #if defined(MULTI_THREAD)
 typedef struct {
-	board_t board;
-	int move;
-	score_heur_t res;
+        board_t board;
+        int move;
+        score_heur_t res;
 } thrd_context;
 
 static void thrd_worker(void *param);
 #endif
 
-#if FASTMODE != 0
+#if FASTMODE
 #define TABLESIZE 65536
 static row_t *row_left_table;
 static row_t *row_right_table;
@@ -261,14 +259,17 @@ static int count_empty(board_t x) {
 static void init_tables(void) {
     row_t row = 0, result = 0;
 
-#if FASTMODE != 0
+#if FASTMODE
     row_t rev_row = 0, rev_result = 0;
 #endif
 
     do {
         int i = 0, j = 0;
         row_t line[4] = { 0 };
-        score_t score = 0, rank = 0;
+        score_t rank = 0;
+#if FASTMODE
+        score_t score = 0;
+#endif
 
         score_heur_t sum = 0.0f;
         score_t empty = 0;
@@ -283,7 +284,7 @@ static void init_tables(void) {
         line[2] = (row >> 8) & 0xf;
         line[3] = (row >> 12) & 0xf;
 
-#if FASTMODE != 0
+#if FASTMODE
         for (i = 0; i < 4; ++i) {
             rank = line[i];
             if (rank >= 2) {
@@ -294,7 +295,7 @@ static void init_tables(void) {
 #endif
 
         for (i = 0; i < 4; ++i) {
-            score_t rank = line[i];
+            rank = line[i];
 
             sum += (score_heur_t)pow((score_heur_t)rank, SCORE_SUM_POWER);
             if (rank == 0) {
@@ -325,7 +326,7 @@ static void init_tables(void) {
             }
         }
 
-#if FASTMODE != 0
+#if FASTMODE
         score_heur_table[row] =
             (score_heur_t)(SCORE_LOST_PENALTY +
                            SCORE_EMPTY_WEIGHT * empty + SCORE_MERGES_WEIGHT * merges -
@@ -362,7 +363,7 @@ static void init_tables(void) {
 
         result = line[0] | (line[1] << 4) | (line[2] << 8) | (line[3] << 12);
 
-#if FASTMODE != 0
+#if FASTMODE
         rev_row = reverse_row(row);
         rev_result = reverse_row(result);
         row_left_table[row] = row ^ result;
@@ -373,7 +374,7 @@ static void init_tables(void) {
     } while (row++ != 0xFFFF);
 }
 
-#if FASTMODE != 0
+#if FASTMODE
 static void alloc_tables(void) {
     row_left_table = (row_t *)malloc(sizeof(row_t) * TABLESIZE);
     row_right_table = (row_t *)malloc(sizeof(row_t) * TABLESIZE);
@@ -554,7 +555,7 @@ static board_t initial_board(void) {
     return insert_tile_rand(board, draw_tile());
 }
 
-#if FASTMODE != 0
+#if FASTMODE
 static int get_depth_limit(board_t board) {
     row_t bitset = 0, max_limit = 0;
     int count = 0;
@@ -584,18 +585,6 @@ static int get_depth_limit(board_t board) {
 }
 #else
 static int get_depth_limit(board_t board) {
-    row_t bitset = 0;
-
-    while (board) {
-        bitset |= 1 << (board & 0xf);
-        board >>= 4;
-    }
-
-    if (bitset <= 128) {
-        return 1;
-    } else if (bitset <= 512) {
-        return 2;
-    }
     return 3;
 }
 #endif
@@ -613,7 +602,7 @@ static score_heur_t score_tilechoose_node(eval_state *state, board_t board, scor
         return score_heur_board(board);
     }
 
-#if FASTMODE != 0
+#if FASTMODE
     if (state->curdepth < CACHE_DEPTH_LIMIT) {
         trans_table_entry_t *entry = map_get(&state->trans_table, board);
         if (entry != NULL) {
@@ -638,9 +627,11 @@ static score_heur_t score_tilechoose_node(eval_state *state, board_t board, scor
     }
     res = res / num_open;
 
-#if FASTMODE != 0
+#if FASTMODE
     if (state->curdepth < CACHE_DEPTH_LIMIT) {
-        trans_table_entry_t entry = { state->curdepth, res };
+        trans_table_entry_t entry;
+        entry.depth = state->curdepth;
+        entry.heuristic = res;
         map_set(&state->trans_table, board, entry);
     }
 #endif
@@ -678,14 +669,14 @@ static score_heur_t score_toplevel_move(board_t board, int move) {
     board_t newboard = execute_move(board, move);
 
     memset(&state, 0x00, sizeof(eval_state));
-#if FASTMODE != 0
-	map_init(&state.trans_table, NULL, NULL);
+#if FASTMODE
+        map_init(&state.trans_table, NULL, NULL);
 #endif
     state.depth_limit = get_depth_limit(board);
     if (board != newboard)
         res = score_tilechoose_node(&state, newboard, 1.0f) + 1e-6f;
 
-#if FASTMODE != 0
+#if FASTMODE
     printf("Move %d: result %f: eval'd %ld moves (%ld no moves, %ld table hits, %ld cache hits, %ld cache size) (maxdepth=%d)\n",
          move, res, state.moves_evaled, state.nomoves, state.tablehits, state.cachehits,
          (long)state.trans_table.base.nnodes, state.maxdepth);
@@ -694,7 +685,7 @@ static score_heur_t score_toplevel_move(board_t board, int move) {
          move, res, state.moves_evaled, state.nomoves, state.tablehits, state.cachehits, 0L, state.maxdepth);
 #endif
 
-#if FASTMODE != 0
+#if FASTMODE
     map_delete(&state.trans_table);
 #endif
     return res;
