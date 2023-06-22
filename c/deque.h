@@ -31,6 +31,12 @@ typedef struct {
 
 #define deque_empty(ctx) ((ctx)->base.nnode == 0)
 
+#define deque_nodes(ctx) ((ctx)->base.nnode)
+
+#define deque_size(ctx) ((ctx)->base.nsize)
+
+#define deque_shrink(ctx) deque_shrink_(&(ctx)->base, sizeof((ctx)->tmp))
+
 /* private function */
 extern int deque_init_(deque_base_t *base, size_t node_size);
 
@@ -43,5 +49,7 @@ extern void* deque_pop_back_(deque_base_t *base, size_t node_size);
 extern int deque_push_front_(deque_base_t *base, void *node, size_t node_size);
 
 extern int deque_push_back_(deque_base_t *base, void *node, size_t node_size);
+
+extern size_t deque_shrink_(deque_base_t *base, size_t node_size);
 
 #endif
