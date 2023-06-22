@@ -197,6 +197,10 @@ lcc 4.0 (win32)
 dmc 8.57 (win32)
 ```
 
+gcc编译示例：
+```
+gcc -DMULTI_THREAD -O2 c/2048-ai.c -pthread -o 2048 -lm
+```
 
 ### OpenMP多线程
 
@@ -215,7 +219,6 @@ gcc编译示例：
 ```
 gcc -DOPENMP_THREAD -O2 -fopenmp c/2048-ai.c -o 2048 -lm
 ```
-
 
 ## c/2048ai16.c
 
@@ -778,7 +781,7 @@ Lua 5.3+实现，使用查表法，依赖Lua 5.3或以上版本提供的原生64
 
 已测试Lua版本和平台：
 ```
-lua-5.3+ (linux, win32, freebsd, macos)
+lua 5.3+ (linux, win32, freebsd, macos)
 ```
 
 编译运行命令行示例：
