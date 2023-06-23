@@ -734,12 +734,28 @@ gfortran -std=gnu -O2 fortran/2048.f fortran/f90deps.c -o 2048
 ```
 
 
+# Basic
+
+## basic/2048.bas
+
+现代FreeBasic实现，使用64位整数，查表法。
+
+已测试编译器和平台：
+```
+fbc 1.00.0+ (linux, win32, freebsd, dos)
+```
+
+编译命令行示例：
+```
+fbc -O 2 basic/2048.bas -x 2048
+```
+
 
 # Python
 
 ## python/2048.py
 
-Python实现，不使用查表法。
+Python实现，使用64位整数，不使用查表法。
 
 已测试Python版本和平台：
 ```
@@ -748,7 +764,7 @@ python 3.0+ (linux, win32, freebsd, macos, openbsd, netbsd, dragonflybsd, solari
 pypy/pypy3 all (linux, win32, macos)
 ```
 
-* 在amd64 + linux平台，python 2.2/2.3也可以运行，由于缺乏可移植性，不例入兼容列表。
+* 在amd64 + linux平台，python 2.2/2.3也可以运行，由于缺乏可移植性（其整数字长取决于系统字长），不例入兼容列表。
 
 
 ## python/2048-ai.py
