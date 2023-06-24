@@ -287,11 +287,11 @@ Public Module Game2048
 
         If bitset <= 2048 Then
             Return 3
-        Else If bitset <= 2048 + 1024 Then
+        ElseIf bitset <= 2048 + 1024 Then
             max_limit = 4
-        Else If bitset <= 4096 Then
+        ElseIf bitset <= 4096 Then
             max_limit = 5
-        Else If bitset <= 4096 + 2048 Then
+        ElseIf bitset <= 4096 + 2048 Then
             max_limit = 6
         End If
 
@@ -384,7 +384,7 @@ Public Module Game2048
     End Function
 
     Friend Class thrd_context
-        Public board As UInt64
+        Public board As ULong
         Public move As Integer
         Public res As Double
         Public ev As AutoResetEvent = New AutoResetEvent(False)

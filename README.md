@@ -642,7 +642,7 @@ quick pascal 1.0 (dos16)
 
 ## pascal/2048-ai.pas
 
-Pascal AI实现，查表法，由预处理FASTMODE决定是否使用TDictionary cache（默认不启用），由预处理MULTI_THREAD决定是否使用多线程（默认不启用）。
+Pascal AI实现，查表法，由预处理FASTMODE决定是否使用TDictionary cache（默认不启用），由预处理MULTI_THREAD决定是否使用多线程（默认不启用），仅支持win32和posix线程。
 
 默认不启用FASTMODE时，限定搜索深度上限为5。编译器支持范围更宽。
 
@@ -748,6 +748,21 @@ fbc 1.00.0+ (linux, win32, freebsd, dos)
 编译命令行示例：
 ```
 fbc -O 2 basic/2048.bas -x 2048
+```
+
+
+## basic/2048-ai.bas
+
+现代FreeBasic AI实现，使用64位整数，查表法，FreeBasic标准库缺少关联容器，限制搜索深度上限为5。预处理MULTI_THREAD决定是否使用多线程（默认不启用），仅支持win32和posix线程。
+
+已测试编译器和平台：
+```
+fbc 1.00.0+ (linux, win32, freebsd, dos)
+```
+
+启用多线程时编译命令行示例：
+```
+fbc -d MULTI_THREAD -O 2 basic/2048-ai.bas -x 2048
 ```
 
 

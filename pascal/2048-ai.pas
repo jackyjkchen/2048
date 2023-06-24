@@ -469,9 +469,6 @@ begin
     msg := format('Move %d: result %f: eval''d %d moves (%d no moves, %d table hits, %d cache hits, %d cache size) (maxdepth=%d)', [_move, res,
            state.moves_evaled, state.nomoves, state.tablehits, state.cachehits, 0, state.maxdepth]);
 {$endif}
-{$ifndef MULTI_THREAD}
-    writeln(msg);
-{$endif}
     score_toplevel_move := res;
 end;
 
@@ -522,8 +519,8 @@ begin
     for _move := 0 to 3 do begin
 {$ifdef MULTI_THREAD}
         WaitForThreadTerminate(thrd_ids[_move], 2147483647);
-        writeln(context[_move].msg);
 {$endif}
+        writeln(context[_move].msg);
         if context[_move].res > best then begin
             best := context[_move].res;
             bestmove := _move;
