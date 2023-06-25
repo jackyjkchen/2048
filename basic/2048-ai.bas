@@ -66,7 +66,7 @@ Private Sub print_board(board As ULongint)
             Else
                 Print Using "|######"; 1 Shl fb_Power_val;
             End If
-            board = board Shr 4
+            board Shr= 4
         Next
         Print "|"
     Next
@@ -153,9 +153,9 @@ Private Sub init_tables()
         i = 1
         While i < 4
             If line_(i - 1) > line_(i) Then
-                monotonicity_left += fb_Pow(line_(i - 1), SCORE_MONOTONICITY_POWER) - fb_Pow(line_(i), SCORE_MONOTONICITY_POWER)
+                monotonicity_left += (line_(i - 1) ^ SCORE_MONOTONICITY_POWER) - (line_(i) ^ SCORE_MONOTONICITY_POWER)
             Else
-                monotonicity_right += fb_Pow(line_(i), SCORE_MONOTONICITY_POWER) - fb_Pow(line_(i - 1), SCORE_MONOTONICITY_POWER)
+                monotonicity_right += (line_(i) ^ SCORE_MONOTONICITY_POWER) - (line_(i - 1) ^ SCORE_MONOTONICITY_POWER)
             End If
             i += 1
         Wend
@@ -251,7 +251,7 @@ Private Function get_depth_limit(board As ULongint) As Integer
 
     While board <> 0
         bitset_ = bitset_ Or (CUShort(1) Shl (board And &HFUL))
-        board = board Shr 4
+        board Shr= 4
     Wend
 
     If bitset_ <= 2048 Then
@@ -296,7 +296,7 @@ Private Function score_tilechoose_node(ByRef state As eval_state, board As ULong
             res += score_move_node(state, board Or tile_2, cprob * 0.9F) * 0.9F
             res += score_move_node(state, board Or (tile_2 Shl 1), cprob * 0.1F) * 0.1F
         End If
-        tmp = tmp Shr 4
+        tmp Shr= 4
         tile_2 = tile_2 Shl 4
     Wend
 

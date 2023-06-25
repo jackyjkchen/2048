@@ -43,7 +43,7 @@ Private Sub print_board(board As ULongint)
             Else
                 Print Using "|######"; 1 Shl power_val;
             End If
-            board = board Shr 4
+            board Shr= 4
         Next
         Print "|"
     Next
