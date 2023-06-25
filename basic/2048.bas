@@ -1,14 +1,16 @@
 randomize(timer())
-Private Dim Shared ROW_MASK As Const ULongint = &HFFFFULL
-Private Dim Shared COL_MASK As Const ULongint = &HF000F000F000FULL
-Private Dim Shared TABLESIZE As Const Integer = 65536
+Private Const ROW_MASK = &HFFFFULL
+Private Const COL_MASK = &HF000F000F000FULL
+Private Const TABLESIZE = 65536
 Private Dim Shared row_table(TABLESIZE - 1) As UShort
 Private Dim Shared score_table(TABLESIZE - 1) As UInteger
-Private Dim Shared UP_ As Const Integer = 0
-Private Dim Shared DOWN_ As Const Integer = 1
-Private Dim Shared LEFT_ As Const Integer = 2
-Private Dim Shared RIGHT_ As Const Integer = 3
-Private Dim Shared RETRACT_ As Const Integer = 4
+Enum MoveAction
+    UP_ = 0
+    DOWN_
+    LEFT_
+    RIGHT_
+    RETRACT_
+End Enum
 
 Private Function unif_random(n As Integer) As Integer
     Return rnd() mod n
@@ -122,24 +124,24 @@ End Sub
 
 Private Function execute_move(board As ULongint, move As Integer) As ULongint
     Dim ret As ULongint = board
-    If move = UP_ Then
+    If move = MoveAction.UP_ Then
         board = transpose(board)
         ret = ret Xor unpack_col(row_table(board And ROW_MASK))
         ret = ret Xor (unpack_col(row_table((board Shr 16) And ROW_MASK)) Shl 4)
         ret = ret Xor (unpack_col(row_table((board Shr 32) And ROW_MASK)) Shl 8)
         ret = ret Xor (unpack_col(row_table((board Shr 48) And ROW_MASK)) Shl 12)
-    ElseIf move = DOWN_ Then
+    ElseIf move = MoveAction.DOWN_ Then
         board = transpose(board)
         ret = ret Xor unpack_col(reverse_row(row_table(reverse_row(board And ROW_MASK))))
         ret = ret Xor (unpack_col(reverse_row(row_table(reverse_row((board Shr 16) And ROW_MASK)))) Shl 4)
         ret = ret Xor (unpack_col(reverse_row(row_table(reverse_row((board Shr 32) And ROW_MASK)))) Shl 8)
         ret = ret Xor (unpack_col(reverse_row(row_table(reverse_row((board Shr 48) And ROW_MASK)))) Shl 12)
-    ElseIf move = LEFT_ Then
+    ElseIf move = MoveAction.LEFT_ Then
         ret = ret Xor CULngint(row_table(board And ROW_MASK))
         ret = ret Xor (CULngint(row_table((board Shr 16) And ROW_MASK)) Shl 16)
         ret = ret Xor (CULngint(row_table((board Shr 32) And ROW_MASK)) Shl 32)
         ret = ret Xor (CULngint(row_table((board Shr 48) And ROW_MASK)) Shl 48)
-    ElseIf move = RIGHT_ Then
+    ElseIf move = MoveAction.RIGHT_ Then
         ret = ret Xor CULngint(reverse_row(row_table(reverse_row(board And ROW_MASK))))
         ret = ret Xor (CULngint(reverse_row(row_table(reverse_row((board Shr 16) And ROW_MASK)))) Shl 16)
         ret = ret Xor (CULngint(reverse_row(row_table(reverse_row((board Shr 32) And ROW_MASK)))) Shl 32)
@@ -196,7 +198,7 @@ Private Function ask_for_move(board As ULongint) As Integer
         If movechar = Asc("q") Then
             Return -1
         ElseIf movechar = Asc("r") Then
-            Return RETRACT_
+            Return MoveAction.RETRACT_
         End If
         pos_ = InStr(allmoves, String(1, movechar)) - 1
         print pos_
@@ -211,7 +213,7 @@ Private Sub play_game()
     Dim board As ULongint = initial_board()
     Dim scorepenalty As Integer = 0
     Dim last_score As Integer = 0, current_score As Integer = 0, moveno As Integer = 0
-    Dim MAX_RETRACT As Integer = 64
+    Const MAX_RETRACT = 64
     Dim retract_vec(MAX_RETRACT - 1) As ULongint
     Dim retract_penalty_vec(MAX_RETRACT - 1) As Byte
     Dim retract_pos As Integer = 0, retract_num As Integer = 0
@@ -235,7 +237,7 @@ Private Sub play_game()
         move = ask_for_move(board)
         If move < 0 Then Exit While
 
-        If move = RETRACT_ Then
+        If move = MoveAction.RETRACT_ Then
             If moveno <= 1 OrElse retract_num <= 0 Then
                 moveno -= 1
                 Continue While

@@ -1,15 +1,17 @@
 randomize(timer())
-Private Dim Shared ROW_MASK As Const ULongint = &HFFFFULL
-Private Dim Shared COL_MASK As Const ULongint = &HF000F000F000FULL
-Private Dim Shared TABLESIZE As Const Integer = 65536
+Private Const ROW_MASK = &HFFFFULL
+Private Const COL_MASK = &HF000F000F000FULL
+Private Const TABLESIZE = 65536
 Private Dim Shared row_left_table(TABLESIZE - 1) As UShort
 Private Dim Shared row_right_table(TABLESIZE - 1) As UShort
 Private Dim Shared score_table(TABLESIZE - 1) As UInteger
-Private Dim Shared UP_ As Const Integer = 0
-Private Dim Shared DOWN_ As Const Integer = 1
-Private Dim Shared LEFT_ As Const Integer = 2
-Private Dim Shared RIGHT_ As Const Integer = 3
 Private Dim Shared score_heur_table(TABLESIZE - 1) As Double
+Enum MoveAction
+    UP_ = 0
+    DOWN_
+    LEFT_
+    RIGHT_
+End Enum
 
 Private Type eval_state
     maxdepth As Integer
@@ -20,15 +22,15 @@ Private Type eval_state
     depth_limit As Integer
 End Type
 
-Private Dim Shared SCORE_LOST_PENALTY As Const Double = 200000.0F
-Private Dim Shared SCORE_MONOTONICITY_POWER As Const Double = 4.0F
-Private Dim Shared SCORE_MONOTONICITY_WEIGHT As Const Double = 47.0F
-Private Dim Shared SCORE_SUM_POWER As Const Double = 3.5F
-Private Dim Shared SCORE_SUM_WEIGHT As Const Double = 11.0F
-Private Dim Shared SCORE_MERGES_WEIGHT As Const Double = 700.0F
-Private Dim Shared SCORE_EMPTY_WEIGHT As Const Double = 270.0F
-Private Dim Shared CPROB_THRESH_BASE As Const Double = 0.0001F
-Private Dim Shared CACHE_DEPTH_LIMIT As Const UShort = 15
+Private Const SCORE_LOST_PENALTY = 200000.0F
+Private Const SCORE_MONOTONICITY_POWER = 4.0F
+Private Const SCORE_MONOTONICITY_WEIGHT = 47.0F
+Private Const SCORE_SUM_POWER = 3.5F
+Private Const SCORE_SUM_WEIGHT = 11.0F
+Private Const SCORE_MERGES_WEIGHT = 700.0F
+Private Const SCORE_EMPTY_WEIGHT = 270.0F
+Private Const CPROB_THRESH_BASE = 0.0001F
+Private Const CACHE_DEPTH_LIMIT = 15
 
 #define min_(a, b) iif((a) < (b), (a), (b))
 #define max_(a, b) iif((a) > (b), (a), (b))
@@ -103,13 +105,14 @@ Private Sub init_tables()
     Do
         Dim i As Integer = 0, j As Integer = 0
         Dim score As UInteger = 0
+        Dim rank As Integer = 0
         line_(0) = row And &HF
         line_(1) = (row Shr 4) And &HF
         line_(2) = (row Shr 8) And &HF
         line_(3) = (row Shr 12) And &HF
 
         While i < 4
-            Dim rank As Integer = line_(i)
+            rank = line_(i)
             If rank >= 2 Then
                 score += (rank - 1) * (1 Shl rank)
             End If
@@ -124,7 +127,7 @@ Private Sub init_tables()
         Dim counter As Integer = 0
         i = 0
         While i < 4
-            Dim rank As Integer = line_(i)
+            rank = line_(i)
             sum += fb_Pow(rank, SCORE_SUM_POWER)
 
             If rank = 0 Then
@@ -192,24 +195,24 @@ End Sub
 
 Private Function execute_move(board As ULongint, move As Integer) As ULongint
     Dim ret As ULongint = board
-    If move = UP_ Then
+    If move = MoveAction.UP_ Then
         board = transpose(board)
         ret = ret Xor unpack_col(row_left_table(board And ROW_MASK))
         ret = ret Xor (unpack_col(row_left_table((board Shr 16) And ROW_MASK)) Shl 4)
         ret = ret Xor (unpack_col(row_left_table((board Shr 32) And ROW_MASK)) Shl 8)
         ret = ret Xor (unpack_col(row_left_table((board Shr 48) And ROW_MASK)) Shl 12)
-    ElseIf move = DOWN_ Then
+    ElseIf move = MoveAction.DOWN_ Then
         board = transpose(board)
         ret = ret Xor unpack_col(row_right_table(board And ROW_MASK))
         ret = ret Xor (unpack_col(row_right_table((board Shr 16) And ROW_MASK)) Shl 4)
         ret = ret Xor (unpack_col(row_right_table((board Shr 32) And ROW_MASK)) Shl 8)
         ret = ret Xor (unpack_col(row_right_table((board Shr 48) And ROW_MASK)) Shl 12)
-    ElseIf move = LEFT_ Then
+    ElseIf move = MoveAction.LEFT_ Then
         ret = ret Xor CULngint(row_left_table(board And ROW_MASK))
         ret = ret Xor (CULngint(row_left_table((board Shr 16) And ROW_MASK)) Shl 16)
         ret = ret Xor (CULngint(row_left_table((board Shr 32) And ROW_MASK)) Shl 32)
         ret = ret Xor (CULngint(row_left_table((board Shr 48) And ROW_MASK)) Shl 48)
-    ElseIf move = RIGHT_ Then
+    ElseIf move = MoveAction.RIGHT_ Then
         ret = ret Xor CULngint(row_right_table(board And ROW_MASK))
         ret = ret Xor (CULngint(row_right_table((board Shr 16) And ROW_MASK)) Shl 16)
         ret = ret Xor (CULngint(row_right_table((board Shr 32) And ROW_MASK)) Shl 32)
@@ -375,11 +378,12 @@ End Sub
 Private Function find_best_move(board As ULongint) As Integer
     Dim best As Double = 0.0F
     Dim bestmove As Integer = -1
+    Dim move As Integer = 0
     print_board(board)
     Print Using "Current scores: heur &, actual &"; CUInt(score_heur_board(board)); score_board(board)
 
     Dim context(3) As thrd_context
-    For move As Integer = 0 To 3
+    For move = 0 To 3
         context(move).board = board
         context(move).move = move
 #ifdef MULTI_THREAD
@@ -389,7 +393,7 @@ Private Function find_best_move(board As ULongint) As Integer
 #endif
     Next
 
-    For move As Integer = 0 To 3
+    For move = 0 To 3
 #ifdef MULTI_THREAD
         ThreadWait(context(move).thread_id)
 #endif
