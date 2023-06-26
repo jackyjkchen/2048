@@ -222,7 +222,9 @@ gcc -DOPENMP_THREAD -O2 -fopenmp c/2048-ai.c -o 2048 -lm
 
 ## c/2048ai16.c
 
-不使用64位整数的严格ISO C90 AI实现，不启用cache，查表法采取分表形式（单表小于64KiB，总内存需求256KiB），支持dos16目标（需要compact或large内存模型），限定搜索深度上限为3。
+不使用64位整数的严格ISO C90 AI实现，查表法采取分表形式（单表小于64KiB，总内存需求256KiB），支持dos16目标（需要compact或large内存模型），限定搜索深度上限为3。
+
+如果启用FASTMODE=1预处理（默认不启用），则启用cmap cache，内存消耗会增长，但限于搜索深度，dos16目标仍只需要compact或large内存模型。
 
 已测试编译器和平台：
 ```

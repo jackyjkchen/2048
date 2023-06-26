@@ -51,6 +51,16 @@ enum {
 
 typedef int (*get_move_func_t)(board_t);
 
+#if FASTMODE
+#include "cmap.c"
+typedef struct {
+    int depth;
+    score_heur_t heuristic;
+} trans_table_entry_t;
+
+typedef map_t(board_t, trans_table_entry_t) trans_table_t;
+#endif
+
 #if defined(__MINGW64__) || defined(__MINGW32__)
 #undef __USE_MINGW_ANSI_STDIO
 #define __USE_MINGW_ANSI_STDIO 0
@@ -109,8 +119,14 @@ static const score_heur_t SCORE_SUM_WEIGHT = 11.0f;
 static const score_heur_t SCORE_MERGES_WEIGHT = 700.0f;
 static const score_heur_t SCORE_EMPTY_WEIGHT = 270.0f;
 static const score_heur_t CPROB_THRESH_BASE = 0.0001f;
+#if FASTMODE
+static const row_t CACHE_DEPTH_LIMIT = 15;
+#endif
 
 typedef struct {
+#if FASTMODE
+    trans_table_t trans_table;
+#endif
     int maxdepth;
     int curdepth;
     long nomoves;
@@ -463,6 +479,19 @@ static score_heur_t score_tilechoose_node(eval_state *state, board_t board, scor
         return score_heur_board(board);
     }
 
+#if FASTMODE
+    if (state->curdepth < CACHE_DEPTH_LIMIT) {
+        trans_table_entry_t *entry = map_get(&state->trans_table, board);
+        if (entry != NULL) {
+            if (entry->depth <= state->curdepth) {
+                state->cachehits++;
+                return entry->heuristic;
+            }
+        }
+    }
+#endif
+
+    num_open = count_empty(board);
     num_open = count_empty(board);
     cprob /= num_open;
 
@@ -479,6 +508,15 @@ static score_heur_t score_tilechoose_node(eval_state *state, board_t board, scor
         }
     }
     res = res / num_open;
+
+#if FASTMODE
+    if (state->curdepth < CACHE_DEPTH_LIMIT) {
+        trans_table_entry_t entry;
+        entry.depth = state->curdepth;
+        entry.heuristic = res;
+        map_set(&state->trans_table, board, entry);
+    }
+#endif
 
     return res;
 }
@@ -508,22 +546,33 @@ static score_heur_t score_move_node(eval_state *state, board_t board, score_heur
     return best;
 }
 
-
 static score_heur_t score_toplevel_move(board_t board, int move) {
     eval_state state;
     score_heur_t res = 0.0f;
     board_t newboard;
 
     memset(&state, 0x00, sizeof(eval_state));
+#if FASTMODE
+    map_init(&state.trans_table, NULL, NULL);
+#endif
+
     state.depth_limit = 3;
     newboard = execute_move(board, move);
     if (memcmp(&newboard, &board, sizeof(board_t)) != 0)
         res = score_tilechoose_node(&state, newboard, 1.0f) + 1e-6f;
 
-    printf
-        ("Move %d: result %f: eval'd %ld moves (%ld no moves, %ld table hits, %ld cache hits, %ld cache size) (maxdepth=%d)\n",
+#if FASTMODE
+    printf("Move %d: result %f: eval'd %ld moves (%ld no moves, %ld table hits, %ld cache hits, %ld cache size) (maxdepth=%d)\n",
+         move, res, state.moves_evaled, state.nomoves, state.tablehits, state.cachehits,
+         (long)state.trans_table.base.nnodes, state.maxdepth);
+#else
+    printf("Move %d: result %f: eval'd %ld moves (%ld no moves, %ld table hits, %ld cache hits, %ld cache size) (maxdepth=%d)\n",
          move, res, state.moves_evaled, state.nomoves, state.tablehits, state.cachehits, 0L, state.maxdepth);
+#endif
 
+#if FASTMODE
+    map_delete(&state.trans_table);
+#endif
     return res;
 }
 

@@ -69,6 +69,7 @@ enum {
 #endif
 
 typedef int (*get_move_func_t)(board_t);
+
 #if FASTMODE
 #include "cmap.c"
 typedef struct {
@@ -670,7 +671,7 @@ static score_heur_t score_toplevel_move(board_t board, int move) {
 
     memset(&state, 0x00, sizeof(eval_state));
 #if FASTMODE
-        map_init(&state.trans_table, NULL, NULL);
+    map_init(&state.trans_table, NULL, NULL);
 #endif
     state.depth_limit = get_depth_limit(board);
     if (board != newboard)
