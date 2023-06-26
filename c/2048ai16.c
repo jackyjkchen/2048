@@ -15,6 +15,10 @@
 #define __16BIT__ 1
 #endif
 
+#if !defined(ENABLE_CACHE)
+#define ENABLE_CACHE 1
+#endif
+
 typedef unsigned short row_t;
 #ifdef __16BIT__
 typedef unsigned long score_t;
@@ -51,7 +55,7 @@ enum {
 
 typedef int (*get_move_func_t)(board_t);
 
-#if FASTMODE
+#if ENABLE_CACHE
 #include "cmap.c"
 typedef struct {
     int depth;
@@ -119,12 +123,12 @@ static const score_heur_t SCORE_SUM_WEIGHT = 11.0f;
 static const score_heur_t SCORE_MERGES_WEIGHT = 700.0f;
 static const score_heur_t SCORE_EMPTY_WEIGHT = 270.0f;
 static const score_heur_t CPROB_THRESH_BASE = 0.0001f;
-#if FASTMODE
+#if ENABLE_CACHE
 static const row_t CACHE_DEPTH_LIMIT = 15;
 #endif
 
 typedef struct {
-#if FASTMODE
+#if ENABLE_CACHE
     trans_table_t trans_table;
 #endif
     int maxdepth;
@@ -479,7 +483,7 @@ static score_heur_t score_tilechoose_node(eval_state *state, board_t board, scor
         return score_heur_board(board);
     }
 
-#if FASTMODE
+#if ENABLE_CACHE
     if (state->curdepth < CACHE_DEPTH_LIMIT) {
         trans_table_entry_t *entry = map_get(&state->trans_table, board);
         if (entry != NULL) {
@@ -509,7 +513,7 @@ static score_heur_t score_tilechoose_node(eval_state *state, board_t board, scor
     }
     res = res / num_open;
 
-#if FASTMODE
+#if ENABLE_CACHE
     if (state->curdepth < CACHE_DEPTH_LIMIT) {
         trans_table_entry_t entry;
         entry.depth = state->curdepth;
@@ -552,7 +556,7 @@ static score_heur_t score_toplevel_move(board_t board, int move) {
     board_t newboard;
 
     memset(&state, 0x00, sizeof(eval_state));
-#if FASTMODE
+#if ENABLE_CACHE
     map_init(&state.trans_table, NULL, NULL);
 #endif
 
@@ -561,7 +565,7 @@ static score_heur_t score_toplevel_move(board_t board, int move) {
     if (memcmp(&newboard, &board, sizeof(board_t)) != 0)
         res = score_tilechoose_node(&state, newboard, 1.0f) + 1e-6f;
 
-#if FASTMODE
+#if ENABLE_CACHE
     printf("Move %d: result %f: eval'd %ld moves (%ld no moves, %ld table hits, %ld cache hits, %ld cache size) (maxdepth=%d)\n",
          move, res, state.moves_evaled, state.nomoves, state.tablehits, state.cachehits,
          (long)state.trans_table.base.nnodes, state.maxdepth);
@@ -570,7 +574,7 @@ static score_heur_t score_toplevel_move(board_t board, int move) {
          move, res, state.moves_evaled, state.nomoves, state.tablehits, state.cachehits, 0L, state.maxdepth);
 #endif
 
-#if FASTMODE
+#if ENABLE_CACHE
     map_delete(&state.trans_table);
 #endif
     return res;

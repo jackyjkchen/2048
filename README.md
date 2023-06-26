@@ -14,7 +14,7 @@ AI实现需要关联容器、字典或哈希表做cache以提升性能，考验�
 
 为保障AI性能上的基本实用性——
 
-对于脚本语言或16位DOS目标，限定搜索深度上限为3，此时100%能算到2048，但通常只能算到4096-8192，小概率算到16384。
+对于脚本语言、16位数据结构实现或16位目标，限定搜索深度上限为3，此时100%能算到2048，但通常只能算到4096-8192，小概率算到16384。
 
 对于标准库中缺乏关联容器、字典或哈希表的编译型语言（如Fortran），限定搜索深度上限为5，此时100%能算到4096，通常能算到8192-16384，小概率算到32768。
 
@@ -27,7 +27,7 @@ AI实现需要关联容器、字典或哈希表做cache以提升性能，考验�
 
 通常的ISO C90跨平台实现，非严格C90内容仅为64位整数。
 
-使用FASTMODE预处理（默认），可启用查表法，会增加384KiB的常驻内存开销。
+非16位目标，启用查表法，会增加384KiB的常驻内存开销。16位目标，不使用查表法，代码段和数据段可控制在64KiB以内，可运行于DOS的tiny和small内存模型。
 
 已测试编译器和平台：
 ```
@@ -38,8 +38,8 @@ icc 8.1+ (win32, linux)
 aocc 1.0+ (linux)
 nvhpc/pgi 20.11/21.7 (linux)
 open64 4.2.4/4.5.2.1/5.0 (linux)
-openwatcom c++ 1.9 (win32, dos32)
-watcom c++ 11.0 (win32, dos32)
+openwatcom c++ 1.9 (win32, dos32, dos16)
+watcom c++ 11.0 (win32, dos32, dos16)
 borland c++ 5.5 (win32)
 visualage c++ 3.5 (win32)
 tcc 0.9.27 (linux, win32)
@@ -48,12 +48,6 @@ lcc 4.0 (win32)
 dmc 8.57 (win32)
 cc (openserver, unixware)
 compcert 3.12 (linux)
-```
-
-使用FASTMODE=0预处理（dos16目标下默认FASTMODE=0），代码段和数据段可控制在64KiB以内，额外支持：
-```
-openwatcom c++ 1.9 (dos16)
-watcom c++ 11.0 (dos16)
 ```
 
 * gcc 3.1以下版本需要大量补丁用于支持现代化系统和修复一些bug，[参见legacy-gcc](https://github.com/jackyjkchen/legacy-gcc)。低版本gcc均在legacy-gcc场景测试。
@@ -75,7 +69,7 @@ watcom c++ 11.0 (dos16)
 
 ## c/2048-16b.c
 
-不使用64位整数的严格ISO C90实现，用于兼容一些老编译器，不使用查表法用以兼容16位DOS。
+不使用64位整数的严格ISO C90实现，用于兼容一些老编译器，不使用查表法用以兼容16位DOS的tiny和small内存模型。
 
 除了64位整数外，为了兼容一些老编译器或者嵌入式系统，还有如下修改——
 * 不使用struct赋值、传参、返回等部分编译器或平台不一定支持的功能。
@@ -144,7 +138,9 @@ ISO C90 AI实现，非严格C90内容仅为64位整数。可选支持OpenMP多�
 
 ### 单线程
 
-默认启用查表法和cache（预处理FASTMODE=1）。
+对于非16位目标，默认启用查表法，768KiB内存开销。对于16位目标，查表法采取分表形式（单表小于64KiB，总内存开销384KiB），可支持dos16（需要compact或large内存模型）。
+
+默认启用cmap cache，内存动态增长，使用预处理ENABLE_CACHE=0可以关闭。
 
 已测试编译器和平台：
 ```
@@ -155,8 +151,8 @@ icc 8.1+ (win32, linux)
 aocc 1.0+ (linux)
 nvhpc/pgi 20.11/21.7 (linux)
 open64 4.2.4/4.5.2.1/5.0 (linux)
-openwatcom c++ 1.9 (win32, dos32)
-watcom c++ 11.0 (win32, dos32)
+openwatcom c++ 1.9 (win32, dos32, dos16)
+watcom c++ 11.0 (win32, dos32, dos16)
 borland c++ 5.5 (win32)
 visualage c++ 3.5 (win32)
 tcc 0.9.27 (linux, win32)
@@ -165,12 +161,6 @@ lcc 4.0 (win32)
 dmc 8.57 (win32)
 cc (openserver, unixware)
 compcert 3.12 (linux)
-```
-
-使用FASTMODE=0预处理（dos16目标下默认FASTMODE=0），不启用cache，查表法采取分表形式（单表小于64KiB，总内存需求384KiB），可支持dos16目标（需要compact或large内存模型），限定搜索深度上限为3，额外支持：
-```
-openwatcom c++ 1.9 (dos16)
-watcom c++ 11.0 (dos16)
 ```
 
 * 编译器相关comments同c/2048.c。
@@ -222,9 +212,9 @@ gcc -DOPENMP_THREAD -O2 -fopenmp c/2048-ai.c -o 2048 -lm
 
 ## c/2048ai16.c
 
-不使用64位整数的严格ISO C90 AI实现，查表法采取分表形式（单表小于64KiB，总内存需求256KiB），支持dos16目标（需要compact或large内存模型），限定搜索深度上限为3。
+不使用64位整数的严格ISO C90 AI实现，查表法采取分表形式（单表小于64KiB，总内存需求256KiB），支持dos16目标（需要compact或large内存模型）。
 
-如果启用FASTMODE=1预处理（默认不启用），则启用cmap cache，内存消耗会增长，但限于搜索深度，dos16目标仍只需要compact或large内存模型。
+默认启用cmap cache，内存动态增长，使用预处理ENABLE_CACHE=0可以关闭。
 
 已测试编译器和平台：
 ```
