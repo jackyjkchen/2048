@@ -21,7 +21,7 @@ struct map_node_t {
 /* djb2 hashing algorithm */
 size_t map_generic_hash(const void *mem, size_t memsize) {
     /* 5381 and 33 - efficient magic numbers */
-    const unsigned char *barr = mem;
+    const unsigned char *barr = (const unsigned char *)mem;
     size_t hash = 5381;
     size_t i;
 
@@ -197,7 +197,7 @@ map_iter_t map_iter_(void) {
 }
 
 
-void *map_next_(map_base_t *m, map_iter_t *iter) {
+static void *map_next_(map_base_t *m, map_iter_t *iter) {
     if (iter->node != NULL) {
         iter->node = iter->node->next;
         if (iter->node == NULL) {

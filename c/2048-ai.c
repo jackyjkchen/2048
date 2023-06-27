@@ -57,28 +57,29 @@ enum {
     RIGHT,
 };
 
-#if defined(MULTI_THREAD) && defined(OPENMP_THREAD)
+#if MULTI_THREAD && OPENMP_THREAD
 #error "MULTI_THREAD and OPENMP_THREAD cannot be defined at the same time."
 #endif
-#if defined(MULTI_THREAD)
+#if MULTI_THREAD
 #include "deque.c"
 #include "thread_pool_c.c"
-#elif defined(OPENMP_THREAD)
+#elif OPENMP_THREAD
 #include <omp.h>
 #endif
 
 typedef int (*get_move_func_t)(board_t);
 
 #if ENABLE_CACHE
-#include "cmap.c"
 typedef struct {
     int depth;
     score_heur_t heuristic;
 } trans_table_entry_t;
 
+#include "cmap.c"
 typedef map_t(board_t, trans_table_entry_t) trans_table_t;
 #endif
 
+#ifndef __16BIT__
 #if defined(_MSC_VER) && _MSC_VER >= 1500
 #include <intrin.h>
 #define popcount __popcnt
@@ -93,6 +94,7 @@ static int popcount(unsigned int bitset) {
     }
     return count;
 }
+#endif
 #endif
 
 #if defined(__MINGW64__) || defined(__MINGW32__)
@@ -158,9 +160,6 @@ static const row_t CACHE_DEPTH_LIMIT = 15;
 #endif
 
 typedef struct {
-#if ENABLE_CACHE
-    trans_table_t trans_table;
-#endif
     int maxdepth;
     int curdepth;
     long nomoves;
@@ -168,9 +167,12 @@ typedef struct {
     long cachehits;
     long moves_evaled;
     int depth_limit;
+#if ENABLE_CACHE
+    trans_table_t trans_table;
+#endif
 } eval_state;
 
-#if defined(MULTI_THREAD)
+#if MULTI_THREAD
 typedef struct {
         board_t board;
         int move;
@@ -610,7 +612,7 @@ static score_heur_t score_tilechoose_node(eval_state *state, board_t board, scor
 
 #if ENABLE_CACHE
     if (state->curdepth < CACHE_DEPTH_LIMIT) {
-        trans_table_entry_t *entry = map_get(&state->trans_table, board);
+        trans_table_entry_t *entry = (trans_table_entry_t *)map_get(&state->trans_table, board);
         if (entry != NULL) {
             if (entry->depth <= state->curdepth) {
                 state->cachehits++;
@@ -682,14 +684,14 @@ static score_heur_t score_toplevel_move(board_t board, int move) {
     if (board != newboard)
         res = score_tilechoose_node(&state, newboard, 1.0f) + 1e-6f;
 
-#if ENABLE_CACHE
     printf("Move %d: result %f: eval'd %ld moves (%ld no moves, %ld table hits, %ld cache hits, %ld cache size) (maxdepth=%d)\n",
          move, res, state.moves_evaled, state.nomoves, state.tablehits, state.cachehits,
-         (long)state.trans_table.base.nnodes, state.maxdepth);
+#if ENABLE_CACHE
+         (long)state.trans_table.base.nnodes,
 #else
-    printf("Move %d: result %f: eval'd %ld moves (%ld no moves, %ld table hits, %ld cache hits, %ld cache size) (maxdepth=%d)\n",
-         move, res, state.moves_evaled, state.nomoves, state.tablehits, state.cachehits, 0L, state.maxdepth);
+         0L,
 #endif
+         state.maxdepth);
 
 #if ENABLE_CACHE
     map_delete(&state.trans_table);
@@ -697,7 +699,7 @@ static score_heur_t score_toplevel_move(board_t board, int move) {
     return res;
 }
 
-#if defined(MULTI_THREAD)
+#if MULTI_THREAD
 static void thrd_worker(void *param) {
     thrd_context *pcontext = (thrd_context *)param;
     pcontext->res = score_toplevel_move(pcontext->board, pcontext->move);
@@ -713,7 +715,7 @@ int find_best_move(board_t board) {
     int move = 0;
     score_heur_t best = 0.0f;
     int bestmove = -1;
-#if defined(MULTI_THREAD)
+#if MULTI_THREAD
     thrd_context context[4];
     THREADPOOL_CTX *ctx = get_thrd_pool();
 #else
@@ -723,7 +725,7 @@ int find_best_move(board_t board) {
     print_board(board);
     printf("Current scores: heur %ld, actual %ld\n", (long)score_heur_board(board), (long)score_board(board));
 
-#if defined(MULTI_THREAD)
+#if MULTI_THREAD
     for (move = 0; move < 4; move++) {
         context[move].board = board;
         context[move].move = move;
@@ -738,7 +740,7 @@ int find_best_move(board_t board) {
         }
     }
 #else
-#if defined(OPENMP_THREAD)
+#if OPENMP_THREAD
 #pragma omp parallel for num_threads(omp_get_num_procs() >= 4 ? 4 : omp_get_num_procs())
 #endif
     for (move = 0; move < 4; move++) {
@@ -762,7 +764,7 @@ void play_game(get_move_func_t get_move) {
     int scorepenalty = 0;
     long last_score = 0, current_score = 0, moveno = 0;
 
-#if defined(MULTI_THREAD)
+#if MULTI_THREAD
     THREADPOOL_CTX *ctx = get_thrd_pool();
     if (!threadpool_startup(ctx, threadpool_cpucount() >= 4 ? 4 : 0)) {
         fprintf(stderr, "Init thread pool failed.");

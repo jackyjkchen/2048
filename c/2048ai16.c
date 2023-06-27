@@ -128,9 +128,6 @@ static const row_t CACHE_DEPTH_LIMIT = 15;
 #endif
 
 typedef struct {
-#if ENABLE_CACHE
-    trans_table_t trans_table;
-#endif
     int maxdepth;
     int curdepth;
     long nomoves;
@@ -138,6 +135,9 @@ typedef struct {
     long cachehits;
     long moves_evaled;
     int depth_limit;
+#if ENABLE_CACHE
+    trans_table_t trans_table;
+#endif
 } eval_state;
 
 #define TABLESIZE 8192
@@ -485,7 +485,7 @@ static score_heur_t score_tilechoose_node(eval_state *state, board_t board, scor
 
 #if ENABLE_CACHE
     if (state->curdepth < CACHE_DEPTH_LIMIT) {
-        trans_table_entry_t *entry = map_get(&state->trans_table, board);
+        trans_table_entry_t *entry = (trans_table_entry_t *)map_get(&state->trans_table, board);
         if (entry != NULL) {
             if (entry->depth <= state->curdepth) {
                 state->cachehits++;
@@ -559,20 +559,19 @@ static score_heur_t score_toplevel_move(board_t board, int move) {
 #if ENABLE_CACHE
     map_init(&state.trans_table, NULL, NULL);
 #endif
-
     state.depth_limit = 3;
     newboard = execute_move(board, move);
     if (memcmp(&newboard, &board, sizeof(board_t)) != 0)
         res = score_tilechoose_node(&state, newboard, 1.0f) + 1e-6f;
 
-#if ENABLE_CACHE
     printf("Move %d: result %f: eval'd %ld moves (%ld no moves, %ld table hits, %ld cache hits, %ld cache size) (maxdepth=%d)\n",
          move, res, state.moves_evaled, state.nomoves, state.tablehits, state.cachehits,
-         (long)state.trans_table.base.nnodes, state.maxdepth);
+#if ENABLE_CACHE
+         (long)state.trans_table.base.nnodes,
 #else
-    printf("Move %d: result %f: eval'd %ld moves (%ld no moves, %ld table hits, %ld cache hits, %ld cache size) (maxdepth=%d)\n",
-         move, res, state.moves_evaled, state.nomoves, state.tablehits, state.cachehits, 0L, state.maxdepth);
+         0L,
 #endif
+         state.maxdepth);
 
 #if ENABLE_CACHE
     map_delete(&state.trans_table);

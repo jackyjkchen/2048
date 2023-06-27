@@ -15,6 +15,10 @@
 #define __16BIT__ 1
 #endif
 
+#if !defined(ENABLE_CACHE)
+#define ENABLE_CACHE 1
+#endif
+
 typedef unsigned short row_t;
 
 #ifdef __16BIT__
@@ -49,6 +53,16 @@ enum {
     LEFT,
     RIGHT,
 };
+
+#if ENABLE_CACHE
+#include "cmap.c"
+typedef struct {
+    int depth;
+    score_heur_t heuristic;
+} trans_table_entry_t;
+
+typedef map_t(board_t, trans_table_entry_t) trans_table_t;
+#endif
 
 #if defined(__MINGW64__) || defined(__MINGW32__)
 #undef __USE_MINGW_ANSI_STDIO
@@ -108,6 +122,9 @@ const score_heur_t SCORE_SUM_WEIGHT = 11.0f;
 const score_heur_t SCORE_MERGES_WEIGHT = 700.0f;
 const score_heur_t SCORE_EMPTY_WEIGHT = 270.0f;
 const score_heur_t CPROB_THRESH_BASE = 0.0001f;
+#if ENABLE_CACHE
+const row_t CACHE_DEPTH_LIMIT = 15;
+#endif
 
 class Game2048 {
 public:
@@ -153,6 +170,9 @@ private:
         long cachehits;
         long moves_evaled;
         int depth_limit;
+#if ENABLE_CACHE
+        trans_table_t trans_table;
+#endif
 
         eval_state() : maxdepth(0), curdepth(0), nomoves(0), tablehits(0), cachehits(0), moves_evaled(0), depth_limit(0) {}
     };  
@@ -493,6 +513,18 @@ score_heur_t Game2048::score_tilechoose_node(eval_state &state, board_t board, s
         return score_heur_board(board);
     }
 
+#if ENABLE_CACHE
+    if (state.curdepth < CACHE_DEPTH_LIMIT) {
+        trans_table_entry_t *entry = (trans_table_entry_t *)map_get(&state.trans_table, board);
+        if (entry != NULL) {
+            if (entry->depth <= state.curdepth) {
+                state.cachehits++;
+                return entry->heuristic;
+            }
+        }
+    }
+#endif
+
     num_open = count_empty(board);
     cprob /= num_open;
 
@@ -509,6 +541,15 @@ score_heur_t Game2048::score_tilechoose_node(eval_state &state, board_t board, s
         }
     }
     res = res / num_open;
+
+#if ENABLE_CACHE
+    if (state.curdepth < CACHE_DEPTH_LIMIT) {
+        trans_table_entry_t entry;
+        entry.depth = state.curdepth;
+        entry.heuristic = res;
+        map_set(&state.trans_table, board, entry);
+    }
+#endif
 
     return res;
 }
@@ -541,15 +582,25 @@ score_heur_t Game2048::score_toplevel_move(board_t board, int move) {
     score_heur_t res = 0.0f;
     board_t newboard = execute_move(board, move);
 
-    memset(&state, 0x00, sizeof(eval_state));
+#if ENABLE_CACHE
+    map_init(&state.trans_table, NULL, NULL);
+#endif
     state.depth_limit = 3;
     if (memcmp(&newboard, &board, sizeof(board_t)) != 0)
         res = score_tilechoose_node(state, newboard, 1.0f) + 1e-6f;
 
-    printf
-        ("Move %d: result %f: eval'd %ld moves (%ld no moves, %ld table hits, %ld cache hits, %ld cache size) (maxdepth=%d)\n",
-         move, res, state.moves_evaled, state.nomoves, state.tablehits, state.cachehits, 0L, state.maxdepth);
+    printf("Move %d: result %f: eval'd %ld moves (%ld no moves, %ld table hits, %ld cache hits, %ld cache size) (maxdepth=%d)\n",
+         move, res, state.moves_evaled, state.nomoves, state.tablehits, state.cachehits,
+#if ENABLE_CACHE
+         (long)state.trans_table.base.nnodes,
+#else
+         0L,
+#endif
+         state.maxdepth);
 
+#if ENABLE_CACHE
+    map_delete(&state.trans_table);
+#endif
     return res;
 }
 

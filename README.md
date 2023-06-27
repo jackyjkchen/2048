@@ -134,7 +134,7 @@ msc 3.0/4.0 (dos16)
 
 ## c/2048-ai.c
 
-ISO C90 AI实现，非严格C90内容仅为64位整数。可选支持OpenMP多线程（预处理OPENMP_THREAD控制）。使用[https://github.com/Wirtos/cmap](https://github.com/Wirtos/cmap)作为cache。
+ISO C90 AI实现，非严格C90内容仅为64位整数。可选是否支持多线程（预处理MULTI_THREAD或OPENMP_THREAD）。
 
 ### 单线程
 
@@ -212,7 +212,7 @@ gcc -DOPENMP_THREAD -O2 -fopenmp c/2048-ai.c -o 2048 -lm
 
 ## c/2048ai16.c
 
-不使用64位整数的严格ISO C90 AI实现，查表法采取分表形式（单表小于64KiB，总内存需求256KiB），支持dos16目标（需要compact或large内存模型）。
+不使用64位整数的严格ISO C90 AI实现，查表法采取分表形式（单表小于64KiB，总内存需求256KiB），支持dos16目标（需要compact或large内存模型），限定搜索深度上限为3。
 
 默认启用cmap cache，内存动态增长，使用预处理ENABLE_CACHE=0可以关闭。
 
@@ -255,7 +255,7 @@ power c 2.2.2 (dos16)
 
 ISO C++98实现，使用64位整数，不依赖C++标准库。
 
-使用FASTMODE预处理（默认），可启用查表法，会增加384KiB的常驻内存开销。
+非16位目标，启用查表法，会增加384KiB的常驻内存开销。16位目标，不使用查表法，代码段和数据段可控制在64KiB以内，可运行于DOS的tiny和small内存模型。
 
 已测试编译器和平台：
 ```
@@ -266,22 +266,16 @@ icc 8.1+ (win32, linux)
 aocc 1.0+ (linux)
 nvhpc/pgi 20.11/21.7 (linux)
 open64 4.2.4/4.5.2.1/5.0 (linux)
-openwatcom c++ 1.9 (win32, dos32)
-watcom c++ 11.0 (win32, dos32)
+openwatcom c++ 1.9 (win32, dos32, dos16)
+watcom c++ 11.0 (win32, dos32, dos16)
 borland c++ 5.5 (win32)
 visualage c++ 3.5 (win32)
 dmc 8.57 (win32)
 ```
 
-使用FASTMODE=0预处理（dos16目标下默认FASTMODE=0），代码段和数据段可控制在64KiB以内，额外支持：
-```
-openwatcom c++ 1.9 (dos16)
-watcom c++ 11.0 (dos16)
-```
+* gcc版本低于2.6时，不识别cpp扩展名，请编译软链接cc扩展名
 
-* gcc版本低于2.6时，不识别cpp扩展名，请编译软链接cc扩展名，后同。
-
-* 其余编译器已知问题参见c/2048.c。
+* 编译器已知问题参见c/2048.c。
 
 ## cpp/2048-16b.cpp
 
@@ -311,11 +305,17 @@ symantec c++ 7.5 (dos16)
 
 ## cpp/2048-ai.cpp
 
-AI版本，ISO C++98实现，可选支持多线程（预处理MULTI_THREAD或OPENMP_THREAD），默认启用查表法和std::map cache。
+AI版本，ISO C++98实现，可选是否支持多线程（预处理MULTI_THREAD或OPENMP_THREAD）。
 
 ### 单线程
 
-不启用MULTI_THREAD时（默认），无须依赖thread_pool.cpp，已测试编译器和平台：
+不启用MULTI_THREAD（默认）。
+
+对于非16位目标，默认启用查表法，768KiB内存开销。对于16位目标，查表法采取分表形式（单表小于64KiB，总内存开销384KiB），可支持dos16（需要compact或large内存模型）。
+
+默认启用c++ std::map cache（预处理ENABLE_CACHE=1），内存动态增长。
+
+已测试编译器和平台：
 ```
 gcc 2.6.3+ (linux, freebsd, macos, mingw, mingw-w64, cygwin, djgpp, openbsd, netbsd, dragonflybsd, solaris, openserver, unixware)
 clang 3.0+ (linux, macos, freebsd, win32, openbsd, netbsd, dragonflybsd)
@@ -324,19 +324,10 @@ icc 8.1+ (win32, linux)
 aocc 1.0+ (linux)
 nvhpc/pgi 20.11/21.7 (linux)
 open64 4.2.4/4.5.2.1/5.0 (linux)
-openwatcom c++ 1.9 (win32, dos32)
-watcom c++ 11.0 (win32, dos32)
+openwatcom c++ 1.9 (win32, dos32, dos16)
+watcom c++ 11.0 (win32, dos32, dos16)
 borland c++ 5.5 (win32)
 dmc 8.57 (win32)
-```
-
-若使用FASTMODE=0预处理（dos16目标下默认FASTMODE=0），不启用std::map cache，查表法采取分表形式（单表小于64KiB，总内存需求384KiB），可支持dos16目标（需要compact或large内存模型），由于速度很慢，因此限制搜索深度上限为3，额外支持：
-```
-gcc 2.1/2.2.2/2.3.3/2.4.5/2.5.8 (linux)
-msvc 2.x (win32)
-visualage c++ 3.5 (win32)
-openwatcom c++ 1.9 (dos16)
-watcom c++ 11.0 (dos16)
 ```
 
 * msvc 5.0必须应用SP3，否则优化选项会生成错误代码或者编译失败，其他版本msvc也都测试的是补丁打满的版本。
@@ -355,10 +346,27 @@ g++-2.6.3 -O2 -I/usr/lib/gcc-lib/i686-legacy-linux-gnu/2.6.3/include/g++/stl  cp
 g++-2.6.3 -O2 -I/usr/lib/gcc-lib/i686-legacy-linux-gnu/2.6.3/include/stlport/ cpp/2048-ai.cpp -lm -o 2048
 ```
 
+若使用预处理ENABLE_CACHE=2，使用cmap作为cache，若使用预处理ENABLE_CACHE=0，不启用cache。不依赖C++标准库，编译器适应性增强。额外支持：
+```
+gcc 2.1/2.2.2/2.3.3/2.4.5/2.5.8 (linux)
+msvc 2.x (win32)
+visualage c++ 3.5 (win32)
+```
+
+gcc编译示例：
+```
+g++ -DENABLE_CACHE=2 -O2 cpp/2048-ai.cpp -pthread -o 2048
+```
+
+* 使用ENABLE_CACHE=0或ENABLE_CACHE=2时，由于不依赖C++标准库，STL相关issue不存在。
+
+* msvc 2.x都不能使用优化，否则编译器直接crash，包括最新的2.2。其他版本msvc测试的都是补丁打满的版本。
 
 ### 多线程
 
-本实现支持多线程，由预处理MULTI_THREAD控制，多线程版本依赖操作系统原生线程（cpp/thread_pool.cpp），仅支持Win32和Posix两种线程模型，已测试编译器和平台：
+本实现支持多线程，由预处理MULTI_THREAD控制，多线程版本依赖操作系统原生线程，仅支持Win32和Posix两种线程模型。
+
+MULTI_THREAD=1使用C++ thread_pool（cpp/thread_pool.cpp），依赖std::deque，已测试编译器和平台：
 ```
 gcc 2.6.3+ (linux, freebsd, macos, mingw, mingw-w64, cygwin, openbsd, netbsd, dragonflybsd, solaris)
 clang 3.0+ (linux, macos, freebsd, win32, openbsd, netbsd, dragonflybsd)
@@ -374,20 +382,36 @@ borland c++ 5.5 (win32)
 
 gcc编译示例：
 ```
-g++ -DMULTI_THREAD -O2 cpp/2048-ai.cpp -pthread -o 2048
+g++ -DMULTI_THREAD=1 -O2 cpp/2048-ai.cpp -pthread -o 2048
 ```
 
 * gcc 2.7.2需要使用STLPort-3.12.3，在legacy-gcc中已提供，否则libg++-2.7.x的STL在多线程场景下会coredump，编译示例：
 ```
-g++-2.7.2 -DMULTI_THREAD -O2 -I/usr/lib/gcc-lib/i686-legacy-linux-gnu/2.7.2/include/stlport/ cpp/2048-ai.cpp -pthread -o 2048
+g++-2.7.2 -DMULTI_THREAD=1 -O2 -I/usr/lib/gcc-lib/i686-legacy-linux-gnu/2.7.2/include/stlport/ cpp/2048-ai.cpp -pthread -o 2048
 ```
 
 * gcc 2.6.3需要使用STLPort-2.033，在legacy-gcc中已提供，否则根本无法编译通过（使用libg++-2.6.x中的STL也无法编译通过），编译示例：
 ```
-g++-2.6.3 -DMULTI_THREAD -O2 -I/usr/lib/gcc-lib/i686-legacy-linux-gnu/2.6.3/include/stlport/ cpp/2048-ai.cpp -lm -pthread -o 2048
+g++-2.6.3 -DMULTI_THREAD=1 -O2 -I/usr/lib/gcc-lib/i686-legacy-linux-gnu/2.6.3/include/stlport/ cpp/2048-ai.cpp -lm -pthread -o 2048
 ```
 
 * msvc 4.2的STL allocator线程不安全，有概率启动时crash。
+
+MULTI_THREAD=1使用C thread_pool（cpp/thread_pool_c.c），配合ENABLE_CACHE=2，编译器适应性增强。额外支持：
+```
+gcc 2.1/2.2.2/2.3.3/2.4.5/2.5.8 (linux)
+msvc 2.x (win32)
+visualage c++ 3.5 (win32)
+```
+
+gcc编译示例：
+```
+g++ -DMULTI_THREAD=2 -DENABLE_CACHE=2 -O2 cpp/2048-ai.cpp -pthread -o 2048
+```
+
+* 使用ENABLE_CACHE=0或ENABLE_CACHE=2时，由于不依赖C++标准库，STL相关issue不存在。
+
+* msvc 2.x都不能使用优化，否则编译器直接crash，包括最新的2.2。其他版本msvc测试的都是补丁打满的版本。
 
 ### OpenMP多线程
 
@@ -411,6 +435,8 @@ g++ -DOPENMP_THREAD -O2 -fopenmp cpp/2048-ai.cpp -o 2048
 ## cpp/2048ai16.cpp
 
 不使用64位整数的ISO C++98 AI实现，不启用cache，查表法采取分表形式（单表小于64KiB，总内存需求256KiB），支持dos16目标（需要compact或large内存模型），限定搜索深度上限为3。
+
+默认启用cmap cache，不依赖C++标准库，内存动态增长，使用预处理ENABLE_CACHE=0可以关闭。
 
 已测试编译器和平台：
 ```
@@ -634,16 +660,16 @@ quick pascal 1.0 (dos16)
 
 ## pascal/2048-ai.pas
 
-Pascal AI实现，查表法，由预处理FASTMODE决定是否使用TDictionary cache（默认不启用），由预处理MULTI_THREAD决定是否使用多线程（默认不启用），仅支持win32和posix线程。
+Pascal AI实现，查表法，由预处理ENABLE_CACHE决定是否使用TDictionary cache（默认不启用），由预处理MULTI_THREAD决定是否使用多线程（默认不启用），仅支持win32和posix线程。
 
-默认不启用FASTMODE时，限定搜索深度上限为5。编译器支持范围更宽。
+默认不启用ENABLE_CACHE时，限定搜索深度上限为5。编译器支持范围更宽。
 
 已测试编译器和平台：
 ```
 free pascal 2.2+ (linux, win32, freebsd, macos, dos32)
 ```
 
-启用FASTMODE，依赖TDictionary，搜索深度不限，编译器支持范围较窄。
+启用ENABLE_CACHE，依赖TDictionary，搜索深度不限，编译器支持范围较窄。
 
 已测试编译器和平台：
 ```
@@ -652,7 +678,7 @@ free pascal 3.2+ (linux, win32, freebsd, macos, dos32)
 
 使用TDictionary+多线程的编译命令行示例：
 ```
-fpc -dMULTI_THREAD -dFASTMODE:=1 -O2 pascal/2048-ai.pas
+fpc -dMULTI_THREAD -dENABLE_CACHE:=1 -O2 pascal/2048-ai.pas
 ```
 
 

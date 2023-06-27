@@ -12,12 +12,15 @@
 
 #include <limits.h>
 #if UINT_MAX == 0xFFFFU
-#define FASTMODE 0
 #define __16BIT__ 1
 #endif
 
-#if !defined(FASTMODE)
-#define FASTMODE 1
+#if !defined(ENABLE_CACHE)
+#define ENABLE_CACHE 1
+#endif
+
+#if defined(ENABLE_CACHE) && ENABLE_CACHE != 0 && ENABLE_CACHE != 1 & ENABLE_CACHE != 2
+#error "ENABLE_CACHE must be 0 (no cache) or 1 (use c++ map) or 2 (use c map)"
 #endif
 
 typedef unsigned short row_t;
@@ -58,21 +61,28 @@ enum {
     RIGHT,
 };
 
-#if defined(MULTI_THREAD) && defined(OPENMP_THREAD)
+#if MULTI_THREAD && OPENMP_THREAD
 #error "MULTI_THREAD and OPENMP_THREAD cannot be defined at the same time."
+#elif defined(MULTI_THREAD) && MULTI_THREAD != 0 && MULTI_THREAD != 1 & MULTI_THREAD != 2
+#error "MULTI_THREAD must be 0 (no thread) or 1 (use c++ thread_pool) or 2 (use c thread_pool)"
 #endif
-#if defined(MULTI_THREAD)
-#include "thread_pool.cpp"
-#elif defined(OPENMP_THREAD)
+
+#if MULTI_THREAD == 1
+#include "thread_pool.cc"
+#elif MULTI_THREAD == 2
+#include "deque.c"
+#include "thread_pool_c.c"
+#elif OPENMP_THREAD
 #include <omp.h>
 #endif
 
-#if FASTMODE
+#if ENABLE_CACHE
 typedef struct {
     int depth;
     score_heur_t heuristic;
 } trans_table_entry_t;
 
+#if ENABLE_CACHE == 1
 #if defined(max)
 #undef max
 #endif
@@ -107,7 +117,13 @@ typedef std::map<board_t, trans_table_entry_t, less<board_t> > trans_table_t;
 typedef std::map<board_t, trans_table_entry_t> trans_table_t;
 #define MAP_HAVE_SECOND 1
 #endif
+#elif ENABLE_CACHE == 2
+#include "cmap.c"
+typedef map_t(board_t, trans_table_entry_t) trans_table_t;
+#endif
+#endif
 
+#ifndef __16BIT__
 #if defined(_MSC_VER) && _MSC_VER >= 1500
 #include <intrin.h>
 #define popcount __popcnt
@@ -183,7 +199,7 @@ const score_heur_t SCORE_SUM_WEIGHT = 11.0f;
 const score_heur_t SCORE_MERGES_WEIGHT = 700.0f;
 const score_heur_t SCORE_EMPTY_WEIGHT = 270.0f;
 const score_heur_t CPROB_THRESH_BASE = 0.0001f;
-#if FASTMODE
+#if ENABLE_CACHE
 const row_t CACHE_DEPTH_LIMIT = 15;
 #endif
 
@@ -228,9 +244,6 @@ private:
     board_t initial_board();
 
     struct eval_state {
-#if FASTMODE
-        trans_table_t trans_table;
-#endif
         int maxdepth;
         int curdepth;
         long nomoves;
@@ -238,6 +251,9 @@ private:
         long cachehits;
         long moves_evaled;
         int depth_limit;
+#if ENABLE_CACHE
+        trans_table_t trans_table;
+#endif
 
         eval_state() : maxdepth(0), curdepth(0), nomoves(0), tablehits(0), cachehits(0), moves_evaled(0), depth_limit(0) {}
     };
@@ -246,7 +262,7 @@ private:
     score_heur_t score_tilechoose_node(eval_state &state, board_t board, score_heur_t cprob);
     score_heur_t score_toplevel_move(board_t board, int move);
 
-#if defined(MULTI_THREAD)
+#if MULTI_THREAD
     typedef struct {
         Game2048 *pthis;
         board_t board;
@@ -255,10 +271,9 @@ private:
     } thrd_context;
 
     static void thrd_worker(void *param);
-    static ThreadPool &get_thrd_pool();
 #endif
 
-#if FASTMODE
+#ifndef __16BIT__
 #define TABLESIZE 65536
     row_t *row_left_table;
     row_t *row_right_table;
@@ -327,7 +342,7 @@ int Game2048::count_empty(board_t x) {
 
 void Game2048::init_tables() {
     row_t row = 0, result = 0;
-#if FASTMODE
+#ifndef __16BIT__
     row_t rev_row = 0, rev_result = 0;
 #endif
 
@@ -340,7 +355,7 @@ void Game2048::init_tables() {
         line[2] = (row >> 8) & 0xf;
         line[3] = (row >> 12) & 0xf;
 
-#if FASTMODE
+#ifndef __16BIT__
         score_t score = 0;
         for (i = 0; i < 4; ++i) {
             score_t rank = line[i];
@@ -391,7 +406,7 @@ void Game2048::init_tables() {
             }
         }
 
-#if FASTMODE
+#ifndef __16BIT__
         score_heur_table[row] = (score_heur_t)(SCORE_LOST_PENALTY + SCORE_EMPTY_WEIGHT * empty + SCORE_MERGES_WEIGHT * merges -
             SCORE_MONOTONICITY_WEIGHT * _min(monotonicity_left, monotonicity_right) - SCORE_SUM_WEIGHT * sum);
 #else
@@ -421,7 +436,7 @@ void Game2048::init_tables() {
 
         result = line[0] | (line[1] << 4) | (line[2] << 8) | (line[3] << 12);
 
-#if FASTMODE
+#ifndef __16BIT__
         rev_row = reverse_row(row);
         rev_result = reverse_row(result);
         row_left_table[row] = row ^ result;
@@ -432,7 +447,7 @@ void Game2048::init_tables() {
     } while (row++ != 0xFFFF);
 }
 
-#if FASTMODE
+#ifndef __16BIT__
 void Game2048::alloc_tables() {
     row_left_table = (row_t *)malloc(sizeof(row_t) * TABLESIZE);
     row_right_table = (row_t *)malloc(sizeof(row_t) * TABLESIZE);
@@ -602,7 +617,7 @@ board_t Game2048::initial_board() {
     return insert_tile_rand(board, draw_tile());
 }
 
-#if FASTMODE
+#ifndef __16BIT__
 int Game2048::get_depth_limit(board_t board) {
     row_t bitset = 0, max_limit = 0;
     int count = 0;
@@ -616,11 +631,17 @@ int Game2048::get_depth_limit(board_t board) {
         return 3;
     } else if (bitset <= 2048 + 1024) {
         max_limit = 4;
+#if ENABLE_CACHE
     } else if (bitset <= 4096) {
         max_limit = 5;
     } else if (bitset <= 4096 + 2048) {
         max_limit = 6;
     }
+#else
+    } else {
+        max_limit = 5;
+    }
+#endif
 
     bitset >>= 1;
     count = (int)(popcount(bitset)) - 2;
@@ -642,7 +663,7 @@ score_heur_t Game2048::score_tilechoose_node(eval_state &state, board_t board, s
         state.tablehits++;
         return score_heur_board(board);
     }
-#if FASTMODE
+#if ENABLE_CACHE == 1
     if (state.curdepth < CACHE_DEPTH_LIMIT) {
 #if !defined(__WATCOMC__)
         const
@@ -658,6 +679,16 @@ score_heur_t Game2048::score_tilechoose_node(eval_state &state, board_t board, s
             if (entry.depth <= state.curdepth) {
                 state.cachehits++;
                 return entry.heuristic;
+            }
+        }
+    }
+#elif ENABLE_CACHE == 2
+    if (state.curdepth < CACHE_DEPTH_LIMIT) {
+        trans_table_entry_t *entry = (trans_table_entry_t *)map_get(&state.trans_table, board);
+        if (entry != NULL) {
+            if (entry->depth <= state.curdepth) {
+                state.cachehits++;
+                return entry->heuristic;
             }
         }
     }
@@ -681,10 +712,17 @@ score_heur_t Game2048::score_tilechoose_node(eval_state &state, board_t board, s
     }
     res = res / num_open;
 
-#if FASTMODE
+#if ENABLE_CACHE == 1
     if (state.curdepth < CACHE_DEPTH_LIMIT) {
         trans_table_entry_t entry = { state.curdepth, res };
         state.trans_table[board] = entry;
+    }
+#elif ENABLE_CACHE == 2
+    if (state.curdepth < CACHE_DEPTH_LIMIT) {
+        trans_table_entry_t entry;
+        entry.depth = state.curdepth;
+        entry.heuristic = res;
+        map_set(&state.trans_table, board, entry);
     }
 #endif
 
@@ -718,32 +756,47 @@ score_heur_t Game2048::score_toplevel_move(board_t board, int move) {
     score_heur_t res = 0.0f;
     board_t newboard = execute_move(board, move);
 
+#if ENABLE_CACHE == 2
+    map_init(&state.trans_table, NULL, NULL);
+#endif
     state.depth_limit = get_depth_limit(board);
     if (board != newboard)
         res = score_tilechoose_node(state, newboard, 1.0f) + 1e-6f;
 
-#if FASTMODE
     printf("Move %d: result %f: eval'd %ld moves (%ld no moves, %ld table hits, %ld cache hits, %ld cache size) (maxdepth=%d)\n",
-           move, res, state.moves_evaled, state.nomoves, state.tablehits, state.cachehits,
-          (long)state.trans_table.size(), state.maxdepth);
+         move, res, state.moves_evaled, state.nomoves, state.tablehits, state.cachehits,
+#if ENABLE_CACHE == 1
+         (long)state.trans_table.size(),
+#elif ENABLE_CACHE == 2
+         (long)state.trans_table.base.nnodes,
 #else
-    printf("Move %d: result %f: eval'd %ld moves (%ld no moves, %ld table hits, %ld cache hits, %ld cache size) (maxdepth=%d)\n",
-           move, res, state.moves_evaled, state.nomoves, state.tablehits, state.cachehits, 0L, state.maxdepth);
+         0L,
 #endif
+         state.maxdepth);
 
+#if ENABLE_CACHE == 2
+    map_delete(&state.trans_table);
+#endif
     return res;
 }
 
-#if defined(MULTI_THREAD)
+#if MULTI_THREAD
 void Game2048::thrd_worker(void *param) {
     thrd_context *pcontext = (thrd_context *)param;
     pcontext->res = pcontext->pthis->score_toplevel_move(pcontext->board, pcontext->move);
 }
 
-ThreadPool &Game2048::get_thrd_pool() {
+#if MULTI_THREAD == 1
+static ThreadPool& get_thrd_pool() {
     static ThreadPool thrd_pool(ThreadPool::get_cpu_count() >= 4 ? 4 : 0);
     return thrd_pool;
 }
+#elif MULTI_THREAD == 2
+static THREADPOOL_CTX* get_thrd_pool() {
+    static THREADPOOL_CTX ctx;
+    return &ctx;
+}
+#endif
 #endif
 
 int Game2048::find_best_move(board_t board) {
@@ -754,9 +807,10 @@ int Game2048::find_best_move(board_t board) {
     print_board(board);
     printf("Current scores: heur %ld, actual %ld\n", (long)score_heur_board(board), (long)score_board(board));
 
-#if defined(MULTI_THREAD)
-    ThreadPool &thrd_pool = get_thrd_pool();
+#if MULTI_THREAD
     thrd_context context[4];
+#if MULTI_THREAD == 1
+    ThreadPool &thrd_pool = get_thrd_pool();
     for (move = 0; move < 4; move++) {
         context[move].pthis = this;
         context[move].board = board;
@@ -765,6 +819,17 @@ int Game2048::find_best_move(board_t board) {
         thrd_pool.add_task(thrd_worker, &context[move]);
     }
     thrd_pool.wait_all_task();
+#elif MULTI_THREAD == 2
+    THREADPOOL_CTX *ctx = get_thrd_pool();
+    for (move = 0; move < 4; move++) {
+        context[move].pthis = this;
+        context[move].board = board;
+        context[move].move = move;
+        context[move].res = 0.0f;
+        threadpool_addtask(ctx, thrd_worker, &context[move]);
+    }
+    threadpool_waitalltask(ctx);
+#endif
     for (move = 0; move < 4; move++) {
         if (context[move].res > best) {
             best = context[move].res;
@@ -773,7 +838,7 @@ int Game2048::find_best_move(board_t board) {
     }
 #else
     score_heur_t res[4] = { 0.0f };
-#if defined(OPENMP_THREAD)
+#if OPENMP_THREAD
 #pragma omp parallel for num_threads(omp_get_num_procs() >= 4 ? 4 : omp_get_num_procs())
 #endif
     for (move = 0; move < 4; move++) {
@@ -797,9 +862,16 @@ void Game2048::play_game() {
     int scorepenalty = 0;
     long last_score = 0, current_score = 0, moveno = 0;
 
-#if defined(MULTI_THREAD)
+#if MULTI_THREAD == 1
     ThreadPool &thrd_pool = get_thrd_pool();
     if (!thrd_pool.init()) {
+        fprintf(stderr, "Init thread pool failed.");
+        fflush(stderr);
+        abort();
+    }
+#elif MULTI_THREAD == 2
+    THREADPOOL_CTX *ctx = get_thrd_pool();
+    if (!threadpool_startup(ctx, threadpool_cpucount() >= 4 ? 4 : 0)) {
         fprintf(stderr, "Init thread pool failed.");
         fflush(stderr);
         abort();

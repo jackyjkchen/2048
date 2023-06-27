@@ -42,8 +42,6 @@ typedef struct {
         map_base_t base;                  \
         KT tmpkey;                        \
         VT tmpval;                        \
-        KT *keyref;                       \
-        VT *valref;                       \
     }
 
 #define map_init(m, key_cmp_func, key_hash_func)                                        \
@@ -62,7 +60,7 @@ typedef struct {
 
 #define map_get(m, key) \
     ((m)->tmpkey = key, \
-     (m)->valref = map_get_(&(m)->base, &(m)->tmpkey, sizeof((m)->tmpkey)))
+     map_get_(&(m)->base, &(m)->tmpkey, sizeof((m)->tmpkey)))
 
 #define map_set(m, key, value)                                     \
     (                                                              \
@@ -80,13 +78,6 @@ typedef struct {
 
 #define map_iter(m) \
     map_iter_()
-
-#define map_next(m, iter, kptr)                 \
-    ((m)->keyref = map_next_(&(m)->base, iter), \
-     ((m)->keyref)                              \
-         ? ((*kptr = *(m)->keyref), 1)          \
-         : 0                                    \
-    )
 
 #define map_equal(m1, m2, val_cmp_func)              \
     (                                                \
@@ -142,8 +133,6 @@ int map_set_(map_base_t *, const void *, size_t, size_t, const void *, size_t, s
 void map_remove_(map_base_t *, const void *, size_t);
 
 map_iter_t map_iter_(void);
-
-void *map_next_(map_base_t *, map_iter_t *);
 
 int map_equal_(map_base_t *, map_base_t *, size_t, size_t, MapCmpFunction);
 

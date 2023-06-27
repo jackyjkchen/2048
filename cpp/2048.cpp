@@ -12,12 +12,7 @@
 
 #include <limits.h>
 #if UINT_MAX == 0xFFFFU
-#define FASTMODE 0
 #define __16BIT__ 1
-#endif
-
-#if !defined(FASTMODE)
-#define FASTMODE 1
 #endif
 
 typedef unsigned short row_t;
@@ -154,7 +149,7 @@ static int get_ch(void) {
 
 class Game2048 {
 public:
-#if FASTMODE
+#ifdef __16BIT__
     Game2048() {
         alloc_tables();
     }
@@ -181,7 +176,7 @@ private:
     board_t transpose(board_t x);
     int count_empty(board_t x);
 
-#if FASTMODE
+#ifdef __16BIT__
     void init_tables();
     void alloc_tables();
     void free_tables();
@@ -197,7 +192,7 @@ private:
     board_t insert_tile_rand(board_t board, board_t tile);
     board_t initial_board();
 
-#if FASTMODE
+#ifdef __16BIT__
 #define TABLESIZE 65536
     row_t *row_table;
     score_t *score_table;
@@ -256,7 +251,7 @@ int Game2048::count_empty(board_t x) {
     return (int)(x & 0xf);
 }
 
-#if FASTMODE
+#ifdef __16BIT__
 void Game2048::init_tables() {
     row_t row = 0, result = 0;
 
@@ -483,7 +478,7 @@ void Game2048::play_game() {
     row_t retract_penalty_vec[MAX_RETRACT] = { 0 };
     int retract_pos = 0, retract_num = 0;
 
-#if FASTMODE
+#ifdef __16BIT__
     init_tables();
 #endif
     while (1) {
