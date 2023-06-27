@@ -16,7 +16,11 @@
 #endif
 
 #if !defined(ENABLE_CACHE)
+#if defined(_MSC_VER) && _MSC_VER < 600
+#define ENABLE_CACHE 0
+#else
 #define ENABLE_CACHE 1
+#endif
 #endif
 
 typedef unsigned short row_t;

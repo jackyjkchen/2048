@@ -214,7 +214,7 @@ gcc -DOPENMP_THREAD -O2 -fopenmp c/2048-ai.c -o 2048 -lm
 
 不使用64位整数的严格ISO C90 AI实现，查表法采取分表形式（单表小于64KiB，总内存需求256KiB），支持dos16目标（需要compact或large内存模型），限定搜索深度上限为3。
 
-默认启用cmap cache，内存动态增长，使用预处理ENABLE_CACHE=0可以关闭。
+默认启用cmap cache，自动在不支持的编译器上关闭，使用预处理ENABLE_CACHE=0可以强制关闭。
 
 已测试编译器和平台：
 ```
@@ -434,9 +434,9 @@ g++ -DOPENMP_THREAD -O2 -fopenmp cpp/2048-ai.cpp -o 2048
 
 ## cpp/2048ai16.cpp
 
-不使用64位整数的ISO C++98 AI实现，不启用cache，查表法采取分表形式（单表小于64KiB，总内存需求256KiB），支持dos16目标（需要compact或large内存模型），限定搜索深度上限为3。
+不使用64位整数的ISO C++98 AI实现，查表法采取分表形式（单表小于64KiB，总内存需求256KiB），支持dos16目标（需要compact或large内存模型），限定搜索深度上限为3。
 
-默认启用cmap cache，不依赖C++标准库，内存动态增长，使用预处理ENABLE_CACHE=0可以关闭。
+默认启用cmap cache，自动在不支持的编译器上关闭，不依赖C++标准库，使用预处理ENABLE_CACHE=0可以强制关闭。
 
 已测试编译器和平台：
 ```
