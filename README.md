@@ -163,7 +163,7 @@ cc (openserver, unixware)
 compcert 3.12 (linux)
 ```
 
-* 编译器相关comments同c/2048.c。
+* 编译器已知问题参见c/2048.c。
 
 ### 多线程
 
@@ -245,7 +245,7 @@ symantec c++ 7.5 (dos16)
 power c 2.2.2 (dos16)
 ```
 
-* 编译器相关comments同c/2048-16b.c。
+* 编译器已知问题参见c/2048-16b.c。
 
 
 
@@ -397,7 +397,7 @@ g++-2.6.3 -DMULTI_THREAD=1 -O2 -I/usr/lib/gcc-lib/i686-legacy-linux-gnu/2.6.3/in
 
 * msvc 4.2的STL allocator线程不安全，有概率启动时crash。
 
-MULTI_THREAD=1使用C thread_pool（cpp/thread_pool_c.c），配合ENABLE_CACHE=2，编译器适应性增强。额外支持：
+MULTI_THREAD=2使用C thread_pool（cpp/thread_pool_c.c），配合ENABLE_CACHE=2，编译器适应性增强。额外支持：
 ```
 gcc 2.1/2.2.2/2.3.3/2.4.5/2.5.8 (linux)
 msvc 2.x (win32)
