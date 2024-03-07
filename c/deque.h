@@ -3,6 +3,10 @@
 
 #include <stddef.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct {
     void *buf;
     size_t nnode;
@@ -51,5 +55,9 @@ extern int deque_push_front_(deque_base_t *base, void *node, size_t node_size);
 extern int deque_push_back_(deque_base_t *base, void *node, size_t node_size);
 
 extern size_t deque_shrink_(deque_base_t *base, size_t node_size);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

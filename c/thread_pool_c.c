@@ -430,8 +430,8 @@ void threadpool_cleanup(THREADPOOL_CTX *ctx) {
     THREADPOOL_CTX_ *ctx_ = (THREADPOOL_CTX_*)ctx->ctx;
     threadpool_waitallthrd(ctx);
     deque_delete(&ctx_->queue);
-	threadlock_uninit(&ctx_->pool_lock);
-	threadlock_uninit(&ctx_->ctrl_lock);
+    threadlock_uninit(&ctx_->pool_lock);
+    threadlock_uninit(&ctx_->ctrl_lock);
     free(ctx_->thread_handle);
     free(ctx->ctx);
     ctx->ctx = NULL;

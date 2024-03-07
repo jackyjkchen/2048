@@ -10,6 +10,10 @@
 
 #include <stddef.h>             /* size_t, NULL */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define MAP_VER_MAJOR 2
 #define MAP_VER_MINOR 5
 #define MAP_VER_PATCH 0
@@ -151,5 +155,9 @@ typedef map_t(int) map_int_t;
 typedef map_t(char) map_char_t;
 typedef map_t(float) map_float_t;
 typedef map_t(double) map_double_t;*/
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* CMAP_H */
