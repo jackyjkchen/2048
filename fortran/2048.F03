@@ -1,5 +1,5 @@
 program Game2048
-use, intrinsic :: iso_c_binding, only : c_int, c_long, c_char, c_null_char
+use, intrinsic :: iso_c_binding, only : c_int,
 implicit none
 
 interface
@@ -86,7 +86,7 @@ subroutine print_board(board)
     print *, '-----------------------------'
     do i = 0, 3
         do j = 0, 3
-            power_val = iand(board, int(Z000F, kind=8))
+            power_val = int(iand(board, int(Z000F, kind=8)), kind=4)
             if (power_val == 0) then
                 write(*, fmt='(a, 6x)', advance='no') '|'
             else
@@ -125,7 +125,7 @@ function count_empty(x)
     x = x + ishft(x, -16)
     x = x + ishft(x, -8)
     x = x + ishft(x, -4)
-    count_empty = iand(x, int(Z000F, kind=8))
+    count_empty = int(iand(x, int(Z000F, kind=8)), kind=4)
 end function count_empty
 
 #if FASTMODE
@@ -135,9 +135,9 @@ subroutine init_tables()
     integer(4) :: i, j, rank
     integer(4) :: score
 
-    row = 0
+    row = -32768
     row_result = 0
-    do row = -32768, 32767
+    do while (row < 32767)
         score = 0
         row_line(0) = iand(row, Z000F)
         row_line(1) = iand(ishft(row, -4), Z000F)
@@ -170,7 +170,7 @@ subroutine init_tables()
                 i = i - 1
             else if (row_line(i) == row_line(j)) then
                 if (row_line(i) /= 15) then
-                    row_line(i) = row_line(i) + 1
+                    row_line(i) = int(row_line(i) + 1, kind=2)
                 end if
                 row_line(j) = 0
             end if
@@ -187,6 +187,7 @@ subroutine init_tables()
         if (row == 32767) then
             exit
         end if
+        row = row + int(1, kind=2)
     end do
 end subroutine init_tables
 
