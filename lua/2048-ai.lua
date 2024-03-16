@@ -329,7 +329,7 @@ function score_toplevel_move(board, move)
 
     state.depth_limit = 3
 
-    if (board != newboard) then
+    if (board ~= newboard) then
         res = score_tilechoose_node(state, newboard, 1.0) + 0.000001
     end
 

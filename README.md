@@ -608,7 +608,7 @@ jdk 1.5+ (linux, win32, freebsd, macos, openbsd, netbsd, dragonflybsd, solaris)
 编译运行命令行示例：
 ```
 cd java
-gcc -I/opt/openjdk-bin-8.292_p10/include/ -I/opt/openjdk-bin-8.292_p10/include/linux/ -std=c90 -fPIC -O2 -shared javadeps.c -o libjavadeps.so 
+gcc -I/opt/openjdk-bin-17/include/ -I/opt/openjdk-bin-17/include/linux/ -std=c90 -fPIC -O2 -shared javadeps.c -o libjavadeps.so 
 javac 2048.java
 java -Djava.library.path=. Game2048
 ```
@@ -619,6 +619,14 @@ java -Djava.library.path=. Game2048
 Java AI实现，查表法 + HashMap + 多线程，由于Java标准库不支持清除屏幕，由JNI方式——java/javadeps.c实现。
 
 编译器和平台支持同上。
+
+编译运行命令行示例：
+```
+cd java
+gcc -I/opt/openjdk-bin-17/include/ -I/opt/openjdk-bin-17/include/linux/ -std=c90 -fPIC -O2 -shared javadeps.c -o libjavadeps.so 
+javac 2048-ai.java
+java -Djava.library.path=. Game2048
+```
 
 
 ## java/2048-old.java + java/javadeps.c
@@ -858,6 +866,12 @@ gcc -std=c99 -I/usr/include/lua5.4 -shared -fPIC -O2 lua/luadeps.c  -o luadeps.s
 AI实现。查表法 + 原生table cache，限定搜索深度上限为3，依赖Lua 5.3或以上版本提供的原生64位整数运算支持，由于原生Lua对操作系统判定和无回显输入不支持，相关功能由lua/luadeps.c提供。
 
 Lua版本和平台支持同上。
+
+编译运行命令行示例：
+```
+gcc -std=c99 -I/usr/include/lua5.4 -shared -fPIC -O2 lua/luadeps.c  -o luadeps.so
+./lua/2048-ai.lua
+```
 
 
 
