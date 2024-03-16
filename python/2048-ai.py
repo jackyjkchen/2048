@@ -272,7 +272,9 @@ def score_move_node(state, board, cprob):
         newboard = execute_move(board, move)
         state.moves_evaled += 1
         if board != newboard:
-            best = max(best, score_tilechoose_node(state, newboard, cprob))
+            tmp = score_tilechoose_node(state, newboard, cprob)
+            if best < tmp:
+                best = tmp
         else:
             state.nomoves += 1
     state.curdepth -= 1

@@ -250,7 +250,7 @@ Private Function get_depth_limit(board As ULongint) As Integer
     Dim max_limit As Integer = 3
 
     While board <> 0
-        bitset_ = bitset_ Or (CUShort(1) Shl (board And &HFUL))
+        bitset_ = bitset_ Or (CUShort(1) Shl (board And &HFULL))
         board Shr= 4
     Wend
 
@@ -283,19 +283,19 @@ Private Function score_tilechoose_node(ByRef state As eval_state, board As ULong
         Return score_heur_board(board)
     End If
 
-    Dim num_open As Integer = count_empty(board)
-    cprob /= num_open
     Dim res As Double = 0.0F
     Dim tmp As ULongint = board
     Dim tile_2 As ULongint = 1
+    Dim num_open As Integer = count_empty(board)
+    cprob /= num_open
 
     While tile_2 <> 0
-        If (tmp And &HFUL) = 0 Then
+        If (tmp And &HFULL) = 0 Then
             res += score_move_node(state, board Or tile_2, cprob * 0.9F) * 0.9F
             res += score_move_node(state, board Or (tile_2 Shl 1), cprob * 0.1F) * 0.1F
         End If
         tmp Shr= 4
-        tile_2 = tile_2 Shl 4
+        tile_2 Shl= 4
     Wend
 
     res = res / num_open
@@ -310,9 +310,13 @@ Private Function score_move_node(ByRef state As eval_state, board As ULongint, c
 
     While move < 4
         Dim newboard As ULongint = execute_move(board, move)
+
         state.moves_evaled += 1
         If board <> newboard Then
-            best = max_(best, score_tilechoose_node(state, newboard, cprob))
+			Dim tmp As Double = score_tilechoose_node(state, newboard, cprob)
+            If best < tmp Then
+                best = tmp
+			End If
         Else
             state.nomoves += 1
         End If
@@ -327,6 +331,11 @@ Private Function score_toplevel_move(board As ULongint, move As Integer) As Doub
     Dim res As Double = 0.0F
     Dim state As eval_state
     Dim newboard As ULongint = execute_move(board, move)
+    state.maxdepth = 0
+    state.curdepth = 0
+    state.nomoves = 0
+    state.tablehits = 0
+    state.moves_evaled = 0
     state.depth_limit = get_depth_limit(board)
     If board <> newboard Then
         res = score_tilechoose_node(state, newboard, 1.0F) + 0.000001F
@@ -340,7 +349,7 @@ Private Function insert_tile_rand(board As ULongint, tile As ULongint) As ULongi
     Dim tmp As ULongint = board
 
     While 1
-        While (tmp And &HFUL) <> 0
+        While (tmp And &HFULL) <> 0
             tmp Shr= 4
             tile Shl= 4
         Wend

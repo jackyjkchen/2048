@@ -389,7 +389,10 @@ func score_move_node(state *eval_state, board uint64, cprob float64) float64 {
 		state.moves_evaled++
 
 		if board != newboard {
-			best = math.Max(best, score_tilechoose_node(state, newboard, cprob))
+            var tmp float64 = score_tilechoose_node(state, newboard, cprob)
+            if best < tmp {
+			    best = tmp
+            }
 		} else {
 			state.nomoves++
 		}

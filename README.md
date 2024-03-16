@@ -593,6 +593,14 @@ Go AI实现，查表法 + map + goroutine并发，由于Go标准库不支持清�
 编译器和平台支持同上。
 
 
+编译命令行示例：
+```
+cd go
+gcc -std=c90 -O2 -c godeps.c -o godeps.o
+ar rc libgodeps.a godeps.o
+go build 2048-ai.go
+```
+
 
 # Java
 
@@ -717,7 +725,7 @@ gfortran 4.3+ (linux, mingw, mingw-w64, cygwin, freebsd, macos)
 
 编译命令行示例：
 ```
-gfortran -std=f2003 -cpp -O2 fortran/2048.f03 fortran/f03deps.c -o 2048
+gfortran -cpp -O2 fortran/2048.f03 fortran/f03deps.c -o 2048
 ```
 
 
@@ -733,7 +741,7 @@ gfortran 4.3+ (linux, mingw, mingw-w64, cygwin, freebsd, macos)
 gfortran 4.3以上版本均支持OpenMP，推荐使用，编译命令行示例如下：
 
 ```
-gfortran -std=f2003 -cpp -O2 -fopenmp fortran/2048-ai.f03 fortran/f03deps.c -o 2048
+gfortran -cpp -O2 -fopenmp fortran/2048-ai.f03 fortran/f03deps.c -o 2048
 ```
 
 
@@ -748,7 +756,7 @@ gfortran 4.0+ (linux, mingw, mingw-w64, cygwin, freebsd, macos)
 
 编译命令行示例：
 ```
-gfortran -std=f95 -cpp -O2 fortran/2048.f90 fortran/f90deps.c -o 2048
+gfortran -cpp -O2 fortran/2048.f90 fortran/f90deps.c -o 2048
 ```
 
 

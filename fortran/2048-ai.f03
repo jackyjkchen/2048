@@ -493,7 +493,7 @@ function score_toplevel_move(board, move)
         res = score_tilechoose_node(state, newboard, 1.0) + 1e-6
     endif
 
-    print '("Move ", i0, ": result ", f0.0, ": eval''d ", i0, " moves (", i0, " no moves, ", i0, &
+    print '("Move ", i0, ": result ", f0.6, ": eval''d ", i0, " moves (", i0, " no moves, ", i0, &
         & " table hits, ", i0, " cache hits, ", i0, " cache size) (maxdepth=", i0, ")")', &
         & move, res, state%moves_evaled, state%nomoves, state%tablehits, state%cachehits, 0, state%maxdepth
 

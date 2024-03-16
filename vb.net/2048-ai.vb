@@ -362,7 +362,10 @@ Public Module Game2048
             Dim newboard As ULong = execute_move(board, move)
             state.moves_evaled += 1
             If board <> newboard Then
-                best = Math.Max(best, score_tilechoose_node(state, newboard, cprob))
+                Dim tmp As Double = score_tilechoose_node(state, newboard, cprob)
+                If best < tmp Then
+                    best = tmp
+                End If
             Else
                 state.nomoves += 1
             End If

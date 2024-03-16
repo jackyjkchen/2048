@@ -302,7 +302,10 @@ function score_move_node(state, board, cprob)
 
         state.moves_evaled = state.moves_evaled + 1
         if (board ~= newboard) then
-            best = math.max(best, score_tilechoose_node(state, newboard, cprob))
+			local tmp = score_tilechoose_node(state, newboard, cprob)
+            if (best < tmp) then
+                best = tmp
+            end
         else
             state.nomoves = state.nomoves + 1
         end

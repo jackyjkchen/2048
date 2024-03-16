@@ -369,10 +369,14 @@ class Game2048
             long newboard = execute_move(board, move);
             state.moves_evaled++;
 
-            if (board != newboard)
-                best = Math.max(best, score_tilechoose_node(state, newboard, cprob));
-            else
+            if (board != newboard) {
+                double tmp = score_tilechoose_node(state, newboard, cprob);
+                if (best < tmp) {
+                    best = tmp;
+                }
+            } else {
                 state.nomoves++;
+            }
         }
         state.curdepth--;
 
