@@ -73,7 +73,8 @@ JNIEXPORT void JNICALL Java_Game2048_clear_1screen(JNIEnv *env, jobject obj) {
         return;
     SetConsoleCursorPosition(hStdOut, homeCoords);
 #elif defined(UNIX_LIKE)
-    system("clear");
+    int ret = system("clear");
+	(void)ret;
 #elif defined(__WATCOMC__)
     _clearscreen(_GCLEARSCREEN);
 #elif defined(__BORLANDC__) || defined (__TURBOC__) || defined(__DJGPP__)

@@ -72,7 +72,8 @@ DLLEXPORT void clear_screen(void) {
         return;
     SetConsoleCursorPosition(hStdOut, homeCoords);
 #elif defined(UNIX_LIKE)
-    system("clear");
+    int ret = system("clear");
+	(void)ret;
 #elif defined(__WATCOMC__)
     _clearscreen(_GCLEARSCREEN);
 #elif defined(__BORLANDC__) || defined (__TURBOC__) || defined(__DJGPP__)

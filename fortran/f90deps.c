@@ -87,7 +87,8 @@ DLLEXPORT void c_clear_screen_(void) {
 #ifndef USE_SYSTEM_CLEAR
     printf("\033[2J\033[H");
 #else
-    system("clear");
+    int re = system("clear");
+	(void)ret;
 #endif
 #elif defined(__WATCOMC__)
     _clearscreen(_GCLEARSCREEN);
