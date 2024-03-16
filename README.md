@@ -685,7 +685,7 @@ fpc -dMULTI_THREAD -dENABLE_CACHE:=1 -O2 pascal/2048-ai.pas
 
 # Fortran
 
-## fortran/2048.F03 + fortran/f03deps.c
+## fortran/2048.f03 + fortran/f03deps.c
 
 现代Fortran2003实现，使用FASTMODE预处理判定是否使用查表法（默认）。系统相关功能（无回显输入，清除屏幕），由fortran/f03deps.c提供。
 
@@ -696,11 +696,11 @@ gfortran 4.3+ (linux, mingw, mingw-w64, cygwin, freebsd, macos)
 
 编译命令行示例：
 ```
-gfortran -std=f2003 -O2 fortran/2048.F03 fortran/f03deps.c -o 2048
+gfortran -std=f2003 -cpp -O2 fortran/2048.f03 fortran/f03deps.c -o 2048
 ```
 
 
-## fortran/2048-ai.F03 + fortran/f03deps.c
+## fortran/2048-ai.f03 + fortran/f03deps.c
 
 Fortran2003 AI实现，查表法，由于缺乏cache数据结构，限定搜索深度上限为5。系统相关功能（清除屏幕），由fortran/f03deps.c提供。
 
@@ -712,11 +712,11 @@ gfortran 4.3+ (linux, mingw, mingw-w64, cygwin, freebsd, macos)
 gfortran 4.3以上版本均支持OpenMP，推荐使用，编译命令行示例如下：
 
 ```
-gfortran -std=f2003 -O2 -fopenmp fortran/2048-ai.F03 fortran/f03deps.c -o 2048
+gfortran -std=f2003 -cpp -O2 -fopenmp fortran/2048-ai.f03 fortran/f03deps.c -o 2048
 ```
 
 
-## fortran/2048.F90 + fortran/f90deps.c
+## fortran/2048.f90 + fortran/f90deps.c
 
 现代Fortran90实现，使用FASTMODE预处理判定是否使用查表法（默认）。系统相关功能（无回显输入，清除屏幕），由fortran/f90deps.c提供。
 
@@ -727,7 +727,7 @@ gfortran 4.0+ (linux, mingw, mingw-w64, cygwin, freebsd, macos)
 
 编译命令行示例：
 ```
-gfortran -std=f95 -O2 fortran/2048.F90 fortran/f90deps.c -o 2048
+gfortran -std=f95 -cpp -O2 fortran/2048.f90 fortran/f90deps.c -o 2048
 ```
 
 
