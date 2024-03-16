@@ -1,5 +1,0 @@
-dev-java/openjdk-bin headless-awt
-dev-lang/mono minimal
-dev-lang/rust rustfmt
-media-libs/harfbuzz -cairo -graphite -introspection -truetype
-net-misc/curl http2
