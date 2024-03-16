@@ -4,7 +4,8 @@ extern crate num_cpus;
 extern crate rand;
 extern crate rayon;
 use rand::Rng;
-use rayon::prelude::*;
+use rayon::iter::IntoParallelIterator;
+use rayon::iter::ParallelIterator;
 use std::collections::HashMap;
 
 type BoardT = u64;

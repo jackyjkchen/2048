@@ -472,6 +472,13 @@ Rust实现，查表法，依赖rand、getch、clearscreen三个crates
 rust 1.46+ (linux, win32, freebsd, macos)
 ```
 
+编译运行示例：
+```
+cd rust/Game2048
+cargo build --release
+./target/release/Game2048
+```
+
 
 ## rust/AI2048
 
@@ -479,6 +486,12 @@ Rust AI实现，查表法 + HashMap + 多线程，依赖rand、clearscreen、ray
 
 编译器和平台支持同上。
 
+编译运行示例：
+```
+cd rust/AI2048
+cargo build --release
+./target/release/AI2048
+```
 
 
 
