@@ -331,21 +331,25 @@ var
     count     : integer;
 begin
     bitset := 0;
-    max_limit := 0;
+    max_limit := 3;
     while board <> 0 do begin
         bitset := bitset or (1 shl (board and $f));
         board := board shr 4;
     end;
 
     if bitset <= 2048 then
-        exit(3)
+        exit(max_limit)
     else if bitset <= 2048 + 1024 then
         max_limit := 4
 {$if ENABLE_CACHE}
     else if bitset <= 4096 then
         max_limit := 5
     else if bitset <= 4096 + 1024 then
-        max_limit := 6;
+        max_limit := 6
+    else if bitset <= 8192 then
+        max_limit := 7
+    else
+        max_limit := 8;
 {$else}
     else
         max_limit := 5;
@@ -359,8 +363,7 @@ begin
     end;
     count := count - 2;
     count := max(count, 3);
-    if max_limit <> 0 then
-        count := min(count, max_limit);
+    count := min(count, max_limit);
     get_depth_limit := count;
 end;
 

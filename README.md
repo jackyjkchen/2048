@@ -18,7 +18,7 @@ AI实现需要关联容器、字典或哈希表做cache以提升性能，考验�
 
 对于标准库中缺乏关联容器、字典或哈希表的编译型语言（如Fortran），限定搜索深度上限为5，此时100%能算到4096，通常能算到8192-16384，小概率算到32768。
 
-对于标准库拥有关联容器、字典或哈希表的编译型语言（如C++、C#、Rust、Go、Java、VB.net、Pascal，C语言使用[https://github.com/Wirtos/cmap](https://github.com/Wirtos/cmap)作为关联容器），不限定算法搜索深度（实际上限为12），此时100%能算到8192，16384概率超过90%，32768概率超过30%。
+对于标准库拥有关联容器、字典或哈希表的编译型语言（如C++、C#、Rust、Go、Java、VB.net、Pascal，C语言使用[https://github.com/Wirtos/cmap](https://github.com/Wirtos/cmap)作为关联容器），搜索深度上限为8，此时100%能算到8192，高概率算到16384，小概率算到32768。
 
 
 # C
@@ -682,7 +682,7 @@ Pascal AI实现，查表法，由预处理ENABLE_CACHE决定是否使用TDiction
 free pascal 2.2+ (linux, win32, freebsd, macos, dos32)
 ```
 
-启用ENABLE_CACHE，依赖TDictionary，搜索深度不限，编译器支持范围较窄。
+启用ENABLE_CACHE，依赖TDictionary，搜索深度上限为8，编译器支持范围较窄。
 
 已测试编译器和平台：
 ```

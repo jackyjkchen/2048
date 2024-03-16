@@ -559,7 +559,7 @@ static board_t initial_board(void) {
 
 #ifndef __16BIT__
 static int get_depth_limit(board_t board) {
-    row_t bitset = 0, max_limit = 0;
+    row_t bitset = 0, max_limit = 3;
     int count = 0;
 
     while (board) {
@@ -568,7 +568,7 @@ static int get_depth_limit(board_t board) {
     }
 
     if (bitset <= 2048) {
-        return 3;
+        return max_limit;
     } else if (bitset <= 2048 + 1024) {
         max_limit = 4;
 #if ENABLE_CACHE
@@ -576,6 +576,10 @@ static int get_depth_limit(board_t board) {
         max_limit = 5;
     } else if (bitset <= 4096 + 2048) {
         max_limit = 6;
+    } else if (bitset <= 8192) {
+        max_limit = 7;
+    } else {
+        max_limit = 8;
     }
 #else
     } else {
@@ -586,9 +590,7 @@ static int get_depth_limit(board_t board) {
     bitset >>= 1;
     count = (int)(popcount(bitset)) - 2;
     count = _max(count, 3);
-    if (max_limit) {
-        count = _min(count, max_limit);
-    }
+    count = _min(count, max_limit);
     return count;
 }
 #else

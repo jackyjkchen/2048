@@ -247,7 +247,7 @@ End Function
 
 Private Function get_depth_limit(board As ULongint) As Integer
     Dim bitset_ As UShort = 0
-    Dim max_limit As Integer = 0
+    Dim max_limit As Integer = 3
 
     While board <> 0
         bitset_ = bitset_ Or (CUShort(1) Shl (board And &HFUL))
@@ -255,7 +255,7 @@ Private Function get_depth_limit(board As ULongint) As Integer
     Wend
 
     If bitset_ <= 2048 Then
-        Return 3
+        Return max_limit
     ElseIf bitset_ <= 2048 + 1024 Then
         max_limit = 4
     Else
@@ -270,9 +270,7 @@ Private Function get_depth_limit(board As ULongint) As Integer
     wend
     count -= 2
     count = max_(count, 3)
-    If max_limit <> 0 Then
-        count = min_(count, max_limit)
-    End If
+    count = min_(count, max_limit)
     Return count
 End Function
 

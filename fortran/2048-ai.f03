@@ -379,7 +379,7 @@ function get_depth_limit(board)
     integer(4) :: count_, max_limit
 
     bitset = 0
-    max_limit = 0
+    max_limit = 3
     count_ = 0
     do while (board /= 0)
         bitset = ior(bitset, int(ishft(1, iand(board, int(Z000F, kind=8))), kind=2))
@@ -387,7 +387,7 @@ function get_depth_limit(board)
     end do
 
     if (bitset <= 2048) then
-        get_depth_limit = 3
+        get_depth_limit = max_limit
         return
     else if (bitset <= 2048 + 1024) then
         max_limit = 4

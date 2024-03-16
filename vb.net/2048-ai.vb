@@ -278,7 +278,7 @@ Public Module Game2048
 
     Private Function get_depth_limit(board As ULong) As Integer
         Dim bitset As UShort = 0
-        Dim max_limit As Integer = 0
+        Dim max_limit As Integer = 3
 
         While board <> 0
             bitset = bitset Or (CUShort(1) << (board And &HFUL))
@@ -286,13 +286,17 @@ Public Module Game2048
         End While
 
         If bitset <= 2048 Then
-            Return 3
+            Return max_limit
         ElseIf bitset <= 2048 + 1024 Then
             max_limit = 4
         ElseIf bitset <= 4096 Then
             max_limit = 5
         ElseIf bitset <= 4096 + 2048 Then
             max_limit = 6
+        ElseIf bitset <= 8192 Then
+            max_limit = 7
+        Else
+            max_limit = 8
         End If
 
         bitset >>= 1
@@ -303,9 +307,7 @@ Public Module Game2048
         End While
         count -= 2
         count = Math.Max(count, 3)
-        If max_limit <> 0 Then
-            count = Math.Min(count, max_limit)
-        End If
+        count = Math.Min(count, max_limit)
         Return count
     End Function
 

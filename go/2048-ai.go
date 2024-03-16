@@ -298,7 +298,7 @@ func initial_board() uint64 {
 
 func get_depth_limit(board uint64) int {
 	var bitset uint16 = 0
-	max_limit := 0
+	max_limit := 3
 	count := 0
 
 	for board != 0 {
@@ -307,13 +307,17 @@ func get_depth_limit(board uint64) int {
 	}
 
 	if bitset <= 2048 {
-		return 3
+		return max_limit
 	} else if bitset <= 2048+1024 {
 		max_limit = 4
 	} else if bitset <= 4096 {
 		max_limit = 5
 	} else if bitset <= 4096+2048 {
 		max_limit = 6
+	} else if bitset <= 8192 {
+		max_limit = 7
+	} else {
+		max_limit = 8
 	}
 
 	bitset >>= 1
@@ -325,10 +329,8 @@ func get_depth_limit(board uint64) int {
 	if count < 3 {
 		count = 3
 	}
-	if max_limit != 0 {
-		if count > max_limit {
-			count = max_limit
-		}
+	if count > max_limit {
+		count = max_limit
 	}
 	return count
 }
@@ -407,9 +409,9 @@ func score_toplevel_move(board uint64, move int, res *float64, wg *sync.WaitGrou
 
 	if board == newboard {
 		*res = 0.0
-    } else {
-	    *res = score_tilechoose_node(&state, newboard, 1.0) + 0.000001
-    }
+	} else {
+		*res = score_tilechoose_node(&state, newboard, 1.0) + 0.000001
+	}
 
 	fmt.Printf("Move %d: result %f: eval'd %d moves (%d no moves, %d table hits, %d cache hits, %d cache size) (maxdepth=%d)\n", move, *res,
 		state.moves_evaled, state.nomoves, state.tablehits, state.cachehits, len(state.trans_table), state.maxdepth)

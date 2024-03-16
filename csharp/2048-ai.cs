@@ -312,7 +312,7 @@ class Game2048
     int get_depth_limit(UInt64 board)
     {
         UInt16 bitset = 0;
-        int max_limit = 0;
+        int max_limit = 3;
         int count = 0;
 
         while (board != 0)
@@ -322,13 +322,17 @@ class Game2048
         }
 
         if (bitset <= 2048) {
-            return 3;
+            return max_limit;
         } else if (bitset <= 2048 + 1024) {
             max_limit = 4;
         } else if (bitset <= 4096) {
             max_limit = 5;
         } else if (bitset <= 4096 + 2048) {
             max_limit = 6;
+        } else if (bitset <= 8192) {
+            max_limit = 7;
+        } else {
+            max_limit = 8;
         }
 
         bitset >>= 1;
@@ -339,9 +343,7 @@ class Game2048
         }
         count -= 2;
         count = Math.Max(count, 3);
-        if (max_limit != 0) {
-            count = Math.Min(count, max_limit);
-        }
+        count = Math.Min(count, max_limit);
         return count;
     }
 
