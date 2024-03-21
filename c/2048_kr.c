@@ -10,15 +10,6 @@
 #endif
 #endif
 
-typedef unsigned short row_t;
-typedef unsigned long score_t;
-typedef struct {
-    row_t r0;
-    row_t r1;
-    row_t r2;
-    row_t r3;
-} board_t;
-
 #if defined(__TINYC__)
 #define NOT_USE_WIN32_SDK 1
 #endif
@@ -41,12 +32,6 @@ typedef struct {
 #elif defined(__WATCOMC__) && __WATCOMC__ < 1100
 #define GETCH_USE 1
 #endif
-
-#define UP 0
-#define DOWN 1
-#define LEFT 2
-#define RIGHT 3
-#define RETRACT 4
 
 #if defined(__MINGW64__) || defined(__MINGW32__)
 #undef __USE_MINGW_ANSI_STDIO
@@ -133,6 +118,22 @@ static int get_ch() {
     return getchar();
 #endif
 }
+
+typedef unsigned short row_t;
+typedef unsigned long score_t;
+
+typedef struct {
+    row_t r0;
+    row_t r1;
+    row_t r2;
+    row_t r3;
+} board_t;
+
+#define UP 0
+#define DOWN 1
+#define LEFT 2
+#define RIGHT 3
+#define RETRACT 4
 
 static unsigned int unif_random(n)
      unsigned int n;

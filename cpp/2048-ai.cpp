@@ -1,65 +1,6 @@
-#if defined(__linux__) || defined(linux) || defined(__unix__) || defined(unix) || defined(__CYGWIN__) || defined(__MACH__)
-#ifndef __DJGPP__
-#define UNIX_LIKE 1
-#endif
-#endif
-
-#if defined(__MSDOS__) || defined(_MSDOS) || defined(__DOS__)
-#ifndef MSDOS
-#define MSDOS 1
-#endif
-#endif
-
-#include <limits.h>
-#if UINT_MAX == 0xFFFFU
-#define __16BIT__ 1
-#endif
-
-#if !defined(ENABLE_CACHE)
-#define ENABLE_CACHE 1
-#endif
-
-#if defined(ENABLE_CACHE) && ENABLE_CACHE != 0 && ENABLE_CACHE != 1 & ENABLE_CACHE != 2
-#error "ENABLE_CACHE must be 0 (no cache) or 1 (use c++ map) or 2 (use c map)"
-#endif
-
-typedef unsigned short row_t;
-#ifdef __16BIT__
-typedef unsigned long score_t;
-#else
-typedef unsigned int score_t;
-#endif
-#if defined(_MSC_VER) || defined(__BORLANDC__) || defined(__WATCOMC__)
-typedef unsigned __int64 board_t;
-#define W64LIT(x) x##ui64
-#else
-typedef unsigned long long board_t;
-#define W64LIT(x) x##ULL
-#endif
-typedef float score_heur_t;
-
-#if defined(__TINYC__)
-#define NOT_USE_WIN32_SDK 1
-#endif
-
-#if defined(_WIN32) && !defined(NOT_USE_WIN32_SDK)
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#elif defined(__WATCOMC__)
-#include <graph.h>
-#elif defined(__BORLANDC__) || defined (__TURBOC__) || defined(__DJGPP__)
-#include <conio.h>
-#endif
-
-const board_t ROW_MASK = W64LIT(0xFFFF);
-const board_t COL_MASK = W64LIT(0x000F000F000F000F);
-
-enum {
-    UP = 0,
-    DOWN,
-    LEFT,
-    RIGHT,
-};
+#define SUPPORT_64BIT 1
+#include "arch.h"
+#include <math.h>
 
 #if MULTI_THREAD && OPENMP_THREAD
 #error "MULTI_THREAD and OPENMP_THREAD cannot be defined at the same time."
@@ -74,6 +15,10 @@ enum {
 #include "thread_pool_c.c"
 #elif OPENMP_THREAD
 #include <omp.h>
+#endif
+
+#if defined(ENABLE_CACHE) && ENABLE_CACHE != 0 && ENABLE_CACHE != 1 & ENABLE_CACHE != 2
+#error "ENABLE_CACHE must be 0 (no cache) or 1 (use c++ map) or 2 (use c map)"
 #endif
 
 #if ENABLE_CACHE
@@ -117,79 +62,19 @@ typedef std::map<board_t, trans_table_entry_t, less<board_t> > trans_table_t;
 typedef std::map<board_t, trans_table_entry_t> trans_table_t;
 #define MAP_HAVE_SECOND 1
 #endif
+
 #elif ENABLE_CACHE == 2
 #include "cmap.c"
 typedef map_t(board_t, trans_table_entry_t) trans_table_t;
 #endif
 #endif
 
-#ifndef __16BIT__
-#if defined(_MSC_VER) && _MSC_VER >= 1500
-#include <intrin.h>
-#define popcount __popcnt
-#elif defined(__GNUC__) && (__GNUC__ >= 4 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 4))
-#define popcount __builtin_popcount
-#else
-static inline int popcount(unsigned int bitset) {
-    int count = 0;
-    while (bitset) {
-        bitset &= bitset - 1;
-        count++;
-    }
-    return count;
-}
-#endif
-#endif
-
-#if defined(__MINGW64__) || defined(__MINGW32__)
-#undef __USE_MINGW_ANSI_STDIO
-#define __USE_MINGW_ANSI_STDIO 0
-#endif
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
-#include <string.h>
-#include <time.h>
-
-#define _max(a,b) ( ((a)>(b)) ? (a):(b) )
-#define _min(a,b) ( ((a)>(b)) ? (b):(a) )
-
-static void clear_screen(void) {
-#if defined(_WIN32) && !defined(NOT_USE_WIN32_SDK)
-    HANDLE hStdOut;
-    DWORD count;
-    DWORD cellCount;
-    COORD homeCoords = { 0, 0 };
-    static CONSOLE_SCREEN_BUFFER_INFO csbi;
-    static int full_clear = 1;
-
-    hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
-    if (hStdOut == INVALID_HANDLE_VALUE)
-        return;
-    if (full_clear == 1) {
-        if (!GetConsoleScreenBufferInfo(hStdOut, &csbi))
-            return;
-        cellCount = csbi.dwSize.X * csbi.dwSize.Y;
-        if (cellCount >= 8192)
-            full_clear = 0;
-    } else {
-        cellCount = 8192;
-    }
-    if (!FillConsoleOutputCharacter(hStdOut, (TCHAR)' ', cellCount, homeCoords, &count))
-        return;
-    if (full_clear && !FillConsoleOutputAttribute(hStdOut, csbi.wAttributes, cellCount, homeCoords, &count))
-        return;
-    SetConsoleCursorPosition(hStdOut, homeCoords);
-#elif defined(UNIX_LIKE)
-    printf("\033[2J\033[H");
-#elif defined(__WATCOMC__)
-    _clearscreen(_GCLEARSCREEN);
-#elif defined(__BORLANDC__) || defined (__TURBOC__) || defined(__DJGPP__)
-    clrscr();
-#elif (defined(_WIN32) && defined(NOT_USE_WIN32_SDK)) || defined(MSDOS)
-    system("cls");
-#endif
-}
+enum {
+    UP = 0,
+    DOWN,
+    LEFT,
+    RIGHT,
+};
 
 const score_heur_t SCORE_LOST_PENALTY = 200000.0f;
 const score_heur_t SCORE_MONOTONICITY_POWER = 4.0f;

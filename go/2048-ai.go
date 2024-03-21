@@ -1,7 +1,7 @@
 package main
 
 /*
-extern void clear_screen(void);
+extern void c_clear_screen(void);
 #cgo LDFLAGS: -L. -lgodeps
 */
 import "C"
@@ -459,7 +459,7 @@ func play_game(get_move get_move_func_t) {
 		var tile uint64 = 0
 		var newboard uint64 = 0
 
-		C.clear_screen()
+		C.c_clear_screen()
 		for move = 0; move < 4; move++ {
 			if execute_move(board, move) != board {
 				break

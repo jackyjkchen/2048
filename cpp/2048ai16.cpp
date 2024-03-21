@@ -1,62 +1,5 @@
-#if defined(__linux__) || defined(linux) || defined(__unix__) || defined(unix) || defined(__CYGWIN__) || defined(__MACH__)
-#ifndef __DJGPP__
-#define UNIX_LIKE 1
-#endif
-#endif
-
-#if defined(__MSDOS__) || defined(_MSDOS) || defined(__DOS__)
-#ifndef MSDOS
-#define MSDOS 1
-#endif
-#endif
-
-#include <limits.h>
-#if UINT_MAX == 0xFFFFU
-#define __16BIT__ 1
-#endif
-
-#if !defined(ENABLE_CACHE)
-#if defined(_MSC_VER) && _MSC_VER < 600
-#define ENABLE_CACHE 0
-#else
-#define ENABLE_CACHE 1
-#endif
-#endif
-
-typedef unsigned short row_t;
-
-#ifdef __16BIT__
-typedef unsigned long score_t;
-#else
-typedef unsigned int score_t;
-#endif
-typedef struct {
-    row_t r0;
-    row_t r1;
-    row_t r2;
-    row_t r3;
-} board_t;
-typedef float score_heur_t;
-
-#if defined(__TINYC__)
-#define NOT_USE_WIN32_SDK 1
-#endif
-
-#if defined(_WIN32) && !defined(NOT_USE_WIN32_SDK)
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#elif defined(__WATCOMC__)
-#include <graph.h>
-#elif defined(__BORLANDC__) || defined (__TURBOC__) || defined(__DJGPP__)
-#include <conio.h>
-#endif
-
-enum {
-    UP = 0,
-    DOWN,
-    LEFT,
-    RIGHT,
-};
+#include "arch.h"
+#include <math.h>
 
 #if ENABLE_CACHE
 #include "cmap.c"
@@ -68,55 +11,12 @@ typedef struct {
 typedef map_t(board_t, trans_table_entry_t) trans_table_t;
 #endif
 
-#if defined(__MINGW64__) || defined(__MINGW32__)
-#undef __USE_MINGW_ANSI_STDIO
-#define __USE_MINGW_ANSI_STDIO 0
-#endif
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
-#include <string.h>
-#include <time.h>
-
-#define _max(a,b) ( ((a)>(b)) ? (a):(b) )
-#define _min(a,b) ( ((a)>(b)) ? (b):(a) )
-
-static void clear_screen(void) {
-#if defined(_WIN32) && !defined(NOT_USE_WIN32_SDK)
-    HANDLE hStdOut;
-    DWORD count;
-    DWORD cellCount;
-    COORD homeCoords = { 0, 0 };
-    static CONSOLE_SCREEN_BUFFER_INFO csbi;
-    static int full_clear = 1;
-
-    hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
-    if (hStdOut == INVALID_HANDLE_VALUE)
-        return;
-    if (full_clear == 1) {
-        if (!GetConsoleScreenBufferInfo(hStdOut, &csbi))
-            return;
-        cellCount = csbi.dwSize.X * csbi.dwSize.Y;
-        if (cellCount >= 8192)
-            full_clear = 0;
-    } else {
-        cellCount = 8192;
-    }
-    if (!FillConsoleOutputCharacter(hStdOut, (TCHAR)' ', cellCount, homeCoords, &count))
-        return;
-    if (full_clear && !FillConsoleOutputAttribute(hStdOut, csbi.wAttributes, cellCount, homeCoords, &count))
-        return;
-    SetConsoleCursorPosition(hStdOut, homeCoords);
-#elif defined(UNIX_LIKE)
-    printf("\033[2J\033[H");
-#elif defined(__WATCOMC__)
-    _clearscreen(_GCLEARSCREEN);
-#elif defined(__BORLANDC__) || defined (__TURBOC__) || defined(__DJGPP__)
-    clrscr();
-#elif (defined(_WIN32) && defined(NOT_USE_WIN32_SDK)) || defined(MSDOS)
-    system("cls");
-#endif
-}
+enum {
+    UP = 0,
+    DOWN,
+    LEFT,
+    RIGHT,
+};
 
 const score_heur_t SCORE_LOST_PENALTY = 200000.0f;
 const score_heur_t SCORE_MONOTONICITY_POWER = 4.0f;

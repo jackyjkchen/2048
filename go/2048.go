@@ -1,8 +1,8 @@
 package main
 
 /*
-extern void clear_screen(void);
-extern int get_ch(void);
+extern void c_clear_screen(void);
+extern int c_get_ch(void);
 #cgo LDFLAGS: -L. -lgodeps
 */
 import "C"
@@ -220,7 +220,7 @@ func ask_for_move(board uint64) int {
 	for true {
 		allmoves := "wsadkjhl"
 		pos := 0
-		var movechar rune = rune(C.get_ch())
+		var movechar rune = rune(C.c_get_ch())
 
 		if movechar == 'q' {
 			return -1
@@ -254,7 +254,7 @@ func play_game(get_move get_move_func_t) {
 		var tile uint64 = 0
 		var newboard uint64 = 0
 
-		C.clear_screen()
+		C.c_clear_screen()
 		for move = 0; move < 4; move++ {
 			if execute_move(board, move) != board {
 				break
