@@ -1,3 +1,4 @@
+#define AI_SOURCE 1
 #include "arch.h"
 #include <math.h>
 

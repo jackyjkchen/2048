@@ -1,4 +1,5 @@
 #define SUPPORT_64BIT 1
+#define AI_SOURCE 1
 #include "arch.h"
 #include <math.h>
 
@@ -591,7 +592,7 @@ static void thrd_worker(void *param) {
     pcontext->res = score_toplevel_move(pcontext->board, pcontext->move);
 }
 
-static THREADPOOL_CTX* get_thrd_pool() {
+static THREADPOOL_CTX *get_thrd_pool() {
     static THREADPOOL_CTX ctx;
     return &ctx;
 }

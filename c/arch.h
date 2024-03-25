@@ -96,6 +96,7 @@ static void clear_screen(void) {
 #endif
 }
 
+#ifndef AI_SOURCE
 static int get_ch(void) {
 #if (defined(_WIN32) && !defined(GETCH_USE)) || defined(_GETCH_USE)
     return _getch();
@@ -135,6 +136,7 @@ static int get_ch(void) {
     return getchar();
 #endif
 }
+#endif
 
 typedef unsigned short row_t;
 #ifdef __16BIT__
@@ -164,6 +166,7 @@ typedef struct {
 
 typedef float score_heur_t;
 
+#ifdef AI_SOURCE
 #ifndef __16BIT__
 #if defined(_MSC_VER) && _MSC_VER >= 1500
 #include <intrin.h>
@@ -171,7 +174,7 @@ typedef float score_heur_t;
 #elif defined(__GNUC__) && (__GNUC__ >= 4 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 4))
 #define popcount __builtin_popcount
 #else
-static inline int popcount(unsigned int bitset) {
+static int popcount(unsigned int bitset) {
     int count = 0;
     while (bitset) {
         bitset &= bitset - 1;
@@ -179,6 +182,7 @@ static inline int popcount(unsigned int bitset) {
     }
     return count;
 }
+#endif
 #endif
 #endif
 
