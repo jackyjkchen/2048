@@ -4,7 +4,7 @@
 
 static int c_clear_screen(lua_State *L) {
     clear_screen();
-	return 1;
+    return 1;
 }
 
 static int c_getch(lua_State *L) {
@@ -12,7 +12,7 @@ static int c_getch(lua_State *L) {
     if (ret < 97 || ret > 122)
         ret = 0;
     lua_pushnumber(L, ret);
-	return 1;
+    return 1;
 }
 
 static const struct luaL_Reg luadeps[] = {
